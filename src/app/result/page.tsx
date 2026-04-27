@@ -51,7 +51,10 @@ export default function ResultPage() {
   }
 
   const top3 = data.results.slice(0, 3);
-  const remaining = data.results.slice(3).filter((r) => r.score >= 50).slice(0, 7);
+  // ユーザーから「特定の学科が見当たらない」という指摘があり、全学科を表示する。
+  // 比較対象に含まれていれば必ずこのリストで見つかる。
+  const remaining = data.results.slice(3);
+  const totalCount = data.results.length;
   const page7 = getPage7Content(data.axisScores);
   const colors = VERSION_CATEGORY_COLORS[data.version];
   const names = VERSION_CATEGORY_NAMES[data.version];
@@ -145,10 +148,13 @@ export default function ResultPage() {
         );
       })}
 
-      {/* Page 6: Top 4以降 */}
-      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6">
+      {/* Page 6: 4位以降の全学科ランキング */}
+      <section className="flex min-w-full snap-center flex-col items-center px-6 py-12">
         <div className="w-full max-w-sm">
-          <h2 className="mb-6 text-lg font-bold">その他の候補</h2>
+          <h2 className="mb-1 text-lg font-bold">他の学科ランキング</h2>
+          <p className="mb-6 text-xs text-gray-400">
+            比較対象 全{totalCount}学科をスコア順で表示
+          </p>
           {remaining.length > 0 ? (
             <div className="space-y-3">
               {remaining.map((r, i) => (
@@ -166,6 +172,9 @@ export default function ResultPage() {
                       }}
                     />
                   </div>
+                  <span className="w-6 text-right text-[10px] text-gray-400">
+                    {r.score}
+                  </span>
                 </div>
               ))}
             </div>

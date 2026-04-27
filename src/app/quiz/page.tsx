@@ -25,7 +25,9 @@ const STORAGE_KEYS = {
   currentSet: "quizCurrentSet",
 } as const;
 
-const SCROLL_DELAY_MS = 200;
+// セット切り替え時のトップへ戻すスクロールに使用。
+// 質問単位の自動スクロールは「次の質問が勝手に中央へ動いてストレス」というユーザー
+// フィードバックを受けて削除した（ボタンは fixed bottom で常に見えるため不要）。
 const SCROLL_DURATION_MS = 700;
 
 function smoothScrollTo(targetY: number, duration: number) {
@@ -44,13 +46,6 @@ function smoothScrollTo(targetY: number, duration: number) {
     if (progress < 1) requestAnimationFrame(step);
   };
   requestAnimationFrame(step);
-}
-
-function smoothScrollElementToCenter(element: HTMLElement, duration: number) {
-  const rect = element.getBoundingClientRect();
-  const targetY =
-    window.scrollY + rect.top - (window.innerHeight - rect.height) / 2;
-  smoothScrollTo(targetY, duration);
 }
 
 const CIRCLE_OPTIONS = [
@@ -154,25 +149,9 @@ export default function QuizPage() {
         next[questionIndex] = value;
         return next;
       });
-      const setStartIdx = setSizes.slice(0, currentSet).reduce((a, b) => a + b, 0);
-      const setEndIdx = setStartIdx + setSizes[currentSet];
-      const nextIdx = questionIndex + 1;
-      window.setTimeout(() => {
-        if (nextIdx < setEndIdx) {
-          const nextEl = document.getElementById(`question-${nextIdx}`);
-          if (nextEl) smoothScrollElementToCenter(nextEl, SCROLL_DURATION_MS);
-        } else {
-          const nextBtn = document.getElementById("next-button");
-          if (nextBtn) {
-            smoothScrollElementToCenter(nextBtn, SCROLL_DURATION_MS);
-            window.setTimeout(() => {
-              nextBtn.focus({ preventScroll: true });
-            }, SCROLL_DURATION_MS + 100);
-          }
-        }
-      }, SCROLL_DELAY_MS);
+      // 自動スクロールは行わない（ユーザー側のスクロール操作を尊重）。
     },
-    [currentSet, setSizes]
+    []
   );
 
   const handleNext = () => {
