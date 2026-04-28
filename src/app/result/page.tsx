@@ -11,6 +11,11 @@ import { departmentTexts } from "@/lib/result-texts";
 import { getPage7Content } from "@/lib/page7";
 import type { Version } from "@/lib/questions";
 
+// 匿名集計エンドポイント（Google Apps Script）。
+// 個人を識別する情報は送らない。プライバシーポリシー §2 / §3 に対応。
+const ANALYTICS_ENDPOINT =
+  "https://script.google.com/macros/s/AKfycbzPwyXHlEM7Qt6iozGtnjeHZcwGBdwKTnN8AsxLMqialnULoOstqar6pRONja_OOXvL/exec";
+
 type StoredResult = {
   version: Version;
   axisScores: number[];
@@ -41,6 +46,42 @@ export default function ResultPage() {
       router.replace("/");
     }
   }, [router]);
+
+  // 匿名集計を 1回だけ送信（同一結果の重複送信を防止）。
+  // CORS preflight を避けるため text/plain で送る → Apps Script 側で JSON.parse。
+  // mode: "no-cors" でレスポンスは opaque だが、リクエスト自体は成功する。
+  useEffect(() => {
+    if (!data) return;
+    if (sessionStorage.getItem("quizResultSent")) return;
+
+    const r = data.results;
+    const payload = {
+      version: data.version,
+      top1_id: r[0]?.id ?? "",
+      top1_name: r[0]?.name ?? "",
+      top1_score: r[0]?.score ?? "",
+      top2_id: r[1]?.id ?? "",
+      top2_name: r[1]?.name ?? "",
+      top2_score: r[1]?.score ?? "",
+      top3_id: r[2]?.id ?? "",
+      top3_name: r[2]?.name ?? "",
+      top3_score: r[2]?.score ?? "",
+      categories: data.top3Categories.join(","),
+    };
+
+    fetch(ANALYTICS_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+    })
+      .then(() => {
+        sessionStorage.setItem("quizResultSent", "1");
+      })
+      .catch(() => {
+        // 集計失敗はユーザー体験に影響させない（無視）。
+      });
+  }, [data]);
 
   if (!data) {
     return (

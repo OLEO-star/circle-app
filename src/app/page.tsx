@@ -28,11 +28,12 @@ export default function Home() {
   };
 
   const start = () => {
-    // 「始める」は明示的な新規開始 → 途中保存をクリアして fresh start
+    // 「始める」は明示的な新規開始 → 途中保存・前回の集計送信フラグをクリア
     localStorage.setItem("quizVersion", selected);
     localStorage.removeItem("quizAnswers");
     localStorage.removeItem("quizCurrentSet");
     sessionStorage.removeItem("quizResult");
+    sessionStorage.removeItem("quizResultSent");
     router.push("/quiz");
   };
 
