@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import Ring from "@/components/Ring";
 import type { Version } from "@/lib/questions";
 
@@ -96,6 +97,15 @@ export default function Home() {
         <p className="mt-1 text-[10px] text-gray-300">
           途中で閉じても再開できます
         </p>
+
+        <div className="mt-8 flex justify-center gap-4 text-[10px] text-gray-400">
+          <Link href="/terms" className="hover:text-gray-600">
+            利用規約
+          </Link>
+          <Link href="/privacy" className="hover:text-gray-600">
+            プライバシーポリシー
+          </Link>
+        </div>
       </div>
     </div>
   );
