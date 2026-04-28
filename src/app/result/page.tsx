@@ -14,7 +14,7 @@ import type { Version } from "@/lib/questions";
 // 匿名集計エンドポイント（Google Apps Script）。
 // 個人を識別する情報は送らない。プライバシーポリシー §2 / §3 に対応。
 const ANALYTICS_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbzPwyXHlEM7Qt6iozGtnjeHZcwGBdwKTnN8AsxLMqialnULoOstqar6pRONja_OOXvL/exec";
+  "https://script.google.com/macros/s/AKfycbxRg1rECyqBc0KfcQ4qUOCIikHsegF3TyFOpqrpnI6Qa4oWfM4kErTM6CGW6VRhtpaS/exec";
 
 type StoredResult = {
   version: Version;
