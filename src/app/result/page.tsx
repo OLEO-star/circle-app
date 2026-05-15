@@ -8,6 +8,7 @@ import {
   VERSION_CATEGORY_COLORS,
 } from "@/lib/departments";
 import { departmentTexts } from "@/lib/result-texts";
+import { careerTexts } from "@/lib/career-texts";
 import { getPage7Content } from "@/lib/page7";
 import type { Version } from "@/lib/questions";
 
@@ -182,6 +183,16 @@ export default function ResultPage() {
                     </h3>
                     <p className="text-sm leading-relaxed">{texts.weeklyFlow}</p>
                   </div>
+                  {careerTexts[r.id] && (
+                    <div>
+                      <h3 className="mb-1.5 text-xs font-medium text-gray-400">
+                        主な進路
+                      </h3>
+                      <p className="text-sm leading-relaxed">
+                        {careerTexts[r.id]}
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
