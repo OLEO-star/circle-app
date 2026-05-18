@@ -36,6 +36,8 @@ type StoredResult = {
   }[];
   categoryStrengths: number[];
   top3Categories: number[];
+  // 質問ごとの回答変更回数。旧データには無いので optional。
+  changeCounts?: number[];
 };
 
 export default function ResultPage() {
@@ -45,12 +47,32 @@ export default function ResultPage() {
   // ハイドレーション不一致になるので、useEffect 内で読み込む。
   const [data, setData] = useState<StoredResult | null>(null);
 
+  // Top3 への納得感スコア。1ヶ所に集中して回答率を最大化する設計（Phase 1）。
+  // セッション中に1回だけ送信し、UI も「ありがとう」表示に切り替える。
+  const [satisfaction, setSatisfaction] = useState<
+    "pitari" | "fuzzy" | "different" | null
+  >(null);
+  const [reason, setReason] = useState("");
+  const [satisfactionSent, setSatisfactionSent] = useState(false);
+
   useEffect(() => {
     const stored = sessionStorage.getItem("quizResult");
     if (stored) {
       setData(JSON.parse(stored) as StoredResult);
     } else {
       router.replace("/");
+    }
+    // 既に送信済みなら UI を「回答済」状態にする（戻る/再読込ケース対応）。
+    if (sessionStorage.getItem("satisfactionSent")) {
+      setSatisfactionSent(true);
+      const stored2 = sessionStorage.getItem("satisfactionValue");
+      if (
+        stored2 === "pitari" ||
+        stored2 === "fuzzy" ||
+        stored2 === "different"
+      ) {
+        setSatisfaction(stored2);
+      }
     }
   }, [router]);
 
@@ -87,6 +109,12 @@ export default function ResultPage() {
       categories: data.top3Categories.join(","),
       // 19軸スコア（マスタSheets側で改善分析に使う）
       axis_scores: data.axisScores.join(","),
+      // 回答変更ログ：変更があった質問のみ "1始まり質問番号:変更回数" のCSV。
+      // 変更が多い質問 = 文言が分かりにくい可能性。改善ターゲット特定に使う。
+      change_log: (data.changeCounts ?? [])
+        .map((count, idx) => (count > 0 ? `${idx + 1}:${count}` : null))
+        .filter((s): s is string => s !== null)
+        .join(","),
       // 学校モード関連（個人モードでは空文字列で送る）
       school_mode: schoolMode ? "true" : "false",
       school_code: schoolInfo?.code ?? "",
@@ -113,6 +141,32 @@ export default function ResultPage() {
         // 集計失敗はユーザー体験に影響させない（無視）。
       });
   }, [data]);
+
+  // Top3 への納得感スコア送信。session_id で診断データ行と結合できるよう、
+  // 同じ ANALYTICS_ENDPOINT に type="satisfaction" として後追い送信する。
+  // 理由（reason）は任意。返信があれば改善に直接効くので欄だけ用意する。
+  const submitSatisfaction = () => {
+    if (satisfactionSent || !satisfaction) return;
+    setSatisfactionSent(true);
+    sessionStorage.setItem("satisfactionSent", "1");
+    sessionStorage.setItem("satisfactionValue", satisfaction);
+    const trimmedReason = reason.trim();
+    const sessionId = sessionStorage.getItem("sessionId") ?? "";
+    const payload = {
+      type: "satisfaction",
+      session_id: sessionId,
+      satisfaction,
+      reason: trimmedReason,
+    };
+    fetch(ANALYTICS_ENDPOINT, {
+      method: "POST",
+      mode: "no-cors",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: JSON.stringify(payload),
+    }).catch(() => {
+      // 集計失敗はユーザー体験に影響させない（無視）。
+    });
+  };
 
   if (!data) {
     return (
@@ -172,6 +226,78 @@ export default function ResultPage() {
               </div>
             </div>
           ))}
+        </div>
+
+        {/* 納得感スコア（Phase 1：診断全体への1問評価）+ 任意の理由欄。
+            選択 → 理由欄表示 → 送信、の段階的フロー。回答後は感謝表示に切替。 */}
+        <div className="mt-10 w-full max-w-sm rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4">
+          {!satisfactionSent ? (
+            <>
+              <p className="mb-3 text-center text-sm font-medium text-gray-800">
+                この結果、自分にピンときましたか？
+              </p>
+              <div className="mb-3 flex justify-center gap-2">
+                {(
+                  [
+                    { value: "pitari", emoji: "👍", label: "ピッタリ" },
+                    { value: "fuzzy", emoji: "😐", label: "微妙" },
+                    { value: "different", emoji: "👎", label: "違うかも" },
+                  ] as const
+                ).map((opt) => {
+                  const active = satisfaction === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => setSatisfaction(opt.value)}
+                      className={`flex flex-1 flex-col items-center gap-1 rounded-xl border px-3 py-2.5 text-xs transition-colors ${
+                        active
+                          ? "border-gray-900 bg-white text-gray-900 ring-2 ring-gray-900/10"
+                          : "border-gray-200 bg-white text-gray-700 active:bg-gray-100"
+                      }`}
+                      aria-pressed={active}
+                    >
+                      <span className="text-xl leading-none">{opt.emoji}</span>
+                      {opt.label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* 選択後に理由欄と送信ボタンを表示。理由は任意。 */}
+              {satisfaction && (
+                <>
+                  <label className="mb-1 block text-xs text-gray-500">
+                    理由があれば教えてください（任意）
+                  </label>
+                  <textarea
+                    value={reason}
+                    onChange={(e) => setReason(e.target.value)}
+                    placeholder="例：Top1の○○学科は興味あるけど、Top3 の□□は違う気がした"
+                    rows={3}
+                    maxLength={500}
+                    className="mb-3 w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:outline-none"
+                  />
+                  <button
+                    onClick={submitSatisfaction}
+                    className="w-full rounded-full bg-gray-900 py-2.5 text-sm font-medium text-white transition-colors active:bg-gray-700"
+                  >
+                    送信する
+                  </button>
+                </>
+              )}
+            </>
+          ) : (
+            <p className="text-center text-sm text-gray-600">
+              <span className="mr-2 text-lg leading-none">
+                {satisfaction === "pitari"
+                  ? "👍"
+                  : satisfaction === "fuzzy"
+                    ? "😐"
+                    : "👎"}
+              </span>
+              ありがとうございます！
+            </p>
+          )}
         </div>
       </section>
 

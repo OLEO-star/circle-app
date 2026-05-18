@@ -23,6 +23,9 @@ const STORAGE_KEYS = {
   version: "quizVersion",
   answers: "quizAnswers",
   currentSet: "quizCurrentSet",
+  // 質問ごとの回答変更回数。変更が多い質問は文言が分かりにくい可能性が高く、
+  // 改善対象を特定するための指標として診断完了時にサーバに送る。
+  changeCounts: "quizChangeCounts",
 } as const;
 
 // セット切り替え時のトップへ戻すスクロールに使用。
@@ -65,6 +68,8 @@ export default function QuizPage() {
   const [hydrated, setHydrated] = useState(false);
   const [currentSet, setCurrentSet] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
+  // 質問ごとの回答変更回数。0始まりの配列で answers と同じ長さを保つ。
+  const [changeCounts, setChangeCounts] = useState<number[]>([]);
   // 「セットを完了する」を未回答ありで押したか。これが立つと未回答の帯を
   // ストレスの少ない淡ロゼで強調する（Baker-Miller Pink の鎮静系統の淡色版）。
   const [attemptedAdvance, setAttemptedAdvance] = useState(false);
@@ -105,8 +110,20 @@ export default function QuizPage() {
       }
     }
 
+    let savedChangeCounts: number[] | null = null;
+    const rawChanges = localStorage.getItem(STORAGE_KEYS.changeCounts);
+    if (rawChanges) {
+      try {
+        const parsed = JSON.parse(rawChanges);
+        if (Array.isArray(parsed) && parsed.length === qs.length) {
+          savedChangeCounts = parsed as number[];
+        }
+      } catch {}
+    }
+
     setVersion(v);
     setAnswers(savedAnswers ?? new Array(qs.length).fill(null));
+    setChangeCounts(savedChangeCounts ?? new Array(qs.length).fill(0));
     setCurrentSet(savedSet);
     setHydrated(true);
   }, []);
@@ -121,6 +138,14 @@ export default function QuizPage() {
     if (!hydrated) return;
     localStorage.setItem(STORAGE_KEYS.currentSet, String(currentSet));
   }, [currentSet, hydrated]);
+
+  useEffect(() => {
+    if (!hydrated) return;
+    localStorage.setItem(
+      STORAGE_KEYS.changeCounts,
+      JSON.stringify(changeCounts),
+    );
+  }, [changeCounts, hydrated]);
 
   // 現在のセットの質問範囲
   const setStart = setSizes.slice(0, currentSet).reduce((a, b) => a + b, 0);
@@ -148,13 +173,23 @@ export default function QuizPage() {
   const handleAnswer = useCallback(
     (questionIndex: number, value: number) => {
       setAnswers((prev) => {
+        const previous = prev[questionIndex];
+        // 既存の回答があり、新しい値と異なる場合のみ変更カウントを増やす。
+        // 同じ値を再タップした場合や、null → 数値の初回回答ではカウントしない。
+        if (previous !== null && previous !== value) {
+          setChangeCounts((counts) => {
+            const nextCounts = [...counts];
+            nextCounts[questionIndex] = (nextCounts[questionIndex] ?? 0) + 1;
+            return nextCounts;
+          });
+        }
         const next = [...prev];
         next[questionIndex] = value;
         return next;
       });
       // 自動スクロールは行わない（ユーザー側のスクロール操作を尊重）。
     },
-    []
+    [],
   );
 
   const handleNext = () => {
@@ -198,11 +233,13 @@ export default function QuizPage() {
         })),
         categoryStrengths,
         top3Categories,
+        changeCounts,
       };
       sessionStorage.setItem("quizResult", JSON.stringify(resultData));
       // 完了したので途中保存をクリア
       localStorage.removeItem(STORAGE_KEYS.answers);
       localStorage.removeItem(STORAGE_KEYS.currentSet);
+      localStorage.removeItem(STORAGE_KEYS.changeCounts);
       router.push("/result");
     }
   };
