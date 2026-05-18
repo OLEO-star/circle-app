@@ -65,6 +65,9 @@ export default function QuizPage() {
   const [hydrated, setHydrated] = useState(false);
   const [currentSet, setCurrentSet] = useState(0);
   const [answers, setAnswers] = useState<(number | null)[]>([]);
+  // 「セットを完了する」を未回答ありで押したか。これが立つと未回答の帯を
+  // ストレスの少ない淡ロゼで強調する（Baker-Miller Pink の鎮静系統の淡色版）。
+  const [attemptedAdvance, setAttemptedAdvance] = useState(false);
 
   const questions = useMemo(() => getQuestionsForVersion(version), [version]);
   const setSizes = useMemo(() => getSetSizes(version), [version]);
@@ -155,6 +158,24 @@ export default function QuizPage() {
   );
 
   const handleNext = () => {
+    // 未回答があれば最初の未回答質問を画面中央にスクロールして留まる。
+    // disabled で押せないより「何が足りないか」を物理的に示す方が分かりやすい。
+    if (!allAnswered) {
+      setAttemptedAdvance(true);
+      const firstUnansweredIdx = currentQuestions.findIndex(
+        (_, i) => answers[setStart + i] === null,
+      );
+      if (firstUnansweredIdx !== -1) {
+        const globalIdx = setStart + firstUnansweredIdx;
+        const el = document.getElementById(`question-${globalIdx}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      }
+      return;
+    }
+    // セット切り替えで attempted をリセット（次セットでまた未回答時に発動）
+    setAttemptedAdvance(false);
     if (currentSet + 1 < setSizes.length) {
       setCurrentSet(currentSet + 1);
     } else {
@@ -247,14 +268,21 @@ export default function QuizPage() {
         {currentQuestions.map((q, i) => {
           const globalIndex = setStart + i;
           const selected = answers[globalIndex];
+          // 未回答強調：attempted を押した後、未回答だけ淡ロゼ背景にする。
+          // Baker-Miller Pink の系統の淡色で、ストレッサーになりにくい色味を選択。
+          const highlight = attemptedAdvance && selected === null;
           return (
             <div
               key={q.id}
               id={`question-${globalIndex}`}
-              className="border-b border-gray-50 py-5"
+              className={`-mx-3 rounded-2xl border px-3 py-5 transition-colors ${
+                highlight
+                  ? "border-rose-200 bg-rose-50"
+                  : "border-transparent border-b-gray-50"
+              }`}
             >
               <p className="mb-4 text-sm leading-relaxed">
-                <span className="mr-2 text-xs text-gray-300">
+                <span className="mr-2 text-xs font-medium text-gray-500">
                   {globalIndex + 1}.
                 </span>
                 {q.text}
@@ -293,8 +321,11 @@ export default function QuizPage() {
         <button
           id="next-button"
           onClick={handleNext}
-          disabled={!allAnswered}
-          className="w-full rounded-full bg-gray-900 py-3 text-sm font-medium text-white transition-colors disabled:bg-gray-200 disabled:text-gray-400"
+          className={`w-full rounded-full py-3 text-sm font-medium transition-colors ${
+            allAnswered
+              ? "bg-gray-900 text-white active:bg-gray-700"
+              : "bg-gray-300 text-white active:bg-gray-400"
+          }`}
         >
           {isLastSet
             ? "結果を見る"

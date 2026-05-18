@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# school master raw CSV (regenerated from MEXT via scripts/generate-school-data.py)
+scripts/data/raw/

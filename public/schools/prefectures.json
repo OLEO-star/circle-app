@@ -1,0 +1,284 @@
+[
+  {
+    "code": "01",
+    "name": "北海道",
+    "junior_count": 548,
+    "high_count": 272
+  },
+  {
+    "code": "02",
+    "name": "青森県",
+    "junior_count": 151,
+    "high_count": 63
+  },
+  {
+    "code": "03",
+    "name": "岩手県",
+    "junior_count": 147,
+    "high_count": 76
+  },
+  {
+    "code": "04",
+    "name": "宮城県",
+    "junior_count": 196,
+    "high_count": 98
+  },
+  {
+    "code": "05",
+    "name": "秋田県",
+    "junior_count": 103,
+    "high_count": 50
+  },
+  {
+    "code": "06",
+    "name": "山形県",
+    "junior_count": 95,
+    "high_count": 59
+  },
+  {
+    "code": "07",
+    "name": "福島県",
+    "junior_count": 206,
+    "high_count": 96
+  },
+  {
+    "code": "08",
+    "name": "茨城県",
+    "junior_count": 217,
+    "high_count": 128
+  },
+  {
+    "code": "09",
+    "name": "栃木県",
+    "junior_count": 155,
+    "high_count": 75
+  },
+  {
+    "code": "10",
+    "name": "群馬県",
+    "junior_count": 157,
+    "high_count": 77
+  },
+  {
+    "code": "11",
+    "name": "埼玉県",
+    "junior_count": 441,
+    "high_count": 201
+  },
+  {
+    "code": "12",
+    "name": "千葉県",
+    "junior_count": 385,
+    "high_count": 190
+  },
+  {
+    "code": "13",
+    "name": "東京都",
+    "junior_count": 796,
+    "high_count": 434
+  },
+  {
+    "code": "14",
+    "name": "神奈川県",
+    "junior_count": 472,
+    "high_count": 232
+  },
+  {
+    "code": "15",
+    "name": "新潟県",
+    "junior_count": 227,
+    "high_count": 103
+  },
+  {
+    "code": "16",
+    "name": "富山県",
+    "junior_count": 75,
+    "high_count": 49
+  },
+  {
+    "code": "17",
+    "name": "石川県",
+    "junior_count": 89,
+    "high_count": 57
+  },
+  {
+    "code": "18",
+    "name": "福井県",
+    "junior_count": 76,
+    "high_count": 33
+  },
+  {
+    "code": "19",
+    "name": "山梨県",
+    "junior_count": 89,
+    "high_count": 40
+  },
+  {
+    "code": "20",
+    "name": "長野県",
+    "junior_count": 192,
+    "high_count": 108
+  },
+  {
+    "code": "21",
+    "name": "岐阜県",
+    "junior_count": 177,
+    "high_count": 87
+  },
+  {
+    "code": "22",
+    "name": "静岡県",
+    "junior_count": 284,
+    "high_count": 138
+  },
+  {
+    "code": "23",
+    "name": "愛知県",
+    "junior_count": 440,
+    "high_count": 222
+  },
+  {
+    "code": "24",
+    "name": "三重県",
+    "junior_count": 167,
+    "high_count": 79
+  },
+  {
+    "code": "25",
+    "name": "滋賀県",
+    "junior_count": 102,
+    "high_count": 58
+  },
+  {
+    "code": "26",
+    "name": "京都府",
+    "junior_count": 185,
+    "high_count": 106
+  },
+  {
+    "code": "27",
+    "name": "大阪府",
+    "junior_count": 511,
+    "high_count": 257
+  },
+  {
+    "code": "28",
+    "name": "兵庫県",
+    "junior_count": 374,
+    "high_count": 215
+  },
+  {
+    "code": "29",
+    "name": "奈良県",
+    "junior_count": 106,
+    "high_count": 52
+  },
+  {
+    "code": "30",
+    "name": "和歌山県",
+    "junior_count": 123,
+    "high_count": 47
+  },
+  {
+    "code": "31",
+    "name": "鳥取県",
+    "junior_count": 57,
+    "high_count": 32
+  },
+  {
+    "code": "32",
+    "name": "島根県",
+    "junior_count": 93,
+    "high_count": 47
+  },
+  {
+    "code": "33",
+    "name": "岡山県",
+    "junior_count": 159,
+    "high_count": 90
+  },
+  {
+    "code": "34",
+    "name": "広島県",
+    "junior_count": 258,
+    "high_count": 132
+  },
+  {
+    "code": "35",
+    "name": "山口県",
+    "junior_count": 158,
+    "high_count": 76
+  },
+  {
+    "code": "36",
+    "name": "徳島県",
+    "junior_count": 89,
+    "high_count": 37
+  },
+  {
+    "code": "37",
+    "name": "香川県",
+    "junior_count": 73,
+    "high_count": 43
+  },
+  {
+    "code": "38",
+    "name": "愛媛県",
+    "junior_count": 127,
+    "high_count": 67
+  },
+  {
+    "code": "39",
+    "name": "高知県",
+    "junior_count": 119,
+    "high_count": 43
+  },
+  {
+    "code": "40",
+    "name": "福岡県",
+    "junior_count": 355,
+    "high_count": 166
+  },
+  {
+    "code": "41",
+    "name": "佐賀県",
+    "junior_count": 89,
+    "high_count": 44
+  },
+  {
+    "code": "42",
+    "name": "長崎県",
+    "junior_count": 181,
+    "high_count": 81
+  },
+  {
+    "code": "43",
+    "name": "熊本県",
+    "junior_count": 169,
+    "high_count": 77
+  },
+  {
+    "code": "44",
+    "name": "大分県",
+    "junior_count": 122,
+    "high_count": 55
+  },
+  {
+    "code": "45",
+    "name": "宮崎県",
+    "junior_count": 131,
+    "high_count": 51
+  },
+  {
+    "code": "46",
+    "name": "鹿児島県",
+    "junior_count": 210,
+    "high_count": 90
+  },
+  {
+    "code": "47",
+    "name": "沖縄県",
+    "junior_count": 152,
+    "high_count": 70
+  }
+]

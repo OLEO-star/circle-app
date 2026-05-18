@@ -1,10 +1,11 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Ring from "@/components/Ring";
 import type { Version } from "@/lib/questions";
+import { getStudentAge, setStudentAge } from "@/lib/school-mode";
 
 const PREVIEW_STRENGTHS = new Array(8).fill(0.7) as number[];
 
@@ -22,6 +23,12 @@ const COUNT_INFO: Record<
 export default function Home() {
   const router = useRouter();
   const [selected, setSelected] = useState<Version>("mixed");
+  const [age, setAge] = useState("");
+
+  // 個人モードでの年齢入力を復元（再訪時の手間を省く）。
+  useEffect(() => {
+    setAge(getStudentAge());
+  }, []);
 
   const toggle = (v: "humanities" | "sciences") => {
     setSelected((prev) => (prev === v ? "mixed" : v));
@@ -34,6 +41,8 @@ export default function Home() {
     localStorage.removeItem("quizCurrentSet");
     sessionStorage.removeItem("quizResult");
     sessionStorage.removeItem("quizResultSent");
+    // 年齢は任意。空文字なら保存しない（クリア）。
+    setStudentAge(age.trim());
     router.push("/quiz");
   };
 
@@ -49,15 +58,32 @@ export default function Home() {
           showLabels={false}
         />
 
-        <h1 className="mb-3 mt-4 text-2xl font-bold">学部診断</h1>
-        <p className="mb-7 text-sm leading-relaxed text-gray-500">
-          質問に答えて
-          <br />
-          あなたに合う大学の学科を見つけよう
-        </p>
+        {/* 年齢入力（任意・データ集計用）。タイトルと説明文の代わりに配置。 */}
+        <div className="mb-6 mt-6 text-left">
+          <label className="mb-1 block text-xs text-gray-500">
+            年齢（任意）
+          </label>
+          <input
+            type="number"
+            inputMode="numeric"
+            value={age}
+            onChange={(e) => setAge(e.target.value)}
+            placeholder="例：17"
+            min={10}
+            max={30}
+            className="w-full rounded-xl border border-gray-200 bg-white px-4 py-3 text-sm text-gray-900 focus:border-gray-400 focus:outline-none"
+          />
+          <p className="mt-1 text-[10px] text-gray-400">
+            入力すると診断結果の傾向データに含まれます（個人を特定する情報は集めません）
+          </p>
+        </div>
 
-        <p className="mb-2 text-[11px] leading-relaxed text-gray-400">
-          文理が決まっている方はこちら（選ばなければ全学科で比較）
+        <p className="mb-2 text-center text-sm font-medium leading-snug text-gray-800">
+          文理が決まっている方はこちら
+          <br />
+          <span className="text-xs font-normal text-gray-500">
+            （選ばなければ全学科で比較）
+          </span>
         </p>
 
         <div className="mb-6 flex gap-2">

@@ -11,6 +11,12 @@ import { departmentTexts } from "@/lib/result-texts";
 import { careerTexts } from "@/lib/career-texts";
 import { getPage7Content } from "@/lib/page7";
 import type { Version } from "@/lib/questions";
+import {
+  getSchoolInfo,
+  getStudentAge,
+  getStudentInfo,
+  isSchoolMode,
+} from "@/lib/school-mode";
 
 // 匿名集計エンドポイント（Google Apps Script）。
 // 個人を識別する情報は送らない。プライバシーポリシー §2 / §3 に対応。
@@ -56,8 +62,19 @@ export default function ResultPage() {
     if (sessionStorage.getItem("quizResultSent")) return;
 
     const r = data.results;
+    // 学校モード時のみ学校・生徒情報を含める。Apps Script 側で school_mode を見て
+    // マスタSheets（個人特定なし）と学校別Sheets（クラス・出席番号あり）に振り分ける。
+    // session_id は両モード共通で生成し、PostHog の操作ログと突き合わせるための匿名IDとして使う。
+    const schoolMode = isSchoolMode();
+    const schoolInfo = schoolMode ? getSchoolInfo() : null;
+    const studentInfo = schoolMode ? getStudentInfo() : null;
+    const sessionId =
+      sessionStorage.getItem("sessionId") ?? crypto.randomUUID();
+    sessionStorage.setItem("sessionId", sessionId);
+
     const payload = {
       version: data.version,
+      session_id: sessionId,
       top1_id: r[0]?.id ?? "",
       top1_name: r[0]?.name ?? "",
       top1_score: r[0]?.score ?? "",
@@ -68,6 +85,19 @@ export default function ResultPage() {
       top3_name: r[2]?.name ?? "",
       top3_score: r[2]?.score ?? "",
       categories: data.top3Categories.join(","),
+      // 19軸スコア（マスタSheets側で改善分析に使う）
+      axis_scores: data.axisScores.join(","),
+      // 学校モード関連（個人モードでは空文字列で送る）
+      school_mode: schoolMode ? "true" : "false",
+      school_code: schoolInfo?.code ?? "",
+      school_name: schoolInfo?.name ?? "",
+      school_pref: schoolInfo?.pref ?? "",
+      school_type: schoolInfo?.schoolType ?? "",
+      grade: studentInfo?.grade ?? "",
+      klass: studentInfo?.klass ?? "",
+      student_number: studentInfo?.number ?? "",
+      // 年齢は両モード共通の任意項目（個人モードでも傾向データ集計に使う）
+      student_age: getStudentAge(),
     };
 
     fetch(ANALYTICS_ENDPOINT, {
