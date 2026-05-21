@@ -26,6 +26,8 @@ const STORAGE_KEYS = {
   // 質問ごとの回答変更回数。変更が多い質問は文言が分かりにくい可能性が高く、
   // 改善対象を特定するための指標として診断完了時にサーバに送る。
   changeCounts: "quizChangeCounts",
+  // 診断開始時刻（最初の質問が表示された時点の ISO 文字列）。所要時間集計に使う。
+  startTime: "quizStartTime",
 } as const;
 
 // セット切り替え時のトップへ戻すスクロールに使用。
@@ -119,6 +121,11 @@ export default function QuizPage() {
           savedChangeCounts = parsed as number[];
         }
       } catch {}
+    }
+
+    // 診断開始時刻を初回マウント時に記録（再訪時は既存値を維持）
+    if (!localStorage.getItem(STORAGE_KEYS.startTime)) {
+      localStorage.setItem(STORAGE_KEYS.startTime, new Date().toISOString());
     }
 
     setVersion(v);
@@ -235,11 +242,29 @@ export default function QuizPage() {
         top3Categories,
         changeCounts,
       };
-      sessionStorage.setItem("quizResult", JSON.stringify(resultData));
+      // 終了時刻と所要時間も結果に乗せる（result/page.tsx で payload に追加）
+      const startTime = localStorage.getItem(STORAGE_KEYS.startTime) ?? "";
+      const endTime = new Date().toISOString();
+      let durationSec = "";
+      if (startTime) {
+        const diff = Math.max(
+          0,
+          Math.round(
+            (new Date(endTime).getTime() - new Date(startTime).getTime()) /
+              1000,
+          ),
+        );
+        durationSec = String(diff);
+      }
+      sessionStorage.setItem(
+        "quizResult",
+        JSON.stringify({ ...resultData, startTime, endTime, durationSec }),
+      );
       // 完了したので途中保存をクリア
       localStorage.removeItem(STORAGE_KEYS.answers);
       localStorage.removeItem(STORAGE_KEYS.currentSet);
       localStorage.removeItem(STORAGE_KEYS.changeCounts);
+      localStorage.removeItem(STORAGE_KEYS.startTime);
       router.push("/result");
     }
   };

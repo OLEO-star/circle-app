@@ -16,7 +16,7 @@ const COUNT_INFO: Record<
   { count: number; minutes: string; sets: number }
 > = {
   mixed: { count: 61, minutes: "約10分", sets: 6 },
-  humanities: { count: 47, minutes: "約8分", sets: 5 },
+  humanities: { count: 51, minutes: "約9分", sets: 5 },
   sciences: { count: 50, minutes: "約8分", sets: 5 },
 };
 
@@ -58,7 +58,7 @@ export default function Home() {
           showLabels={false}
         />
 
-        {/* 年齢入力（任意・データ集計用）。タイトルと説明文の代わりに配置。 */}
+        {/* 年齢入力（任意・データ集計用）。希望進路は診断後に結果ページで聞く設計。 */}
         <div className="mb-6 mt-6 text-left">
           <label className="mb-1 block text-xs text-gray-500">
             年齢（任意）

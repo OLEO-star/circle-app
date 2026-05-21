@@ -41,6 +41,20 @@ export function getStudentAge(): string {
   return localStorage.getItem(KEYS.age) ?? "";
 }
 
+// 希望進路（任意・自由入力）。先生が個別生徒の進路指導で「希望と診断結果のズレ」を
+// 把握するのに使う。表記揺れがあっても自由入力のメリット（強制せず気軽に書ける）を優先。
+const DESIRED_FIELD_KEY = "desiredField";
+
+export function setDesiredField(value: string): void {
+  if (value) localStorage.setItem(DESIRED_FIELD_KEY, value);
+  else localStorage.removeItem(DESIRED_FIELD_KEY);
+}
+
+export function getDesiredField(): string {
+  if (typeof window === "undefined") return "";
+  return localStorage.getItem(DESIRED_FIELD_KEY) ?? "";
+}
+
 export function enableSchoolMode(): void {
   localStorage.setItem(KEYS.mode, "true");
 }

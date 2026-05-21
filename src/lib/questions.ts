@@ -2,7 +2,9 @@
 //
 // バージョン:
 //   mixed      = 文理混合版（61問・既存）
-//   humanities = 文系特化版（47問 = 共通25 + 文系のみ16 + 文系追加6）
+//   humanities = 文系特化版（51問 = 共通25 + 文系のみ16 + 文系追加6 + 数理共通4）
+//                 ※ 2026-05-18: MATH(M1/M2/M3) と LAB(L3) を追加。
+//                   経済・経営・心理など数学・実験要素を持つ文系学科の評価精度向上のため。
 //   sciences   = 理系特化版（50問 = 共通25 + 理系のみ20 + 理系追加5）
 //
 // 軸インデックス:
@@ -116,7 +118,7 @@ const ALL_QUESTIONS: Question[] = [
   { id: "Mk1",  text: "模型や工作など、手を動かして形にする作業が好きだ",
     axisIndex: 5,  reverse: false, versions: ["mixed", "sciences"] },
   { id: "M1",   text: "数式を使って法則を導き出す作業にワクワクする",
-    axisIndex: 0,  reverse: false, versions: ["mixed", "sciences"] },
+    axisIndex: 0,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
   { id: "An1",  text: "動物の生態や行動を観察するのが好きだ",
     axisIndex: 15, reverse: false, versions: ["mixed", "sciences"] },
   { id: "Li1",  text: "将来、生き物の生死に直接関わる現場で働きたいと思う",
@@ -128,15 +130,15 @@ const ALL_QUESTIONS: Question[] = [
   { id: "Mk2",  text: "「こういう建物や製品があったらいいな」と頭の中で設計図を描くことがある",
     axisIndex: 5,  reverse: false, versions: ["mixed", "sciences"] },
   { id: "M2",   text: "日常の現象を「数字で説明できないか」と考えることがある",
-    axisIndex: 0,  reverse: false, versions: ["mixed", "sciences"] },
+    axisIndex: 0,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
   { id: "An2",  text: "保護犬・保護猫の活動や、動物園・水族館の裏側に興味がある",
     axisIndex: 15, reverse: false, versions: ["mixed", "sciences"] },
   { id: "Li2",  text: "手術や解剖の映像を見ても、怖さより「どんな処置をしているのか」に注目するほうだ",
     axisIndex: 14, reverse: false, versions: ["mixed", "sciences"] },
   { id: "M3",   text: "計算問題がずっと続くと、途中で集中が切れてしまうほうだ",
-    axisIndex: 0,  reverse: true,  versions: ["mixed", "sciences"] },
+    axisIndex: 0,  reverse: true,  versions: ["mixed", "humanities", "sciences"] },
   { id: "L3",   text: "実験が失敗しても原因を探してやり直すことに抵抗がない",
-    axisIndex: 2,  reverse: false, versions: ["mixed", "sciences"] },
+    axisIndex: 2,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
   { id: "C3",   text: "パソコンで何かを作っていてうまくいかないと、すぐに諦めたくなるほうだ",
     axisIndex: 4,  reverse: true,  versions: ["mixed", "sciences"] },
   { id: "Mk3",  text: "作品を何度もやり直すのは面倒で、早く完成させたいほうだ",
@@ -194,18 +196,19 @@ const VERSION_ORDERS: Record<Version, readonly string[]> = {
     // セット6（12問）
     "N1", "J1", "Bo1", "N2", "J2", "Bo2", "F4", "Bz4", "L4", "N3", "J3", "Bo3",
   ],
-  // 文系版 47問
+  // 文系版 51問（2026-05-18: 経済・経営・心理など数理要素を持つ文系学科の評価精度向上のため
+  // MATH 3問 (M1/M2/M3) と LAB 1問 (L3) を追加）
   humanities: [
     // セット1（10）
     "F1", "Ca1", "B1", "Lg1", "A1", "N1", "J1", "Me1", "Ce1", "T1",
-    // セット2（10）
-    "Ab1", "Bo1", "G1", "Bz4", "Ca4", "Ca5", "F2", "Lg2", "N2", "J2",
-    // セット3（10）
-    "Me2", "B2", "A2", "Ab2", "T2", "Ce2", "G2", "Lg4", "N3", "J3",
-    // セット4（10）
-    "F3", "Lg3", "Ca3", "Me3", "Ab3", "T3", "Ce3", "B3", "A3", "Bo2",
-    // セット5（7）
-    "Ca2", "F4", "Ab4", "G3", "Bz5", "N4", "Bo3",
+    // セット2（11）
+    "Ab1", "Bo1", "G1", "M1", "Bz4", "Ca4", "Ca5", "F2", "Lg2", "N2", "J2",
+    // セット3（11）
+    "Me2", "B2", "A2", "M2", "Ab2", "T2", "Ce2", "G2", "Lg4", "N3", "J3",
+    // セット4（11）
+    "F3", "M3", "Lg3", "Ca3", "Me3", "Ab3", "T3", "Ce3", "B3", "A3", "Bo2",
+    // セット5（8）
+    "Ca2", "F4", "L3", "Ab4", "G3", "Bz5", "N4", "Bo3",
   ],
   // 理系版 50問
   sciences: [
@@ -225,7 +228,7 @@ const VERSION_ORDERS: Record<Version, readonly string[]> = {
 // バージョンごとのセット区切り
 export const VERSION_SET_SIZES: Record<Version, readonly number[]> = {
   mixed:      [10, 10, 10, 10, 9, 12],
-  humanities: [10, 10, 10, 10, 7],
+  humanities: [10, 11, 11, 11, 8],
   sciences:   [10, 10, 10, 10, 10],
 };
 

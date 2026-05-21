@@ -6,6 +6,7 @@ import Ring from "@/components/Ring";
 import {
   VERSION_CATEGORY_NAMES,
   VERSION_CATEGORY_COLORS,
+  departments,
 } from "@/lib/departments";
 import { departmentTexts } from "@/lib/result-texts";
 import { careerTexts } from "@/lib/career-texts";
@@ -18,10 +19,11 @@ import {
   isSchoolMode,
 } from "@/lib/school-mode";
 
-// 匿名集計エンドポイント（Google Apps Script）。
-// 個人を識別する情報は送らない。プライバシーポリシー §2 / §3 に対応。
+// 匿名集計エンドポイント（Google Apps Script v2、kazu39leo@gmail.com 所有）。
+// マスタSheets（個人特定情報なし）と学校別Sheets（クラス・出席番号あり）に振り分けて記録する。
+// 個人を識別する情報は送らない設計。プライバシーポリシー §2 / §3 に対応。
 const ANALYTICS_ENDPOINT =
-  "https://script.google.com/macros/s/AKfycbxRg1rECyqBc0KfcQ4qUOCIikHsegF3TyFOpqrpnI6Qa4oWfM4kErTM6CGW6VRhtpaS/exec";
+  "https://script.google.com/macros/s/AKfycbxoGqyDg6ERed2B24LArJZACk5cI5IAoEgF5hmIHtIIvrF-koDoTSy8GNy_XxZznmhX/exec";
 
 type StoredResult = {
   version: Version;
@@ -38,6 +40,10 @@ type StoredResult = {
   top3Categories: number[];
   // 質問ごとの回答変更回数。旧データには無いので optional。
   changeCounts?: number[];
+  // 所要時間集計用。quiz/page.tsx が sessionStorage 経由で渡す。
+  startTime?: string;
+  endTime?: string;
+  durationSec?: string;
 };
 
 export default function ResultPage() {
@@ -49,13 +55,59 @@ export default function ResultPage() {
 
   // Top3 への納得感スコア。1ヶ所に集中して回答率を最大化する設計（Phase 1）。
   // セッション中に1回だけ送信し、UI も「ありがとう」表示に切り替える。
+  // 希望進路（desired）は結果を見てから書いてもらう設計で、納得感と一緒に送信する。
   const [satisfaction, setSatisfaction] = useState<
     "pitari" | "fuzzy" | "different" | null
   >(null);
   const [reason, setReason] = useState("");
+  // 結果を踏まえて気になっている学部（Top3、優先順位順、任意）。
+  // 各要素は学科ID / "none" / "other"。
+  const [desiredTypes, setDesiredTypes] = useState<string[]>(["", "", ""]);
+  const [desiredOthers, setDesiredOthers] = useState<string[]>(["", "", ""]);
+  // 上記3つを選んだ理由（共通、任意）。
+  const [desiredReason, setDesiredReason] = useState("");
   const [satisfactionSent, setSatisfactionSent] = useState(false);
 
   useEffect(() => {
+    // デモモード（?demo=1）：見た目確認用にダミーデータを注入する。
+    // 送信状態もクリアして Page 8 の初期表示を見られるようにする。
+    // 実データは別の sessionStorage キーには保存しない（あくまで一時的なプレビュー）。
+    if (
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("demo") === "1"
+    ) {
+      const dummy: StoredResult = {
+        version: "humanities",
+        axisScores: [
+          0.65, 0.55, 0.5, 0.75, 0, 0, 0.55, 0.55, 0.55, 0.4, 0.6, 0.45,
+          0.35, 0.45, 0, 0, 0.6, 0.55, 0.3,
+        ],
+        results: [
+          { id: "sociology", name: "社会学科", categoryIndex: 2, slot: 3, score: 88, similarity: 0.88 },
+          { id: "intl-relations", name: "国際関係学科", categoryIndex: 2, slot: 3, score: 85, similarity: 0.85 },
+          { id: "psychology", name: "心理学科", categoryIndex: 4, slot: 6, score: 82, similarity: 0.82 },
+          { id: "politics", name: "政治学科", categoryIndex: 2, slot: 2, score: 78, similarity: 0.78 },
+          { id: "education", name: "教育学科", categoryIndex: 4, slot: 7, score: 75, similarity: 0.75 },
+          { id: "economics", name: "経済学科", categoryIndex: 1, slot: 0, score: 72, similarity: 0.72 },
+          { id: "law", name: "法学科", categoryIndex: 2, slot: 2, score: 70, similarity: 0.7 },
+          { id: "philosophy", name: "哲学科", categoryIndex: 3, slot: 5, score: 68, similarity: 0.68 },
+          { id: "foreign-lang", name: "外国語学科", categoryIndex: 3, slot: 4, score: 65, similarity: 0.65 },
+          { id: "business", name: "経営学科", categoryIndex: 1, slot: 1, score: 62, similarity: 0.62 },
+          { id: "commerce", name: "商学科", categoryIndex: 1, slot: 1, score: 60, similarity: 0.6 },
+          { id: "literature", name: "文学科", categoryIndex: 3, slot: 4, score: 58, similarity: 0.58 },
+          { id: "sports-sci", name: "スポーツ科学科", categoryIndex: 4, slot: 7, score: 55, similarity: 0.55 },
+        ],
+        categoryStrengths: [0.5, 0.4, 0.7, 0.5, 0.4, 0.3, 0.4, 0.6],
+        top3Categories: [2, 4, 1],
+      };
+      sessionStorage.setItem("quizResult", JSON.stringify(dummy));
+      sessionStorage.removeItem("satisfactionSent");
+      sessionStorage.removeItem("satisfactionValue");
+      setData(dummy);
+      setSatisfactionSent(false);
+      return;
+    }
+
     const stored = sessionStorage.getItem("quizResult");
     if (stored) {
       setData(JSON.parse(stored) as StoredResult);
@@ -126,6 +178,10 @@ export default function ResultPage() {
       student_number: studentInfo?.number ?? "",
       // 年齢は両モード共通の任意項目（個人モードでも傾向データ集計に使う）
       student_age: getStudentAge(),
+      // 開始/終了時刻と所要時間（quiz/page.tsx で計算済み）
+      start_time: data.startTime ?? "",
+      end_time: data.endTime ?? "",
+      duration_sec: data.durationSec ?? "",
     };
 
     fetch(ANALYTICS_ENDPOINT, {
@@ -146,17 +202,57 @@ export default function ResultPage() {
   // 同じ ANALYTICS_ENDPOINT に type="satisfaction" として後追い送信する。
   // 理由（reason）は任意。返信があれば改善に直接効くので欄だけ用意する。
   const submitSatisfaction = () => {
-    if (satisfactionSent || !satisfaction) return;
+    // 納得感 or 学部のどちらか入力されていれば送信可能。両方未入力なら何もしない。
+    if (satisfactionSent) return;
+    const hasDesired = desiredTypes.some((t) => t !== "");
+    if (satisfaction === null && !hasDesired) return;
     setSatisfactionSent(true);
     sessionStorage.setItem("satisfactionSent", "1");
-    sessionStorage.setItem("satisfactionValue", satisfaction);
+    if (satisfaction) sessionStorage.setItem("satisfactionValue", satisfaction);
     const trimmedReason = reason.trim();
+    // 各位置の desired 値を決定。教員が Sheets で読みやすいよう、
+    // 学科IDではなく学科名（日本語）に解決してから送る。
+    //   ""              → 空文字
+    //   "none"          → "特にない・分からない"
+    //   学科ID（"math"等） → 学科名（"数学科"等）
+    //   "other" + 入力  → "その他: <入力>"
+    const computeDesired = (type: string, other: string): string => {
+      if (type === "") return "";
+      if (type === "none") return "特にない・分からない";
+      if (type === "other") {
+        const o = other.trim();
+        return o ? `その他: ${o}` : "";
+      }
+      const dept = departments.find((d) => d.id === type);
+      return dept?.name ?? type;
+    };
+    // 学校モードなら学校別 feedback シートにも振り分けるための情報を含める。
+    // session_id だけだと Apps Script から学校が引けないので、school_code 等も同送する。
+    const schoolModeNow = isSchoolMode();
+    const schoolInfoNow = schoolModeNow ? getSchoolInfo() : null;
+    const studentInfoNow = schoolModeNow ? getStudentInfo() : null;
+    // 教員が Sheets で読みやすいよう、納得感も日本語ラベルに解決する。
+    const satisfactionLabel: Record<"pitari" | "fuzzy" | "different", string> = {
+      pitari: "ピッタリ",
+      fuzzy: "微妙",
+      different: "違うかも",
+    };
     const sessionId = sessionStorage.getItem("sessionId") ?? "";
     const payload = {
       type: "satisfaction",
       session_id: sessionId,
-      satisfaction,
+      satisfaction: satisfaction ? satisfactionLabel[satisfaction] : "",
       reason: trimmedReason,
+      desired_field1: computeDesired(desiredTypes[0], desiredOthers[0]),
+      desired_field2: computeDesired(desiredTypes[1], desiredOthers[1]),
+      desired_field3: computeDesired(desiredTypes[2], desiredOthers[2]),
+      desired_reason: desiredReason.trim(),
+      // 学校別 feedback への振り分け用（個人モードでは空文字）
+      school_mode: schoolModeNow ? "true" : "false",
+      school_code: schoolInfoNow?.code ?? "",
+      grade: studentInfoNow?.grade ?? "",
+      klass: studentInfoNow?.klass ?? "",
+      student_number: studentInfoNow?.number ?? "",
     };
     fetch(ANALYTICS_ENDPOINT, {
       method: "POST",
@@ -184,6 +280,11 @@ export default function ResultPage() {
   const page7 = getPage7Content(data.axisScores);
   const colors = VERSION_CATEGORY_COLORS[data.version];
   const names = VERSION_CATEGORY_NAMES[data.version];
+  // Page 8 の希望学部プルダウンは、選択した版に出てくる学科だけに絞る。
+  // 文系を選んだ生徒に医学科などを見せても選択肢として現実的ではないため。
+  const desiredFieldOptions = departments.filter(
+    (d) => !d.versions || d.versions.includes(data.version),
+  );
 
   return (
     <div className="flex min-h-dvh snap-x snap-mandatory overflow-x-auto">
@@ -228,77 +329,6 @@ export default function ResultPage() {
           ))}
         </div>
 
-        {/* 納得感スコア（Phase 1：診断全体への1問評価）+ 任意の理由欄。
-            選択 → 理由欄表示 → 送信、の段階的フロー。回答後は感謝表示に切替。 */}
-        <div className="mt-10 w-full max-w-sm rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4">
-          {!satisfactionSent ? (
-            <>
-              <p className="mb-3 text-center text-sm font-medium text-gray-800">
-                この結果、自分にピンときましたか？
-              </p>
-              <div className="mb-3 flex justify-center gap-2">
-                {(
-                  [
-                    { value: "pitari", emoji: "👍", label: "ピッタリ" },
-                    { value: "fuzzy", emoji: "😐", label: "微妙" },
-                    { value: "different", emoji: "👎", label: "違うかも" },
-                  ] as const
-                ).map((opt) => {
-                  const active = satisfaction === opt.value;
-                  return (
-                    <button
-                      key={opt.value}
-                      onClick={() => setSatisfaction(opt.value)}
-                      className={`flex flex-1 flex-col items-center gap-1 rounded-xl border px-3 py-2.5 text-xs transition-colors ${
-                        active
-                          ? "border-gray-900 bg-white text-gray-900 ring-2 ring-gray-900/10"
-                          : "border-gray-200 bg-white text-gray-700 active:bg-gray-100"
-                      }`}
-                      aria-pressed={active}
-                    >
-                      <span className="text-xl leading-none">{opt.emoji}</span>
-                      {opt.label}
-                    </button>
-                  );
-                })}
-              </div>
-
-              {/* 選択後に理由欄と送信ボタンを表示。理由は任意。 */}
-              {satisfaction && (
-                <>
-                  <label className="mb-1 block text-xs text-gray-500">
-                    理由があれば教えてください（任意）
-                  </label>
-                  <textarea
-                    value={reason}
-                    onChange={(e) => setReason(e.target.value)}
-                    placeholder="例：Top1の○○学科は興味あるけど、Top3 の□□は違う気がした"
-                    rows={3}
-                    maxLength={500}
-                    className="mb-3 w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:outline-none"
-                  />
-                  <button
-                    onClick={submitSatisfaction}
-                    className="w-full rounded-full bg-gray-900 py-2.5 text-sm font-medium text-white transition-colors active:bg-gray-700"
-                  >
-                    送信する
-                  </button>
-                </>
-              )}
-            </>
-          ) : (
-            <p className="text-center text-sm text-gray-600">
-              <span className="mr-2 text-lg leading-none">
-                {satisfaction === "pitari"
-                  ? "👍"
-                  : satisfaction === "fuzzy"
-                    ? "😐"
-                    : "👎"}
-              </span>
-              ありがとうございます！
-            </p>
-          )}
-        </div>
       </section>
 
       {/* Pages 3-5: 学科詳細 */}
@@ -420,8 +450,171 @@ export default function ResultPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
 
-          {/* 最終ページ: もう一度ボタン */}
+      {/* Page 8: フィードバック（納得感 + 理由 + 気になっている学部）
+          すべての結果を見終わってから書いてもらうことで、結果を踏まえた回答になる。
+          学校モードでは先生の進路指導の核データ、個人モードでも改善・集計に使う。 */}
+      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6 py-12">
+        <div className="w-full max-w-sm">
+          <h2 className="mb-1 text-lg font-bold text-center">
+            最後にひとこと聞かせてください
+          </h2>
+          <p className="mb-6 text-center text-xs text-gray-400">
+            すべて任意です
+          </p>
+
+          {!satisfactionSent ? (
+            <>
+              {/* カード1: 納得感（理由は選択後に表示） */}
+              <div className="mb-4 rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4">
+                <p className="mb-3 text-center text-sm font-medium text-gray-800">
+                  この結果、自分にピンときましたか？
+                </p>
+                <div className="flex justify-center gap-2">
+                  {(
+                    [
+                      { value: "pitari", emoji: "👍", label: "ピッタリ" },
+                      { value: "fuzzy", emoji: "😐", label: "微妙" },
+                      { value: "different", emoji: "👎", label: "違うかも" },
+                    ] as const
+                  ).map((opt) => {
+                    const active = satisfaction === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        onClick={() => setSatisfaction(opt.value)}
+                        className={`flex flex-1 flex-col items-center gap-1 rounded-xl border px-3 py-2.5 text-xs transition-colors ${
+                          active
+                            ? "border-gray-900 bg-white text-gray-900 ring-2 ring-gray-900/10"
+                            : "border-gray-200 bg-white text-gray-700 active:bg-gray-100"
+                        }`}
+                        aria-pressed={active}
+                      >
+                        <span className="text-xl leading-none">{opt.emoji}</span>
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {satisfaction && (
+                  <div className="mt-3">
+                    <label className="mb-1 block text-xs text-gray-500">
+                      その理由
+                    </label>
+                    <textarea
+                      value={reason}
+                      onChange={(e) => setReason(e.target.value)}
+                      placeholder="例：Top1の○○学科は興味あるけど、Top3 の□□は違う気がした"
+                      rows={3}
+                      maxLength={500}
+                      className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:outline-none"
+                    />
+                  </div>
+                )}
+              </div>
+
+              {/* カード2: 気になっている学部 Top3 + 共通理由欄（最初から表示） */}
+              <div className="mb-4 rounded-2xl border border-gray-100 bg-gray-50 px-5 py-4">
+                <p className="mb-1 text-center text-sm font-medium text-gray-800">
+                  結果を踏まえて、気になっている学部
+                </p>
+                <p className="mb-3 text-center text-[10px] text-gray-400">
+                  優先順位の順で 最大3つ・任意
+                </p>
+
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="mb-3">
+                    <label className="mb-1 block text-xs text-gray-500">
+                      {i + 1}番目
+                    </label>
+                    <select
+                      value={desiredTypes[i]}
+                      onChange={(e) => {
+                        const next = [...desiredTypes];
+                        next[i] = e.target.value;
+                        setDesiredTypes(next);
+                      }}
+                      className="w-full appearance-none rounded-xl border border-gray-200 bg-white px-3 py-2.5 text-sm text-gray-900 focus:border-gray-400 focus:outline-none"
+                    >
+                      <option value="">選んでください</option>
+                      <option value="none">特にない・分からない</option>
+                      {desiredFieldOptions.map((d) => (
+                        <option key={d.id} value={d.id}>
+                          {d.name}
+                        </option>
+                      ))}
+                      <option value="other">その他（自由入力）</option>
+                    </select>
+
+                    {desiredTypes[i] === "other" && (
+                      <input
+                        type="text"
+                        value={desiredOthers[i]}
+                        onChange={(e) => {
+                          const next = [...desiredOthers];
+                          next[i] = e.target.value;
+                          setDesiredOthers(next);
+                        }}
+                        placeholder="例：医療系、起業 など"
+                        maxLength={50}
+                        className="mt-2 w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:outline-none"
+                      />
+                    )}
+                  </div>
+                ))}
+
+                <label className="mb-1 mt-3 block text-xs text-gray-500">
+                  上記を選んだ理由（任意）
+                </label>
+                <textarea
+                  value={desiredReason}
+                  onChange={(e) => setDesiredReason(e.target.value)}
+                  placeholder="例：医療系に進みたいけど、看護か医師か迷っている"
+                  rows={3}
+                  maxLength={500}
+                  className="w-full resize-none rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:border-gray-400 focus:outline-none"
+                />
+              </div>
+
+              {/* 送信ボタン：納得感 or 学部のどれか1つでも入力されれば有効 */}
+              {(() => {
+                const hasDesired = desiredTypes.some((t) => t !== "");
+                const canSubmit = satisfaction !== null || hasDesired;
+                return (
+                  <button
+                    onClick={submitSatisfaction}
+                    disabled={!canSubmit}
+                    className={`w-full rounded-full py-3 text-sm font-medium transition-colors ${
+                      canSubmit
+                        ? "bg-gray-900 text-white active:bg-gray-700"
+                        : "bg-gray-200 text-gray-400"
+                    }`}
+                  >
+                    送信する
+                  </button>
+                );
+              })()}
+            </>
+          ) : (
+            <div className="rounded-2xl border border-gray-100 bg-gray-50 px-5 py-6 text-center">
+              <p className="text-sm text-gray-700">
+                <span className="mr-2 text-lg leading-none">
+                  {satisfaction === "pitari"
+                    ? "👍"
+                    : satisfaction === "fuzzy"
+                      ? "😐"
+                      : satisfaction === "different"
+                        ? "👎"
+                        : "🙏"}
+                </span>
+                ありがとうございます！
+              </p>
+            </div>
+          )}
+
           <button
             onClick={() => {
               sessionStorage.removeItem("quizResult");

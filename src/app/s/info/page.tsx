@@ -23,7 +23,7 @@ const COUNT_INFO: Record<
   { count: number; minutes: string; sets: number }
 > = {
   mixed: { count: 61, minutes: "約10分", sets: 6 },
-  humanities: { count: 47, minutes: "約8分", sets: 5 },
+  humanities: { count: 51, minutes: "約9分", sets: 5 },
   sciences: { count: 50, minutes: "約8分", sets: 5 },
 };
 

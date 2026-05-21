@@ -1,6 +1,17 @@
 import { departments, AXIS_COUNT, getSlot, type Department } from "./departments";
 import { type Question, type Version } from "./questions";
 
+// バージョン別の計測軸（質問が存在する軸の集合）。
+// 計測されない軸に学科スコアが値を持つと cosine 類似度の分母が膨らみ、
+// 「測れない軸の値が大きい学科」（例: 経済 MATH=0.8、心理 MATH=0.6+LAB=0.7）が
+// 不当に低く出るバグになる。これを防ぐため、両方ゼロ扱いにする。
+//   humanities: MATH/LAB を 2026-05-18 で追加（M1/M2/M3/L3）
+const MEASURED_AXES: Record<Version, ReadonlySet<number>> = {
+  mixed: new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]),
+  humanities: new Set([0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18]),
+  sciences: new Set([0, 1, 2, 3, 4, 5, 7, 10, 11, 12, 13, 14, 15, 18]),
+};
+
 // 質問配列とユーザー回答から19軸スコアを算出
 //
 // 軸別正規化 (min/max): クリップなし（負値を許容してコサイン類似度で逆ベクトル寄与）
@@ -63,9 +74,22 @@ function cosineSimilarity(a: number[], b: number[]): number {
   return dot / (Math.sqrt(magA) * Math.sqrt(magB));
 }
 
-function cosineSimilarityForDept(userScores: number[], dept: Department): number {
+function cosineSimilarityForDept(
+  userScores: number[],
+  dept: Department,
+  version: Version,
+): number {
   const userAdj = [...userScores];
   const deptAdj = [...dept.scores];
+
+  // 計測されない軸はユーザー側も学科側もゼロ扱い（cosine の分母を公平化）。
+  const measured = MEASURED_AXES[version];
+  for (let i = 0; i < AXIS_COUNT; i++) {
+    if (!measured.has(i)) {
+      userAdj[i] = 0;
+      deptAdj[i] = 0;
+    }
+  }
 
   // GRAD軸適用外の学科はGRAD軸を両方ゼロにしてスキップ
   if (dept.gradExempt) {
@@ -92,7 +116,7 @@ export function rankDepartments(
     !d.versions || d.versions.includes(version)
   );
   const results = filtered.map((dept) => {
-    const similarity = cosineSimilarityForDept(axisScores, dept);
+    const similarity = cosineSimilarityForDept(axisScores, dept, version);
     return {
       department: dept,
       similarity,
