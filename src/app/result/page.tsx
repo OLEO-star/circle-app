@@ -392,28 +392,30 @@ export default function ResultPage() {
     <div className="flex min-h-dvh snap-x snap-mandatory overflow-x-auto overscroll-x-contain">
       {/* Page 1: 興味マップ（リング） + Top3 統合
           - overscroll-x-contain: 左端で左スワイプしてもブラウザ戻る等が発動しない
-          - 単方向誘導: 「→ スワイプ」と右方向のみを示し、左戻りの混乱を防ぐ */}
-      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6 py-8">
+          - 単方向誘導: 「→ スワイプ」と右方向のみを示し、左戻りの混乱を防ぐ
+          - リング 320px で画面幅いっぱい近くまで広げ、ブランド・ビジュアルの
+            インパクトを最大化（リング型 = サービス名の由来） */}
+      <section className="flex min-w-full snap-center flex-col items-center justify-center px-4 py-6">
         <h2 className="mb-1 text-base font-bold">あなたの興味マップ</h2>
-        <p className="mb-3 text-[10px] text-gray-400">リングの形があなたの個性です</p>
-        <Ring strengths={data.categoryStrengths} size={240} version={data.version} />
+        <p className="mb-2 text-[10px] text-gray-400">リングの形があなたの個性です</p>
+        <Ring strengths={data.categoryStrengths} size={320} version={data.version} />
 
         {/* Top 3 一覧（旧 Page 2 から移植）。第一画面で答えが見える Primacy Effect 最大化。 */}
-        <div className="mt-6 w-full max-w-sm">
-          <p className="mb-3 text-center text-xs font-semibold text-gray-700">
+        <div className="mt-4 w-full max-w-sm">
+          <p className="mb-2 text-center text-xs font-semibold text-gray-700">
             あなたに合う学科 Top 3
           </p>
-          <div className="space-y-2.5">
+          <div className="space-y-2">
             {top3.map((r, i) => (
               <div key={r.id} className="flex items-center gap-3">
                 <span
-                  className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
+                  className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
                   style={{ backgroundColor: colors[r.slot] }}
                 >
                   {i + 1}
                 </span>
                 <div className="flex-1">
-                  <p className="text-xs font-medium">{r.name}</p>
+                  <p className="text-xs font-medium leading-tight">{r.name}</p>
                   <div className="mt-0.5 flex items-center gap-2">
                     <div className="h-1.5 flex-1 rounded-full bg-gray-100">
                       <div
@@ -424,7 +426,7 @@ export default function ResultPage() {
                         }}
                       />
                     </div>
-                    <span className="w-10 text-right text-[10px] text-gray-500">
+                    <span className="w-8 text-right text-[10px] text-gray-500">
                       {r.score}
                     </span>
                   </div>
@@ -434,7 +436,7 @@ export default function ResultPage() {
           </div>
         </div>
 
-        <p className="mt-6 text-xs text-gray-400">スワイプして詳しく見る →</p>
+        <p className="mt-4 text-xs text-gray-400">スワイプして詳しく見る →</p>
       </section>
 
       {/* Pages 2-4: 学科詳細（旧 Page 3-5、Top3 一覧をP1に統合したため番号繰上げ） */}
