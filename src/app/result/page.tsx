@@ -46,6 +46,124 @@ type StoredResult = {
   durationSec?: string;
 };
 
+// デモデータ生成。
+//   demo=1 / demo=humanities → 文系版
+//   demo=sciences            → 理系版
+//   demo=mixed               → 全学科版（32学科すべて）
+// 結果ページの UI を実データなしで確認するため。
+function buildDemoData(demoParam: string): StoredResult | null {
+  if (demoParam === "1" || demoParam === "humanities") {
+    return {
+      version: "humanities",
+      axisScores: [
+        0.65, 0.55, 0.5, 0.75, 0, 0, 0.55, 0.55, 0.55, 0.4, 0.6, 0.45,
+        0.35, 0.45, 0, 0, 0.6, 0.55, 0.3,
+      ],
+      results: [
+        { id: "sociology", name: "社会学科", categoryIndex: 2, slot: 3, score: 88, similarity: 0.88 },
+        { id: "intl-relations", name: "国際関係学科", categoryIndex: 2, slot: 3, score: 85, similarity: 0.85 },
+        { id: "psychology", name: "心理学科", categoryIndex: 4, slot: 6, score: 82, similarity: 0.82 },
+        { id: "politics", name: "政治学科", categoryIndex: 2, slot: 2, score: 78, similarity: 0.78 },
+        { id: "education", name: "教育学科", categoryIndex: 4, slot: 7, score: 75, similarity: 0.75 },
+        { id: "economics", name: "経済学科", categoryIndex: 1, slot: 0, score: 72, similarity: 0.72 },
+        { id: "law", name: "法学科", categoryIndex: 2, slot: 2, score: 70, similarity: 0.7 },
+        { id: "philosophy", name: "哲学科", categoryIndex: 3, slot: 5, score: 68, similarity: 0.68 },
+        { id: "foreign-lang", name: "外国語学科", categoryIndex: 3, slot: 4, score: 65, similarity: 0.65 },
+        { id: "business", name: "経営学科", categoryIndex: 1, slot: 1, score: 62, similarity: 0.62 },
+        { id: "commerce", name: "商学科", categoryIndex: 1, slot: 1, score: 60, similarity: 0.6 },
+        { id: "literature", name: "文学科", categoryIndex: 3, slot: 4, score: 58, similarity: 0.58 },
+        { id: "sports-sci", name: "スポーツ科学科", categoryIndex: 4, slot: 7, score: 55, similarity: 0.55 },
+      ],
+      categoryStrengths: [0.5, 0.4, 0.7, 0.5, 0.4, 0.3, 0.4, 0.6],
+      top3Categories: [2, 4, 1],
+    };
+  }
+
+  if (demoParam === "sciences") {
+    return {
+      version: "sciences",
+      axisScores: [
+        0.85, 0.5, 0.75, 0.4, 0.7, 0.5, 0.3, 0.3, 0.2, 0.3, 0.8, 0.4,
+        0.45, 0.7, 0.4, 0.4, 0.2, 0.3, 0.4,
+      ],
+      results: [
+        { id: "info-sci", name: "情報科学科", categoryIndex: 0, slot: 0, score: 90, similarity: 0.9 },
+        { id: "data-sci", name: "データサイエンス学科", categoryIndex: 0, slot: 0, score: 87, similarity: 0.87 },
+        { id: "info-eng", name: "情報工学科", categoryIndex: 6, slot: 0, score: 84, similarity: 0.84 },
+        { id: "math", name: "数学科", categoryIndex: 0, slot: 0, score: 80, similarity: 0.8 },
+        { id: "physics", name: "物理学科", categoryIndex: 7, slot: 2, score: 77, similarity: 0.77 },
+        { id: "electrical", name: "電気電子工学科", categoryIndex: 6, slot: 1, score: 74, similarity: 0.74 },
+        { id: "mechanical", name: "機械工学科", categoryIndex: 6, slot: 1, score: 71, similarity: 0.71 },
+        { id: "chemistry", name: "化学科", categoryIndex: 7, slot: 3, score: 68, similarity: 0.68 },
+        { id: "applied-chem", name: "応用化学科", categoryIndex: 7, slot: 3, score: 66, similarity: 0.66 },
+        { id: "chem-eng", name: "化学工学科", categoryIndex: 7, slot: 3, score: 63, similarity: 0.63 },
+        { id: "earth-sci", name: "地球科学科", categoryIndex: 7, slot: 2, score: 60, similarity: 0.6 },
+        { id: "architecture", name: "建築学科", categoryIndex: 6, slot: 1, score: 58, similarity: 0.58 },
+        { id: "biology", name: "生物学科", categoryIndex: 7, slot: 4, score: 55, similarity: 0.55 },
+        { id: "life-chem", name: "生命化学科", categoryIndex: 7, slot: 4, score: 52, similarity: 0.52 },
+        { id: "pharmacy", name: "薬学科", categoryIndex: 5, slot: 5, score: 50, similarity: 0.5 },
+        { id: "agriculture", name: "農学科", categoryIndex: 5, slot: 6, score: 47, similarity: 0.47 },
+        { id: "medicine", name: "医学科", categoryIndex: 5, slot: 5, score: 45, similarity: 0.45 },
+        { id: "veterinary", name: "獣医学科", categoryIndex: 5, slot: 6, score: 42, similarity: 0.42 },
+        { id: "nursing", name: "看護学科", categoryIndex: 5, slot: 5, score: 38, similarity: 0.38 },
+        { id: "sports-sci", name: "スポーツ科学科", categoryIndex: 4, slot: 7, score: 32, similarity: 0.32 },
+      ],
+      categoryStrengths: [0.85, 0.2, 0.3, 0.25, 0.3, 0.5, 0.7, 0.75],
+      top3Categories: [0, 6, 7],
+    };
+  }
+
+  if (demoParam === "mixed") {
+    // 全32学科版。文理混合の興味を持つ生徒を想定し、
+    // 上位は数理・情報系、中位に経済・心理、下位に医療・スポーツ系がくる構成。
+    return {
+      version: "mixed",
+      axisScores: [
+        0.75, 0.55, 0.5, 0.55, 0.7, 0.5, 0.5, 0.55, 0.55, 0.4, 0.7, 0.5,
+        0.4, 0.55, 0.35, 0.3, 0.5, 0.5, 0.45,
+      ],
+      results: [
+        { id: "data-sci", name: "データサイエンス学科", categoryIndex: 0, slot: 0, score: 89, similarity: 0.89 },
+        { id: "info-sci", name: "情報科学科", categoryIndex: 0, slot: 0, score: 86, similarity: 0.86 },
+        { id: "economics", name: "経済学科", categoryIndex: 1, slot: 1, score: 83, similarity: 0.83 },
+        { id: "math", name: "数学科", categoryIndex: 0, slot: 0, score: 81, similarity: 0.81 },
+        { id: "info-eng", name: "情報工学科", categoryIndex: 6, slot: 6, score: 79, similarity: 0.79 },
+        { id: "business", name: "経営学科", categoryIndex: 1, slot: 1, score: 76, similarity: 0.76 },
+        { id: "psychology", name: "心理学科", categoryIndex: 4, slot: 4, score: 74, similarity: 0.74 },
+        { id: "physics", name: "物理学科", categoryIndex: 7, slot: 7, score: 72, similarity: 0.72 },
+        { id: "commerce", name: "商学科", categoryIndex: 1, slot: 1, score: 70, similarity: 0.7 },
+        { id: "intl-relations", name: "国際関係学科", categoryIndex: 2, slot: 2, score: 68, similarity: 0.68 },
+        { id: "sociology", name: "社会学科", categoryIndex: 2, slot: 2, score: 66, similarity: 0.66 },
+        { id: "electrical", name: "電気電子工学科", categoryIndex: 6, slot: 6, score: 64, similarity: 0.64 },
+        { id: "politics", name: "政治学科", categoryIndex: 2, slot: 2, score: 62, similarity: 0.62 },
+        { id: "mechanical", name: "機械工学科", categoryIndex: 6, slot: 6, score: 60, similarity: 0.6 },
+        { id: "law", name: "法学科", categoryIndex: 2, slot: 2, score: 58, similarity: 0.58 },
+        { id: "philosophy", name: "哲学科", categoryIndex: 3, slot: 3, score: 56, similarity: 0.56 },
+        { id: "education", name: "教育学科", categoryIndex: 4, slot: 4, score: 54, similarity: 0.54 },
+        { id: "literature", name: "文学科", categoryIndex: 3, slot: 3, score: 52, similarity: 0.52 },
+        { id: "foreign-lang", name: "外国語学科", categoryIndex: 3, slot: 3, score: 50, similarity: 0.5 },
+        { id: "architecture", name: "建築学科", categoryIndex: 6, slot: 6, score: 48, similarity: 0.48 },
+        { id: "chemistry", name: "化学科", categoryIndex: 7, slot: 7, score: 46, similarity: 0.46 },
+        { id: "applied-chem", name: "応用化学科", categoryIndex: 7, slot: 7, score: 44, similarity: 0.44 },
+        { id: "earth-sci", name: "地球科学科", categoryIndex: 7, slot: 7, score: 42, similarity: 0.42 },
+        { id: "biology", name: "生物学科", categoryIndex: 7, slot: 7, score: 40, similarity: 0.4 },
+        { id: "chem-eng", name: "化学工学科", categoryIndex: 7, slot: 7, score: 38, similarity: 0.38 },
+        { id: "life-chem", name: "生命化学科", categoryIndex: 7, slot: 7, score: 36, similarity: 0.36 },
+        { id: "pharmacy", name: "薬学科", categoryIndex: 5, slot: 5, score: 34, similarity: 0.34 },
+        { id: "agriculture", name: "農学科", categoryIndex: 5, slot: 5, score: 32, similarity: 0.32 },
+        { id: "medicine", name: "医学科", categoryIndex: 5, slot: 5, score: 30, similarity: 0.3 },
+        { id: "sports-sci", name: "スポーツ科学科", categoryIndex: 4, slot: 4, score: 28, similarity: 0.28 },
+        { id: "nursing", name: "看護学科", categoryIndex: 5, slot: 5, score: 26, similarity: 0.26 },
+        { id: "veterinary", name: "獣医学科", categoryIndex: 5, slot: 5, score: 23, similarity: 0.23 },
+      ],
+      categoryStrengths: [0.75, 0.6, 0.5, 0.4, 0.45, 0.3, 0.55, 0.55],
+      top3Categories: [0, 1, 6],
+    };
+  }
+
+  return null;
+}
+
 export default function ResultPage() {
   const router = useRouter();
   // SSR とクライアント初回レンダーで同じ DOM を返すため null 初期化。
@@ -72,43 +190,24 @@ export default function ResultPage() {
   const [expandedDept, setExpandedDept] = useState<string | null>(null);
 
   useEffect(() => {
-    // デモモード（?demo=1）：見た目確認用にダミーデータを注入する。
+    // デモモード：見た目確認用にダミーデータを注入する。
+    //   ?demo=1         → 文系版（後方互換）
+    //   ?demo=humanities → 文系版
+    //   ?demo=sciences  → 理系版
+    //   ?demo=mixed     → 全学科版（32学科すべて表示）
     // 送信状態もクリアして Page 8 の初期表示を見られるようにする。
     // 実データは別の sessionStorage キーには保存しない（あくまで一時的なプレビュー）。
-    if (
-      typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("demo") === "1"
-    ) {
-      const dummy: StoredResult = {
-        version: "humanities",
-        axisScores: [
-          0.65, 0.55, 0.5, 0.75, 0, 0, 0.55, 0.55, 0.55, 0.4, 0.6, 0.45,
-          0.35, 0.45, 0, 0, 0.6, 0.55, 0.3,
-        ],
-        results: [
-          { id: "sociology", name: "社会学科", categoryIndex: 2, slot: 3, score: 88, similarity: 0.88 },
-          { id: "intl-relations", name: "国際関係学科", categoryIndex: 2, slot: 3, score: 85, similarity: 0.85 },
-          { id: "psychology", name: "心理学科", categoryIndex: 4, slot: 6, score: 82, similarity: 0.82 },
-          { id: "politics", name: "政治学科", categoryIndex: 2, slot: 2, score: 78, similarity: 0.78 },
-          { id: "education", name: "教育学科", categoryIndex: 4, slot: 7, score: 75, similarity: 0.75 },
-          { id: "economics", name: "経済学科", categoryIndex: 1, slot: 0, score: 72, similarity: 0.72 },
-          { id: "law", name: "法学科", categoryIndex: 2, slot: 2, score: 70, similarity: 0.7 },
-          { id: "philosophy", name: "哲学科", categoryIndex: 3, slot: 5, score: 68, similarity: 0.68 },
-          { id: "foreign-lang", name: "外国語学科", categoryIndex: 3, slot: 4, score: 65, similarity: 0.65 },
-          { id: "business", name: "経営学科", categoryIndex: 1, slot: 1, score: 62, similarity: 0.62 },
-          { id: "commerce", name: "商学科", categoryIndex: 1, slot: 1, score: 60, similarity: 0.6 },
-          { id: "literature", name: "文学科", categoryIndex: 3, slot: 4, score: 58, similarity: 0.58 },
-          { id: "sports-sci", name: "スポーツ科学科", categoryIndex: 4, slot: 7, score: 55, similarity: 0.55 },
-        ],
-        categoryStrengths: [0.5, 0.4, 0.7, 0.5, 0.4, 0.3, 0.4, 0.6],
-        top3Categories: [2, 4, 1],
-      };
-      sessionStorage.setItem("quizResult", JSON.stringify(dummy));
-      sessionStorage.removeItem("satisfactionSent");
-      sessionStorage.removeItem("satisfactionValue");
-      setData(dummy);
-      setSatisfactionSent(false);
-      return;
+    if (typeof window !== "undefined") {
+      const demoParam = new URLSearchParams(window.location.search).get("demo");
+      const dummy = demoParam ? buildDemoData(demoParam) : null;
+      if (dummy) {
+        sessionStorage.setItem("quizResult", JSON.stringify(dummy));
+        sessionStorage.removeItem("satisfactionSent");
+        sessionStorage.removeItem("satisfactionValue");
+        setData(dummy);
+        setSatisfactionSent(false);
+        return;
+      }
     }
 
     const stored = sessionStorage.getItem("quizResult");
