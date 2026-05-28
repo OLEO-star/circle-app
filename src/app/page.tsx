@@ -58,6 +58,26 @@ export default function Home() {
           showLabels={false}
         />
 
+        {/* 学部診断の趣旨を 2 行で伝える。
+            上：promotion 焦点（やりたい・新しい発見）
+            下：prevention 焦点（10分・無料・縛られない）
+            「したいことがわからない」生徒の自己選別を促す導入文。 */}
+        <div className="mt-6 mb-2">
+          <p className="text-sm font-semibold leading-relaxed text-gray-900">
+            「得意」じゃなくて
+            <br />
+            「やりたい」で選ぶ、学部診断。
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-gray-500">
+            何をしたいかわからない人ほど、
+            <br />
+            答えるうちに見えてくるものがあります。
+          </p>
+          <p className="mt-3 text-[10px] leading-relaxed text-gray-400">
+            約10分・無料・結果に縛られません
+          </p>
+        </div>
+
         {/* 年齢入力（任意・データ集計用）。希望進路は診断後に結果ページで聞く設計。 */}
         <div className="mb-6 mt-6 text-left">
           <label className="mb-1 block text-xs text-gray-500">

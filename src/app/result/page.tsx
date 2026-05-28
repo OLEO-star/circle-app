@@ -67,6 +67,9 @@ export default function ResultPage() {
   // 上記3つを選んだ理由（共通、任意）。
   const [desiredReason, setDesiredReason] = useState("");
   const [satisfactionSent, setSatisfactionSent] = useState(false);
+  // モーダルで詳細展開する学科ID。null = 非表示。
+  // Top4以降の学科の詳細を、ページ遷移せずに読めるようにする UI（案X）。
+  const [expandedDept, setExpandedDept] = useState<string | null>(null);
 
   useEffect(() => {
     // デモモード（?demo=1）：見た目確認用にダミーデータを注入する。
@@ -287,51 +290,55 @@ export default function ResultPage() {
   );
 
   return (
-    <div className="flex min-h-dvh snap-x snap-mandatory overflow-x-auto">
-      {/* Page 1: 興味マップ（リング） */}
-      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6">
-        <h2 className="mb-2 text-lg font-bold">あなたの興味マップ</h2>
-        <p className="mb-6 text-xs text-gray-400">リングの形があなたの個性です</p>
-        <Ring strengths={data.categoryStrengths} size={340} version={data.version} />
-        <p className="mt-6 text-xs text-gray-400">← スワイプして結果を見る →</p>
-      </section>
+    <div className="flex min-h-dvh snap-x snap-mandatory overflow-x-auto overscroll-x-contain">
+      {/* Page 1: 興味マップ（リング） + Top3 統合
+          - overscroll-x-contain: 左端で左スワイプしてもブラウザ戻る等が発動しない
+          - 単方向誘導: 「→ スワイプ」と右方向のみを示し、左戻りの混乱を防ぐ */}
+      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6 py-8">
+        <h2 className="mb-1 text-base font-bold">あなたの興味マップ</h2>
+        <p className="mb-3 text-[10px] text-gray-400">リングの形があなたの個性です</p>
+        <Ring strengths={data.categoryStrengths} size={240} version={data.version} />
 
-      {/* Page 2: Top 3 一覧 */}
-      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6">
-        <h2 className="mb-8 text-lg font-bold">あなたに合う学科 Top 3</h2>
-        <div className="w-full max-w-sm space-y-4">
-          {top3.map((r, i) => (
-            <div key={r.id} className="flex items-center gap-4">
-              <span
-                className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold text-white"
-                style={{ backgroundColor: colors[r.slot] }}
-              >
-                {i + 1}
-              </span>
-              <div className="flex-1">
-                <p className="text-sm font-medium">{r.name}</p>
-                <div className="mt-1 flex items-center gap-2">
-                  <div className="h-2 flex-1 rounded-full bg-gray-100">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${r.score}%`,
-                        backgroundColor: colors[r.slot],
-                      }}
-                    />
+        {/* Top 3 一覧（旧 Page 2 から移植）。第一画面で答えが見える Primacy Effect 最大化。 */}
+        <div className="mt-6 w-full max-w-sm">
+          <p className="mb-3 text-center text-xs font-semibold text-gray-700">
+            あなたに合う学科 Top 3
+          </p>
+          <div className="space-y-2.5">
+            {top3.map((r, i) => (
+              <div key={r.id} className="flex items-center gap-3">
+                <span
+                  className="flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold text-white"
+                  style={{ backgroundColor: colors[r.slot] }}
+                >
+                  {i + 1}
+                </span>
+                <div className="flex-1">
+                  <p className="text-xs font-medium">{r.name}</p>
+                  <div className="mt-0.5 flex items-center gap-2">
+                    <div className="h-1.5 flex-1 rounded-full bg-gray-100">
+                      <div
+                        className="h-full rounded-full transition-all"
+                        style={{
+                          width: `${r.score}%`,
+                          backgroundColor: colors[r.slot],
+                        }}
+                      />
+                    </div>
+                    <span className="w-10 text-right text-[10px] text-gray-500">
+                      {r.score}
+                    </span>
                   </div>
-                  <span className="w-16 text-right text-xs text-gray-500">
-                    適合度 {r.score}
-                  </span>
                 </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
 
+        <p className="mt-6 text-xs text-gray-400">スワイプして詳しく見る →</p>
       </section>
 
-      {/* Pages 3-5: 学科詳細 */}
+      {/* Pages 2-4: 学科詳細（旧 Page 3-5、Top3 一覧をP1に統合したため番号繰上げ） */}
       {top3.map((r, i) => {
         const texts = departmentTexts[r.id];
         return (
@@ -386,17 +393,27 @@ export default function ResultPage() {
         );
       })}
 
-      {/* Page 6: 4位以降の全学科ランキング */}
-      <section className="flex min-w-full snap-center flex-col items-center px-6 py-12">
+      {/* Page 6: 4位以降の全学科ランキング
+          - justify-center で他ページと一貫した縦位置（ヘッダー切れを防ぐ）
+          - 各行クリックでモーダル展開: Top4以降の詳細も読める設計（案X）
+          - py-12 → py-8 で項目数が多くても画面に収まる余地を増やす */}
+      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6 py-8">
         <div className="w-full max-w-sm">
           <h2 className="mb-1 text-lg font-bold">他の学科ランキング</h2>
-          <p className="mb-6 text-xs text-gray-400">
+          <p className="mb-2 text-xs text-gray-400">
             比較対象 全{totalCount}学科をスコア順で表示
           </p>
+          <p className="mb-5 text-[10px] text-gray-400">
+            気になる学科をタップすると詳細が見られます
+          </p>
           {remaining.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-2.5">
               {remaining.map((r, i) => (
-                <div key={r.id} className="flex items-center gap-3">
+                <button
+                  key={r.id}
+                  onClick={() => setExpandedDept(r.id)}
+                  className="flex w-full items-center gap-3 rounded-lg px-1 py-1 text-left transition-colors active:bg-gray-50"
+                >
                   <span className="w-5 text-right text-xs text-gray-400">
                     {i + 4}
                   </span>
@@ -413,7 +430,8 @@ export default function ResultPage() {
                   <span className="w-6 text-right text-[10px] text-gray-400">
                     {r.score}
                   </span>
-                </div>
+                  <span className="text-xs text-gray-300">›</span>
+                </button>
               ))}
             </div>
           ) : (
@@ -626,6 +644,132 @@ export default function ResultPage() {
           </button>
         </div>
       </section>
+
+      {/* 学科詳細モーダル（案X）
+          Top4以降をタップした時に下から滑り上がる詳細パネル。
+          - 背景タップ or × ボタンで閉じる
+          - 横スワイプ UI を維持したまま、追加情報を提供できる
+          - intro / weeklyFlow / careerTexts を Page 2-4 と同じ構造で表示 */}
+      {expandedDept && (
+        <DeptDetailModal
+          deptId={expandedDept}
+          onClose={() => setExpandedDept(null)}
+          allRanked={data.results}
+          colors={colors}
+          names={names}
+        />
+      )}
+    </div>
+  );
+}
+
+function DeptDetailModal({
+  deptId,
+  onClose,
+  allRanked,
+  colors,
+  names,
+}: {
+  deptId: string;
+  onClose: () => void;
+  allRanked: Array<{
+    id: string;
+    name: string;
+    score: number;
+    slot: number;
+    categoryIndex: number;
+  }>;
+  colors: readonly string[];
+  names: readonly string[];
+}) {
+  const dept = allRanked.find((r) => r.id === deptId);
+  const texts = dept ? departmentTexts[dept.id] : null;
+  const career = dept ? careerTexts[dept.id] : null;
+  const rank = dept ? allRanked.findIndex((r) => r.id === dept.id) + 1 : null;
+
+  // ESCキーで閉じる + body スクロールロック
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    document.addEventListener("keydown", onKey);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.removeEventListener("keydown", onKey);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [onClose]);
+
+  if (!dept) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end justify-center bg-black/40"
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+    >
+      <div
+        className="max-h-[85vh] w-full max-w-md overflow-y-auto rounded-t-3xl bg-white px-6 pb-8 pt-3 animate-[slideUp_250ms_ease-out]"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* ハンドル */}
+        <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-gray-300" />
+
+        {/* ヘッダー */}
+        <div className="mb-5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <span
+              className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
+              style={{ backgroundColor: colors[dept.slot] }}
+            >
+              {rank}
+            </span>
+            <div>
+              <p className="text-base font-bold">{dept.name}</p>
+              <p className="text-xs text-gray-400">
+                {names[dept.slot]} ・ 適合度 {dept.score}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={onClose}
+            aria-label="閉じる"
+            className="text-2xl text-gray-400 transition-colors active:text-gray-700"
+          >
+            ×
+          </button>
+        </div>
+
+        {/* 内容（Page 2-4 と同じ構造） */}
+        {texts ? (
+          <div className="space-y-4">
+            <div>
+              <h3 className="mb-1.5 text-xs font-medium text-gray-400">
+                学科について
+              </h3>
+              <p className="text-sm leading-relaxed">{texts.intro}</p>
+            </div>
+            <div>
+              <h3 className="mb-1.5 text-xs font-medium text-gray-400">
+                1週間の流れ
+              </h3>
+              <p className="text-sm leading-relaxed">{texts.weeklyFlow}</p>
+            </div>
+            {career && (
+              <div>
+                <h3 className="mb-1.5 text-xs font-medium text-gray-400">
+                  主な進路
+                </h3>
+                <p className="text-sm leading-relaxed">{career}</p>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-gray-500">この学科の詳細情報はまだ準備中です。</p>
+        )}
+      </div>
     </div>
   );
 }

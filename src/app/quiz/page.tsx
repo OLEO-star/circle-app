@@ -168,6 +168,10 @@ export default function QuizPage() {
   const totalQuestions = questions.length;
   const progress = totalQuestions ? (answeredCount / totalQuestions) * 100 : 0;
   const progressPercent = Math.round(progress);
+  // 現在セット内の回答済み数（マイクロ達成感メッセージ用）
+  const currentSetAnswered = currentQuestions.filter(
+    (_, i) => answers[setStart + i] !== null,
+  ).length;
 
   // セット切り替わり時にトップへスクロール
   useEffect(() => {
@@ -285,6 +289,16 @@ export default function QuizPage() {
 
   const isLastSet = currentSet + 1 >= setSizes.length;
   const remainingSets = setSizes.length - currentSet - 1;
+  // Goal Gradient Effect の応用：節目で異なるメッセージを表示する。
+  // 中間点（半分到達）= 折り返しの実感、ラストセット = 達成直前の高揚感。
+  const isHalfwayPoint =
+    currentSet > 0 &&
+    currentSet === Math.floor(setSizes.length / 2) &&
+    setSizes.length >= 4;
+  // ラストセットの残り問題数（プログレスヘッダーのカウントダウン表示用）
+  const remainingInLastSet = isLastSet
+    ? (setSizes[currentSet] ?? 0) - currentSetAnswered
+    : 0;
 
   return (
     <div className="min-h-dvh bg-white">
@@ -315,17 +329,48 @@ export default function QuizPage() {
 
       {/* 質問リスト */}
       <div className="px-6 pb-24 pt-4">
-        {/* セット境界の達成感バナー（2セット目以降） */}
+        {/* セット境界の達成感バナー：節目で表現を変える Goal Gradient Effect */}
         {currentSet > 0 && (
-          <div className="mb-5 rounded-xl bg-[#F0F7F2] px-4 py-3 text-center text-xs leading-relaxed text-[#3F7B59]">
-            <span className="font-semibold">✓ セット{currentSet} 完了！</span>
-            <span className="ml-2 text-[#5A8C72]">
-              {isLastSet
-                ? `あと ${setSizes[currentSet]} 問で結果が見られます`
-                : `残り ${remainingSets + 1} セット`}
-            </span>
-          </div>
+          <>
+            {isLastSet ? (
+              // ラストセット：最大の高揚感（温色＋強調）
+              <div className="mb-5 rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 to-amber-50 px-4 py-4 text-center leading-relaxed">
+                <p className="text-sm font-semibold text-rose-700">
+                  🎯 最後のセット！
+                </p>
+                <p className="mt-1 text-xs text-gray-700">
+                  あと <strong className="text-rose-700">{setSizes[currentSet]}</strong> 問で、あなたに合う学部が見えます
+                </p>
+              </div>
+            ) : isHalfwayPoint ? (
+              // 中間点：折り返しの実感
+              <div className="mb-5 rounded-xl bg-amber-50 px-4 py-3 text-center text-xs leading-relaxed text-amber-800">
+                <span className="font-semibold">🚩 折り返し地点！</span>
+                <span className="ml-2 text-amber-700">
+                  ここから後半。残り {remainingSets + 1} セットです
+                </span>
+              </div>
+            ) : (
+              // 通常のセット完了
+              <div className="mb-5 rounded-xl bg-[#F0F7F2] px-4 py-3 text-center text-xs leading-relaxed text-[#3F7B59]">
+                <span className="font-semibold">✓ セット{currentSet} 完了！</span>
+                <span className="ml-2 text-[#5A8C72]">
+                  残り {remainingSets + 1} セット
+                </span>
+              </div>
+            )}
+          </>
         )}
+
+        {/* ラストセット内・残り少数の時のマイクロ達成感（5問以下になったら表示） */}
+        {isLastSet &&
+          currentSetAnswered > 0 &&
+          remainingInLastSet > 0 &&
+          remainingInLastSet <= 5 && (
+            <div className="mb-4 text-center text-xs font-semibold text-rose-700">
+              あと {remainingInLastSet} 問！
+            </div>
+          )}
 
         {currentQuestions.map((q, i) => {
           const globalIndex = setStart + i;
