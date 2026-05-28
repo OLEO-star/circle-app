@@ -188,6 +188,9 @@ export default function ResultPage() {
   // モーダルで詳細展開する学科ID。null = 非表示。
   // Top4以降の学科の詳細を、ページ遷移せずに読めるようにする UI（案X）。
   const [expandedDept, setExpandedDept] = useState<string | null>(null);
+  // 「他の学科ランキング」で 19 位以降を隠すかどうか。
+  // 全 32 学科だと縦に長すぎて視認性が落ちるため、デフォルトは 18 位まで表示。
+  const [showAllRemaining, setShowAllRemaining] = useState(false);
 
   useEffect(() => {
     // デモモード：見た目確認用にダミーデータを注入する。
@@ -509,31 +512,54 @@ export default function ResultPage() {
           </p>
           {remaining.length > 0 ? (
             <div className="space-y-2.5">
-              {remaining.map((r, i) => (
+              {/* デフォルトは 4-18 位（15項目）まで表示。
+                  19 位以降は「もっと見る」を押した時のみ展開する。
+                  全 32 学科のときに縦スクロールが長すぎる問題への対応。 */}
+              {(showAllRemaining ? remaining : remaining.slice(0, 15)).map(
+                (r, i) => (
+                  <button
+                    key={r.id}
+                    onClick={() => setExpandedDept(r.id)}
+                    className="flex w-full items-center gap-3 rounded-lg px-1 py-1 text-left transition-colors active:bg-gray-50"
+                  >
+                    <span className="w-5 text-right text-xs text-gray-400">
+                      {i + 4}
+                    </span>
+                    <p className="flex-1 text-sm">{r.name}</p>
+                    <div className="h-2 w-24 rounded-full bg-gray-100">
+                      <div
+                        className="h-full rounded-full"
+                        style={{
+                          width: `${r.score}%`,
+                          backgroundColor: colors[r.slot],
+                        }}
+                      />
+                    </div>
+                    <span className="w-6 text-right text-[10px] text-gray-400">
+                      {r.score}
+                    </span>
+                    <span className="text-xs text-gray-300">›</span>
+                  </button>
+                ),
+              )}
+
+              {/* 19 位以降を展開するボタン（19位以降が存在する場合のみ表示） */}
+              {!showAllRemaining && remaining.length > 15 && (
                 <button
-                  key={r.id}
-                  onClick={() => setExpandedDept(r.id)}
-                  className="flex w-full items-center gap-3 rounded-lg px-1 py-1 text-left transition-colors active:bg-gray-50"
+                  onClick={() => setShowAllRemaining(true)}
+                  className="mt-2 w-full rounded-lg border border-gray-200 py-2.5 text-xs text-gray-600 transition-colors active:bg-gray-50"
                 >
-                  <span className="w-5 text-right text-xs text-gray-400">
-                    {i + 4}
-                  </span>
-                  <p className="flex-1 text-sm">{r.name}</p>
-                  <div className="h-2 w-24 rounded-full bg-gray-100">
-                    <div
-                      className="h-full rounded-full"
-                      style={{
-                        width: `${r.score}%`,
-                        backgroundColor: colors[r.slot],
-                      }}
-                    />
-                  </div>
-                  <span className="w-6 text-right text-[10px] text-gray-400">
-                    {r.score}
-                  </span>
-                  <span className="text-xs text-gray-300">›</span>
+                  さらに見る（19 位〜{remaining.length + 3} 位を表示）▼
                 </button>
-              ))}
+              )}
+              {showAllRemaining && remaining.length > 15 && (
+                <button
+                  onClick={() => setShowAllRemaining(false)}
+                  className="mt-2 w-full rounded-lg border border-gray-200 py-2.5 text-xs text-gray-600 transition-colors active:bg-gray-50"
+                >
+                  18 位までに戻す ▲
+                </button>
+              )}
             </div>
           ) : (
             <p className="text-sm text-gray-500">
