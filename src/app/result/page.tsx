@@ -512,10 +512,13 @@ export default function ResultPage() {
           </p>
           {remaining.length > 0 ? (
             <div className="space-y-2.5">
-              {/* デフォルトは 4-18 位（15項目）まで表示。
-                  19 位以降は「もっと見る」を押した時のみ展開する。
-                  全 32 学科のときに縦スクロールが長すぎる問題への対応。 */}
-              {(showAllRemaining ? remaining : remaining.slice(0, 15)).map(
+              {/* 「さらに見る」UI は mixed 版（全32学科）にのみ適用。
+                  文系・理系版は学科数が少なく、最初から全部見せた方がスムーズ。
+                  デフォルトは 4-18 位（15項目）まで表示し、19 位以降は展開で見る。 */}
+              {(data.version === "mixed" && !showAllRemaining
+                ? remaining.slice(0, 15)
+                : remaining
+              ).map(
                 (r, i) => (
                   <button
                     key={r.id}
@@ -543,23 +546,28 @@ export default function ResultPage() {
                 ),
               )}
 
-              {/* 19 位以降を展開するボタン（19位以降が存在する場合のみ表示） */}
-              {!showAllRemaining && remaining.length > 15 && (
-                <button
-                  onClick={() => setShowAllRemaining(true)}
-                  className="mt-2 w-full rounded-lg border border-gray-200 py-2.5 text-xs text-gray-600 transition-colors active:bg-gray-50"
-                >
-                  さらに見る（19 位〜{remaining.length + 3} 位を表示）▼
-                </button>
-              )}
-              {showAllRemaining && remaining.length > 15 && (
-                <button
-                  onClick={() => setShowAllRemaining(false)}
-                  className="mt-2 w-full rounded-lg border border-gray-200 py-2.5 text-xs text-gray-600 transition-colors active:bg-gray-50"
-                >
-                  18 位までに戻す ▲
-                </button>
-              )}
+              {/* 19 位以降を展開するボタン。
+                  mixed 版（全 32 学科）でのみ表示。文系・理系版は元から全表示。 */}
+              {data.version === "mixed" &&
+                !showAllRemaining &&
+                remaining.length > 15 && (
+                  <button
+                    onClick={() => setShowAllRemaining(true)}
+                    className="mt-2 w-full rounded-lg border border-gray-200 py-2.5 text-xs text-gray-600 transition-colors active:bg-gray-50"
+                  >
+                    さらに見る（19 位〜{remaining.length + 3} 位を表示）▼
+                  </button>
+                )}
+              {data.version === "mixed" &&
+                showAllRemaining &&
+                remaining.length > 15 && (
+                  <button
+                    onClick={() => setShowAllRemaining(false)}
+                    className="mt-2 w-full rounded-lg border border-gray-200 py-2.5 text-xs text-gray-600 transition-colors active:bg-gray-50"
+                  >
+                    18 位までに戻す ▲
+                  </button>
+                )}
             </div>
           ) : (
             <p className="text-sm text-gray-500">
