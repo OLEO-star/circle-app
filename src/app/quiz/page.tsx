@@ -14,6 +14,7 @@ import {
   calcCategoryStrengths,
 } from "@/lib/scoring";
 import { getSlot } from "@/lib/departments";
+import { isSchoolMode, getStudentInfo } from "@/lib/school-mode";
 
 // 進捗保存に localStorage を使う理由：
 // sessionStorage はタブ kill / iOS Safari の低メモリ時に消えるため、
@@ -81,6 +82,15 @@ export default function QuizPage() {
 
   // クライアントマウント時に localStorage から復元
   useEffect(() => {
+    // 学校モードで生徒情報（学年・クラス・出席番号）が未入力のまま /quiz に
+    // 直接来た場合は /s/info に戻す。これがないと grade/klass/number が空の
+    // 不完全データが Sheets に書き込まれる（八戸学院光星バグ, 2026-05-29）。
+    // hydrated を立てずに return することで、リダイレクト中は読み込み画面のまま留まる。
+    if (isSchoolMode() && !getStudentInfo()) {
+      router.replace("/s/info");
+      return;
+    }
+
     const storedVersion = localStorage.getItem(STORAGE_KEYS.version);
     const v: Version =
       storedVersion === "humanities" ||
