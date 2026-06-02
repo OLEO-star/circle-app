@@ -84,6 +84,19 @@ const CONFIG = {
   ],
 };
 
+const SECURITY = {
+  // フロント（result/page.tsx の POST_TOKEN）と一致させる共有トークン。
+  // 真の秘密ではない（公開WebアプリなのでクライアントJSから抽出可能）が、
+  // エンドポイント直叩き・スクリプトによる大量偽投稿をふるい落とす。
+  // 一致しない POST は doPost が門前払いする。ローテーション時はフロントと同時に差し替える。
+  SHARED_TOKEN: 'b24ea11b1ee94af10fd8c48bba0215225ce8ae22',
+
+  // 1日に自動生成する学校別シートの上限（E: スパム爆発時の被害を頭打ちにする）。
+  // 超過した未登録校はマスタ（集計・個人特定なし）には記録されるが、学校別シートは
+  // 作られない。正当に複数校が同日導入するなら、この値を一時的に引き上げる。
+  DAILY_AUTOCREATE_CAP: 5,
+};
+
 // payload の axis_scores (CSV) を 19要素の配列にする。
 // 不足分は空文字で埋める（理系版/混合版で 19要素揃わない可能性は今のところないが、念のため）。
 function parseAxisScores(csv) {
@@ -125,6 +138,11 @@ function sortSchoolSheet(sheet) {
 function doPost(e) {
   try {
     const payload = JSON.parse(e.postData.contents);
+    // B: 共有トークン検証。一致しない POST はシート生成も書き込みもせず拒否する。
+    // mode:'no-cors' でフロントは応答を読めないが、書き込まれないことが重要。
+    if (payload.token !== SECURITY.SHARED_TOKEN) {
+      return jsonResponse({ ok: false, error: 'unauthorized' });
+    }
     if (payload.type === 'satisfaction') {
       handleSatisfaction(payload);
     } else {
@@ -219,6 +237,59 @@ function notifyOwnerOfNewSchool(schoolCode, schoolName, sheetId) {
   }
 }
 
+// E: 自動生成の日次カウンタ（Asia/Tokyo の日付でキーを分ける）。
+function autoCreateCountKey() {
+  return 'autocreate_count_' +
+    Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyyMMdd');
+}
+
+function getAutoCreateCount() {
+  const v = PropertiesService.getScriptProperties().getProperty(autoCreateCountKey());
+  const n = v ? parseInt(v, 10) : 0;
+  return isFinite(n) ? n : 0;
+}
+
+function canAutoCreateToday() {
+  return getAutoCreateCount() < SECURITY.DAILY_AUTOCREATE_CAP;
+}
+
+function incrementAutoCreateCount() {
+  PropertiesService.getScriptProperties()
+    .setProperty(autoCreateCountKey(), String(getAutoCreateCount() + 1));
+}
+
+/**
+ * 自動生成が1日の上限に達したときオーナーへ通知（1日1回だけ）。
+ * 通知自体が洪水にならないよう、当日フラグで重複送信を防ぐ。
+ */
+function notifyOwnerOfCapReached(schoolCode, schoolName) {
+  if (!CONFIG.OWNER_EMAIL) return;
+  const flagKey = 'capnotified_' +
+    Utilities.formatDate(new Date(), 'Asia/Tokyo', 'yyyyMMdd');
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty(flagKey)) return; // 今日はもう通知済み
+  props.setProperty(flagKey, '1');
+  const subject = '[学部診断] 自動生成が1日の上限に達しました';
+  const body = [
+    '本日の学校別Sheets自動生成が上限（' + SECURITY.DAILY_AUTOCREATE_CAP + '校）に達しました。',
+    '以降の未登録校はマスタ（集計・個人特定なし）にのみ記録され、',
+    '学校別Sheetsは作成されていません。',
+    '',
+    '・正当な急増（複数校で同時導入など）の場合：',
+    '  SECURITY.DAILY_AUTOCREATE_CAP の値を一時的に引き上げてください。',
+    '・不審な急増の場合：スパムの可能性があります。SHARED_TOKEN のローテーションを検討。',
+    '',
+    '最後に上限を超えた学校: ' + (schoolName || schoolCode),
+    '',
+    '— 学部診断 集計システム',
+  ].join('\n');
+  try {
+    MailApp.sendEmail(CONFIG.OWNER_EMAIL, subject, body);
+  } catch (e) {
+    // メール送信失敗しても処理は続行
+  }
+}
+
 /**
  * 診断結果を受信したとき
  *   - マスタの "diagnoses" シートには個人特定情報を含めずに追記
@@ -269,9 +340,16 @@ function handleDiagnosis(p) {
 
   let sheetId = getSchoolSheetId(p.school_code);
   if (!sheetId) {
+    // E: 1日の自動生成上限を超えたら生成しない（スパム爆発の被害を頭打ちにする）。
+    // マスタへの記録（上の diagnoses 追記）は済んでいるので集計データは失わない。
+    if (!canAutoCreateToday()) {
+      notifyOwnerOfCapReached(p.school_code, p.school_name);
+      return;
+    }
     // 未登録の学校 → 自動生成
     sheetId = createSchoolSpreadsheet(p.school_code, p.school_name);
     saveSchoolSheetId(p.school_code, sheetId);
+    incrementAutoCreateCount();
     notifyOwnerOfNewSchool(p.school_code, p.school_name, sheetId);
   }
 

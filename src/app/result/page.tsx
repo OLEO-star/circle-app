@@ -25,6 +25,13 @@ import {
 const ANALYTICS_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxoGqyDg6ERed2B24LArJZACk5cI5IAoEgF5hmIHtIIvrF-koDoTSy8GNy_XxZznmhX/exec";
 
+// 共有トークン。GAS 側（code.gs の SECURITY.SHARED_TOKEN）と一致させる。
+// 真の秘密ではない（公開WebアプリなのでクライアントJSに同梱され抽出可能）。
+// 目的は「エンドポイント直叩き・スクリプト濫用」をふるい落とすこと。
+// 一致しない POST は GAS が門前払いし、シート生成も書き込みもされない。
+// ローテーションするときは GAS 側と同時に差し替える。
+const POST_TOKEN = "b24ea11b1ee94af10fd8c48bba0215225ce8ae22";
+
 type StoredResult = {
   version: Version;
   axisScores: number[];
@@ -252,6 +259,7 @@ export default function ResultPage() {
     sessionStorage.setItem("sessionId", sessionId);
 
     const payload = {
+      token: POST_TOKEN,
       version: data.version,
       session_id: sessionId,
       top1_id: r[0]?.id ?? "",
@@ -344,6 +352,7 @@ export default function ResultPage() {
     };
     const sessionId = sessionStorage.getItem("sessionId") ?? "";
     const payload = {
+      token: POST_TOKEN,
       type: "satisfaction",
       session_id: sessionId,
       satisfaction: satisfaction ? satisfactionLabel[satisfaction] : "",
