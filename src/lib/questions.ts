@@ -1,11 +1,14 @@
-// 質問プール（72問）+ 3バージョン対応（mixed / humanities / sciences）
+// 質問プール（77問）+ 3バージョン対応（mixed / humanities / sciences）
 //
 // バージョン:
-//   mixed      = 文理混合版（61問・既存）
-//   humanities = 文系特化版（51問 = 共通25 + 文系のみ16 + 文系追加6 + 数理共通4）
+//   mixed      = 文理混合版（60問）
+//   humanities = 文系特化版（53問 = 共通25 + 文系のみ16 + 文系追加6 + 数理共通4 + 具体追加2）
 //                 ※ 2026-05-18: MATH(M1/M2/M3) と LAB(L3) を追加。
 //                   経済・経営・心理など数学・実験要素を持つ文系学科の評価精度向上のため。
-//   sciences   = 理系特化版（50問 = 共通25 + 理系のみ20 + 理系追加5）
+//                 ※ 2026-06-03: 具体設問 J4(法↔政治分離)/Ab5(哲学↔文学分離) を追加。
+//   sciences   = 理系特化版（53問 = 共通25 + 理系のみ19 + 理系追加5 + 具体追加4）
+//                 ※ 2026-06-03: 動物質問 An2 を削除（An1と重複）→ 動物 4→3。
+//                   具体設問 Ce4(医療専門職)/Li4(医療)/C5(AI・データ)/M5(自然の根本法則) を追加。
 //
 // 軸インデックス:
 //   MATH=0, MEMO=1, LAB=2, FIELD=3, CODE=4, MAKE=5, LANG=6, CARE=7
@@ -131,8 +134,6 @@ const ALL_QUESTIONS: Question[] = [
     axisIndex: 5,  reverse: false, versions: ["mixed", "sciences"] },
   { id: "M2",   text: "日常の現象を「数字で説明できないか」と考えることがある",
     axisIndex: 0,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "An2",  text: "保護犬・保護猫の活動や、動物園・水族館の裏側に興味がある",
-    axisIndex: 15, reverse: false, versions: ["mixed", "sciences"] },
   { id: "Li2",  text: "手術や解剖の映像を見ても、怖さより「どんな処置をしているのか」に注目するほうだ",
     axisIndex: 14, reverse: false, versions: ["mixed", "sciences"] },
   { id: "M3",   text: "計算問題がずっと続くと、途中で集中が切れてしまうほうだ",
@@ -166,6 +167,13 @@ const ALL_QUESTIONS: Question[] = [
   { id: "Ab4",  text: "「常識」や「当たり前」を一度疑って、自分の頭で考え直す習慣がある",
     axisIndex: 10, reverse: false, versions: ["humanities"] },
 
+  // ===== 文系版・具体設問（2問・humanities のみ・2026-06-03 追加） =====
+  // J4: 法学↔政治学の分離（法=JUSTICE最大）。Ab5: 哲学↔文学の分離（哲学=ABS最大）。
+  { id: "J4",   text: "法律やルールを正確に読み解いて、もめごとの白黒をつけることに関心がある",
+    axisIndex: 17, reverse: false, versions: ["humanities"] },
+  { id: "Ab5",  text: "「正しさとは何か」「人はどう生きるべきか」といった、答えの出ない問いを深く考えたい",
+    axisIndex: 10, reverse: false, versions: ["humanities"] },
+
   // ===== 理系版のみの追加質問（5問・sciences のみ） =====
   { id: "M4",   text: "集合論・群論・位相空間など、抽象的な数学の世界に触れてみたい",
     axisIndex: 0,  reverse: false, versions: ["sciences"] },
@@ -177,6 +185,17 @@ const ALL_QUESTIONS: Question[] = [
     axisIndex: 5,  reverse: false, versions: ["sciences"] },
   { id: "Ab4r", text: "抽象的な議論より、目の前の具体的な問題を解くほうが好きだ",
     axisIndex: 10, reverse: true,  versions: ["sciences"] },
+
+  // ===== 理系版・具体設問（4問・sciences のみ・2026-06-03 追加） =====
+  // 「認識しやすい進路イメージ」で回答品質と学科判別を上げる狙い。各設問は単一軸に対応。
+  { id: "Ce4",  text: "医師・薬剤師・看護師など、国家資格を取って医療の専門職として働きたい",
+    axisIndex: 12, reverse: false, versions: ["sciences"] },
+  { id: "Li4",  text: "病気やケガで苦しむ人を、医療の力で直接助ける仕事に就きたい",
+    axisIndex: 14, reverse: false, versions: ["sciences"] },
+  { id: "C5",   text: "AIやデータ分析を使って、社会や生活の課題を解決することに興味がある",
+    axisIndex: 4,  reverse: false, versions: ["sciences"] },
+  { id: "M5",   text: "宇宙や物質の根源など、自然界の根本法則を数式で解き明かしたい",
+    axisIndex: 0,  reverse: false, versions: ["sciences"] },
 ];
 
 // バージョンごとの出題順
@@ -187,8 +206,8 @@ const VERSION_ORDERS: Record<Version, readonly string[]> = {
     "L1", "Ca1", "C1", "F1", "Mk1", "B1", "Lg1", "M1", "A1", "An1",
     // セット2
     "Ab1", "T1", "Ce1", "G1", "Li1", "Me1", "L2", "F2", "C2", "Mk2",
-    // セット3
-    "Ca2", "B2", "Lg2", "M2", "A2", "An2", "Ab2", "T2", "Ce2", "G2",
+    // セット3（9問・2026-06-03: An2 削除）
+    "Ca2", "B2", "Lg2", "M2", "A2", "Ab2", "T2", "Ce2", "G2",
     // セット4
     "Me2", "Li2", "M3", "L3", "F3", "C3", "Mk3", "Lg3", "Ca3", "B3",
     // セット5（9問）
@@ -196,8 +215,8 @@ const VERSION_ORDERS: Record<Version, readonly string[]> = {
     // セット6（12問）
     "N1", "J1", "Bo1", "N2", "J2", "Bo2", "F4", "Bz4", "L4", "N3", "J3", "Bo3",
   ],
-  // 文系版 51問（2026-05-18: 経済・経営・心理など数理要素を持つ文系学科の評価精度向上のため
-  // MATH 3問 (M1/M2/M3) と LAB 1問 (L3) を追加）
+  // 文系版 53問（2026-05-18: 経済・経営・心理など数理要素を持つ文系学科の評価精度向上のため
+  // MATH 3問 (M1/M2/M3) と LAB 1問 (L3) を追加。2026-06-03: 具体設問 J4/Ab5 を追加）
   humanities: [
     // セット1（10）
     "F1", "Ca1", "B1", "Lg1", "A1", "N1", "J1", "Me1", "Ce1", "T1",
@@ -207,19 +226,19 @@ const VERSION_ORDERS: Record<Version, readonly string[]> = {
     "Me2", "B2", "A2", "M2", "Ab2", "T2", "Ce2", "G2", "Lg4", "N3", "J3",
     // セット4（11）
     "F3", "M3", "Lg3", "Ca3", "Me3", "Ab3", "T3", "Ce3", "B3", "A3", "Bo2",
-    // セット5（8）
-    "Ca2", "F4", "L3", "Ab4", "G3", "Bz5", "N4", "Bo3",
+    // セット5（10・2026-06-03: J4/Ab5 追加）
+    "Ca2", "F4", "L3", "Ab4", "G3", "Bz5", "N4", "Bo3", "J4", "Ab5",
   ],
-  // 理系版 50問
+  // 理系版 53問（2026-06-03: An2 削除、具体設問 M5/C5/Ce4/Li4 を追加）
   sciences: [
-    // セット1（10）
-    "L1", "Ca1", "C1", "F1", "Mk1", "M1", "Me1", "Ce1", "T1", "An1",
-    // セット2（10）
-    "Ab1", "G1", "Li1", "Bo1", "L2", "F2", "C2", "Mk2", "Me2", "An2",
-    // セット3（10）
-    "Ca2", "M2", "Ab2", "T2", "Ce2", "G2", "M4", "C4", "Mk4", "Mk5",
+    // セット1（11）
+    "L1", "Ca1", "C1", "F1", "Mk1", "M1", "M5", "Me1", "Ce1", "T1", "An1",
+    // セット2（11）
+    "Ab1", "G1", "Li1", "Bo1", "L2", "F2", "C2", "C5", "Mk2", "Me2", "Ca2",
+    // セット3（11）
+    "M2", "Ab2", "T2", "Ce2", "Ce4", "G2", "M4", "C4", "Mk4", "Mk5", "Li2",
     // セット4（10）
-    "Li2", "F3", "M3", "C3", "Mk3", "Ca3", "L3", "L4", "Bo2", "Ab4r",
+    "Li4", "F3", "M3", "C3", "Mk3", "Ca3", "L3", "L4", "Bo2", "Ab4r",
     // セット5（10）
     "F4", "Bo3", "Ab3", "T3", "Ce3", "G3", "Li3", "An3", "An4", "Me3",
   ],
@@ -227,9 +246,9 @@ const VERSION_ORDERS: Record<Version, readonly string[]> = {
 
 // バージョンごとのセット区切り
 export const VERSION_SET_SIZES: Record<Version, readonly number[]> = {
-  mixed:      [10, 10, 10, 10, 9, 12],
-  humanities: [10, 11, 11, 11, 8],
-  sciences:   [10, 10, 10, 10, 10],
+  mixed:      [10, 10, 9, 10, 9, 12],
+  humanities: [10, 11, 11, 11, 10],
+  sciences:   [11, 11, 11, 10, 10],
 };
 
 // バージョン指定で出題順の質問配列を取得

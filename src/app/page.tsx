@@ -15,9 +15,9 @@ const COUNT_INFO: Record<
   Version,
   { count: number; minutes: string; sets: number }
 > = {
-  mixed: { count: 61, minutes: "約10分", sets: 6 },
-  humanities: { count: 51, minutes: "約9分", sets: 5 },
-  sciences: { count: 50, minutes: "約8分", sets: 5 },
+  mixed: { count: 60, minutes: "約10分", sets: 6 },
+  humanities: { count: 53, minutes: "約9分", sets: 5 },
+  sciences: { count: 53, minutes: "約9分", sets: 5 },
 };
 
 export default function Home() {
