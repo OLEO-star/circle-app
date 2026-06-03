@@ -24,7 +24,7 @@ const COUNT_INFO: Record<
 > = {
   mixed: { count: 60, minutes: "約10分", sets: 6 },
   humanities: { count: 53, minutes: "約9分", sets: 5 },
-  sciences: { count: 53, minutes: "約9分", sets: 5 },
+  sciences: { count: 52, minutes: "約9分", sets: 5 },
 };
 
 export default function StudentInfoPage() {
