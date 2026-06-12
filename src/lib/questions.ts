@@ -1,21 +1,27 @@
-// 質問プール（76問）+ 3バージョン対応（mixed / humanities / sciences）
+// 質問プール（82問）+ 3バージョン対応（mixed / humanities / sciences）
 //
 // バージョン:
-//   mixed      = 文理混合版（60問）
+//   mixed      = 文理混合版（66問）
 //   humanities = 文系特化版（53問 = 共通25 + 文系のみ16 + 文系追加6 + 数理共通4 + 具体追加2）
 //                 ※ 2026-05-18: MATH(M1/M2/M3) と LAB(L3) を追加。
 //                   経済・経営・心理など数学・実験要素を持つ文系学科の評価精度向上のため。
 //                 ※ 2026-06-03: 具体設問 J4(法↔政治分離)/Ab5(哲学↔文学分離) を追加。
-//   sciences   = 理系特化版（52問 = 共通25 + 理系のみ19 + 理系追加5 + 具体追加3）
+//   sciences   = 理系特化版（58問 = 共通25 + 理系のみ19 + 理系追加5 + 具体追加3 + 新軸6）
 //                 ※ 2026-06-03: 動物質問 An2 を削除（An1と重複）→ 動物 4→3。
 //                   具体設問 Li4(医療)/C5(AI・データ)/M5(自然の根本法則) を追加。
 //                   Ce4(医療専門職/CERT) は検討の末 撤回（医療シグナルは Li4 が LIFE軸で担い、
 //                   CERT は汎用の資格職仕分け役に据え置くため）。
+//                 ※ 2026-06-12: 新3軸 PURE/BIO/PROC の6問（P1-P3/Bi1-Bi2/Pr1）を
+//                   sciences+mixed に追加（B原則: humanities には入れない）。
+//                   化学系4学科（化学・応化・化工・生命化学）と情報科学⇄情報工学の
+//                   ベクトル重複を解消するため。設計と監査記録は
+//                   analysis/2026-06-12-question-addition-design.md 参照。
+//                   全問順方向・比較形（REVERSE_MAP の重み歪みと社会的望ましさバイアス回避）。
 //
 // 軸インデックス:
 //   MATH=0, MEMO=1, LAB=2, FIELD=3, CODE=4, MAKE=5, LANG=6, CARE=7
 //   BIZ=8, ART=9, ABS=10, TEAM=11, CERT=12, GRAD=13, LIFE=14, ANIMAL=15
-//   NARRATIVE=16, JUSTICE=17, BODY=18
+//   NARRATIVE=16, JUSTICE=17, BODY=18, PURE=19, BIO=20, PROC=21
 
 export type Version = "mixed" | "humanities" | "sciences";
 
@@ -27,7 +33,7 @@ export type Question = {
   versions: Version[];
 };
 
-// 全72問のプール（出題順は VERSION_ORDERS で別管理）
+// 全82問のプール（出題順は VERSION_ORDERS で別管理）
 const ALL_QUESTIONS: Question[] = [
   // ===== 共通質問（25問・全バージョン） =====
   { id: "F1",   text: "教室にいるより、外に出て自分の目で見たり体験したりするほうが好きだ",
@@ -115,7 +121,7 @@ const ALL_QUESTIONS: Question[] = [
   { id: "J3",   text: "不公平な状況を見ると、「どう正すべきか」を考えたくなる",
     axisIndex: 17, reverse: false, versions: ["mixed", "humanities"] },
 
-  // ===== 理系のみ（20問・mixed + sciences） =====
+  // ===== 理系のみ（19問・基本 mixed + sciences。M1/M2/M3/L3 の4問は3版共通） =====
   { id: "L1",   text: "理科の授業で、ビーカーや試験管を使って実験する時間が好きだ",
     axisIndex: 2,  reverse: false, versions: ["mixed", "sciences"] },
   { id: "C1",   text: "コードを書いてアプリやゲームを動かすことに興味がある",
@@ -198,24 +204,42 @@ const ALL_QUESTIONS: Question[] = [
     axisIndex: 4,  reverse: false, versions: ["sciences"] },
   { id: "M5",   text: "宇宙や物質の根源など、自然界の根本法則を数式で解き明かしたい",
     axisIndex: 0,  reverse: false, versions: ["sciences"] },
+
+  // ===== 新3軸 PURE/BIO/PROC（6問・mixed + sciences・2026-06-12 追加） =====
+  // PURE(19): 純粋（原理・理論）志向。低スコア＝応用・実装志向。比較形で強制選択させる。
+  //   化学科⇄応化・化工、情報科学⇄情報工学の分離が目的。
+  // BIO(20): 生体・生命現象への興味。生命化学・生物のシグナル（LIFE=臨床医療とは別物）。
+  // PROC(21): 量産・プロセス設計への興味。化学工学のシグナル。1問軸のためゲート対象外。
+  { id: "P1",   text: "すぐに役立つかどうかよりも、「なぜそうなるのか」という原理やしくみを解き明かすことのほうに興味がある",
+    axisIndex: 19, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "P2",   text: "新しい製品やサービスを生み出すことよりも、物質や自然現象の性質そのものを深く調べることのほうが好きだ",
+    axisIndex: 19, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "P3",   text: "アプリやゲームを完成させることよりも、その裏で動くアルゴリズムや計算のしくみを考えることのほうが楽しい",
+    axisIndex: 19, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "Bi1",  text: "植物が光からエネルギーを作ったり、食べたものが体の中で分解されたりする、生き物の中の化学反応に興味がある",
+    axisIndex: 20, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "Bi2",  text: "微生物や酵素など、生き物のはたらきを利用して薬や食品を作る技術に興味がある",
+    axisIndex: 20, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "Pr1",  text: "「誰が作っても同じ品質で、大量に作れるしくみ」を考えることに面白さを感じる",
+    axisIndex: 21, reverse: false, versions: ["mixed", "sciences"] },
 ];
 
 // バージョンごとの出題順
 const VERSION_ORDERS: Record<Version, readonly string[]> = {
-  // 混合版 61問（既存順序）
+  // 混合版 66問（2026-06-12: 新軸6問をセット分散配置。同一軸の連続配置は避ける）
   mixed: [
-    // セット1
-    "L1", "Ca1", "C1", "F1", "Mk1", "B1", "Lg1", "M1", "A1", "An1",
-    // セット2
-    "Ab1", "T1", "Ce1", "G1", "Li1", "Me1", "L2", "F2", "C2", "Mk2",
-    // セット3（9問・2026-06-03: An2 削除）
-    "Ca2", "B2", "Lg2", "M2", "A2", "Ab2", "T2", "Ce2", "G2",
-    // セット4
-    "Me2", "Li2", "M3", "L3", "F3", "C3", "Mk3", "Lg3", "Ca3", "B3",
-    // セット5（9問）
-    "A3", "Ab3", "T3", "Ce3", "G3", "Li3", "An3", "An4", "Me3",
-    // セット6（12問）
-    "N1", "J1", "Bo1", "N2", "J2", "Bo2", "F4", "Bz4", "L4", "N3", "J3", "Bo3",
+    // セット1（11問）
+    "L1", "Ca1", "C1", "F1", "Mk1", "B1", "Lg1", "Bi1", "M1", "A1", "An1",
+    // セット2（11問）
+    "Ab1", "T1", "Ce1", "G1", "Li1", "Me1", "L2", "P1", "F2", "C2", "Mk2",
+    // セット3（10問・2026-06-03: An2 削除）
+    "Ca2", "B2", "Lg2", "M2", "P2", "A2", "Ab2", "T2", "Ce2", "G2",
+    // セット4（11問）
+    "Me2", "Li2", "M3", "L3", "F3", "Bi2", "C3", "Mk3", "Lg3", "Ca3", "B3",
+    // セット5（10問）
+    "A3", "Ab3", "T3", "P3", "Ce3", "G3", "Li3", "An3", "An4", "Me3",
+    // セット6（13問）
+    "N1", "J1", "Bo1", "N2", "J2", "Bo2", "F4", "Pr1", "Bz4", "L4", "N3", "J3", "Bo3",
   ],
   // 文系版 53問（2026-05-18: 経済・経営・心理など数理要素を持つ文系学科の評価精度向上のため
   // MATH 3問 (M1/M2/M3) と LAB 1問 (L3) を追加。2026-06-03: 具体設問 J4/Ab5 を追加）
@@ -231,26 +255,27 @@ const VERSION_ORDERS: Record<Version, readonly string[]> = {
     // セット5（10・2026-06-03: J4/Ab5 追加）
     "Ca2", "F4", "L3", "Ab4", "G3", "Bz5", "N4", "Bo3", "J4", "Ab5",
   ],
-  // 理系版 52問（2026-06-03: An2 削除、具体設問 M5/C5/Li4 を追加。Ce4 は撤回）
+  // 理系版 58問（2026-06-03: An2 削除、具体設問 M5/C5/Li4 を追加。Ce4 は撤回。
+  // 2026-06-12: 新軸6問をセット分散配置）
   sciences: [
-    // セット1（11）
-    "L1", "Ca1", "C1", "F1", "Mk1", "M1", "M5", "Me1", "Ce1", "T1", "An1",
-    // セット2（11）
-    "Ab1", "G1", "Li1", "Bo1", "L2", "F2", "C2", "C5", "Mk2", "Me2", "Ca2",
-    // セット3（10）
-    "M2", "Ab2", "T2", "Ce2", "G2", "M4", "C4", "Mk4", "Mk5", "Li2",
-    // セット4（10）
-    "Li4", "F3", "M3", "C3", "Mk3", "Ca3", "L3", "L4", "Bo2", "Ab4r",
-    // セット5（10）
-    "F4", "Bo3", "Ab3", "T3", "Ce3", "G3", "Li3", "An3", "An4", "Me3",
+    // セット1（12）
+    "L1", "Ca1", "C1", "F1", "Bi1", "Mk1", "M1", "M5", "Me1", "Ce1", "T1", "An1",
+    // セット2（12）
+    "Ab1", "G1", "Li1", "Bo1", "L2", "P1", "F2", "C2", "C5", "Mk2", "Me2", "Ca2",
+    // セット3（12）
+    "M2", "Ab2", "T2", "P2", "Ce2", "G2", "M4", "C4", "Mk4", "Bi2", "Mk5", "Li2",
+    // セット4（11）
+    "Li4", "F3", "M3", "C3", "Mk3", "Ca3", "P3", "L3", "L4", "Bo2", "Ab4r",
+    // セット5（11）
+    "F4", "Bo3", "Pr1", "Ab3", "T3", "Ce3", "G3", "Li3", "An3", "An4", "Me3",
   ],
 };
 
 // バージョンごとのセット区切り
 export const VERSION_SET_SIZES: Record<Version, readonly number[]> = {
-  mixed:      [10, 10, 9, 10, 9, 12],
+  mixed:      [11, 11, 10, 11, 10, 13],
   humanities: [10, 11, 11, 11, 10],
-  sciences:   [11, 11, 10, 10, 10],
+  sciences:   [12, 12, 12, 11, 11],
 };
 
 // バージョン指定で出題順の質問配列を取得

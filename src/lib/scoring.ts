@@ -2,19 +2,20 @@ import { departments, AXIS_COUNT, getSlot, type Department } from "./departments
 import { type Question, type Version } from "./questions";
 
 // バージョン別の計測軸（質問が存在する軸の集合）。
-// 計測されない軸に学科スコアが値を持つと cosine 類似度の分母が膨らみ、
-// 「測れない軸の値が大きい学科」（例: 経済 MATH=0.8、心理 MATH=0.6+LAB=0.7）が
-// 不当に低く出るバグになる。これを防ぐため、両方ゼロ扱いにする。
+// 計測されない軸に学科スコアが値を持つと「測れない軸の値が大きい学科」が
+// 不当に不利/有利になるため、距離計算から除外する（ユーザー側・学科側とも）。
 //   humanities: MATH/LAB を 2026-05-18 で追加（M1/M2/M3/L3）
+//   mixed/sciences: PURE(19)/BIO(20)/PROC(21) を 2026-06-12 で追加。
+//     humanities には追加しない（B原則: その質問が見分ける学科が候補に出る版だけに入れる）
 const MEASURED_AXES: Record<Version, ReadonlySet<number>> = {
-  mixed: new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18]),
+  mixed: new Set([0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21]),
   humanities: new Set([0, 1, 2, 3, 6, 7, 8, 9, 10, 11, 12, 13, 16, 17, 18]),
-  sciences: new Set([0, 1, 2, 3, 4, 5, 7, 10, 11, 12, 13, 14, 15, 18]),
+  sciences: new Set([0, 1, 2, 3, 4, 5, 7, 10, 11, 12, 13, 14, 15, 18, 19, 20, 21]),
 };
 
-// 質問配列とユーザー回答から19軸スコアを算出
+// 質問配列とユーザー回答から22軸スコアを算出
 //
-// 軸別正規化 (min/max): クリップなし（負値を許容してコサイン類似度で逆ベクトル寄与）
+// 軸別正規化 (min/max): クリップなし
 // 逆転項目のマイナス化: 1→+3, 2→+2, 3→0, 4→-2, 5→-3
 //
 // バージョン対応（2026-04-25）:
@@ -60,44 +61,103 @@ export function calcAxisScores(
   return axisScores;
 }
 
-// コサイン類似度
-function cosineSimilarity(a: number[], b: number[]): number {
-  let dot = 0;
-  let magA = 0;
-  let magB = 0;
-  for (let i = 0; i < a.length; i++) {
-    dot += a[i] * b[i];
-    magA += a[i] * a[i];
-    magB += b[i] * b[i];
+// ============================================================
+// 判定式 v2（2026-06-12 導入。旧コサイン類似度から置換）
+//
+//   score = −wL2_var(γ=0.7) − G × Σ_{必須軸} max(0, thr − x_i)
+//
+// - wL2_var: 分散重み付きユークリッド距離。重み w_i = (std_i + ε)^γ、
+//   std_i は当該バージョンに出現する学科間の軸別標準偏差。
+//   コサインが捨てる「絶対差」を使うことで近接学科（化学系等）の分離が向上
+//   （検証: 2026-06-09 判定法サーベイ。mean 同等・最弱学科+14pt・化学系+8pt）
+// - 必須軸ゲート: 学科ベクトル ≥ ESSENTIAL(0.8) の計測軸を「必須」とし、
+//   ユーザーが GATE_THRESHOLD(0.45) を下回った分だけ減点（除外ではない）。
+//   核を欠いた偽物の top1 を棄却（検証: 2026-06-09 ゲート微調整スイープ。
+//   復元率コスト0で棄却100%）
+// - GRAD軸(13) は必須軸から除外（「数学好きだが院非志望」を守る）。
+//   gradExempt 学科（医・獣医）は距離計算からも軸13を除外（旧実装と同義）
+// - 決定の経緯: secretary/notes/archive/2026-06-09-decisions.md・
+//   2026-06-10-decisions.md（v2出荷はオーナー決定 06-10 16:55）
+// ============================================================
+
+const GAMMA = 0.7; // 分散重みの指数
+const GATE_STRENGTH = 2.0; // ゲート減点の強さ G
+const GATE_THRESHOLD = 0.45; // 必須軸の絶対閾値 thr
+const ESSENTIAL = 0.8; // 学科ベクトルがこの値以上の軸 = 必須軸
+const GRAD_AXIS = 13;
+const EPS = 1e-9;
+
+// 表示スコア較正: similarity = exp(−SIM_K × (dist + G×pen)^SIM_P)
+// 実効距離の単調減少変換なので順位は不変。理想プロフィール本人の自己マッチが
+// 概ね 90 前後、無関係学科でも 10-20 程度に落ち着くよう較正
+//（検証: analysis/2026-06-12-v2-verify.md。二乗 exp(−0.6d²) は最下位が0%に
+// 張り付き表示として不自然だったため d^1.5 に変更）
+const SIM_K = 0.35;
+const SIM_P = 1.5;
+
+type VersionContext = {
+  filtered: Department[];
+  weights: number[]; // 軸別の分散重み（非計測軸は0）
+  essentialAxes: Set<number>[]; // filtered と同順の必須軸集合
+  measured: number[]; // 計測軸のリスト
+};
+
+const contextCache = new Map<Version, VersionContext>();
+
+function getVersionContext(version: Version): VersionContext {
+  const cached = contextCache.get(version);
+  if (cached) return cached;
+
+  const filtered = departments.filter(
+    (d) => !d.versions || d.versions.includes(version)
+  );
+  const measured = [...MEASURED_AXES[version]];
+
+  // 軸別標準偏差 → 分散重み
+  const weights: number[] = new Array(AXIS_COUNT).fill(0);
+  for (const i of measured) {
+    let mean = 0;
+    for (const d of filtered) mean += d.scores[i];
+    mean /= filtered.length;
+    let varSum = 0;
+    for (const d of filtered) varSum += (d.scores[i] - mean) ** 2;
+    weights[i] = Math.pow(Math.sqrt(varSum / filtered.length) + EPS, GAMMA);
   }
-  if (magA === 0 || magB === 0) return 0;
-  return dot / (Math.sqrt(magA) * Math.sqrt(magB));
+
+  // 学科ごとの必須軸（GRAD除外）
+  const essentialAxes = filtered.map(
+    (d) =>
+      new Set(
+        measured.filter((i) => i !== GRAD_AXIS && d.scores[i] >= ESSENTIAL)
+      )
+  );
+
+  const ctx: VersionContext = { filtered, weights, essentialAxes, measured };
+  contextCache.set(version, ctx);
+  return ctx;
 }
 
-function cosineSimilarityForDept(
+// dist + ゲート減点（小さいほど良い「実効距離」）を返す
+function effectiveDistance(
   userScores: number[],
   dept: Department,
-  version: Version,
+  deptIndex: number,
+  ctx: VersionContext
 ): number {
-  const userAdj = [...userScores];
-  const deptAdj = [...dept.scores];
+  let sum = 0;
+  for (const i of ctx.measured) {
+    if (i === GRAD_AXIS && dept.gradExempt) continue;
+    const diff = userScores[i] - dept.scores[i];
+    sum += ctx.weights[i] * diff * diff;
+  }
+  const dist = Math.sqrt(sum);
 
-  // 計測されない軸はユーザー側も学科側もゼロ扱い（cosine の分母を公平化）。
-  const measured = MEASURED_AXES[version];
-  for (let i = 0; i < AXIS_COUNT; i++) {
-    if (!measured.has(i)) {
-      userAdj[i] = 0;
-      deptAdj[i] = 0;
-    }
+  let penalty = 0;
+  for (const i of ctx.essentialAxes[deptIndex]) {
+    if (userScores[i] < GATE_THRESHOLD) penalty += GATE_THRESHOLD - userScores[i];
   }
 
-  // GRAD軸適用外の学科はGRAD軸を両方ゼロにしてスキップ
-  if (dept.gradExempt) {
-    userAdj[13] = 0;
-    deptAdj[13] = 0;
-  }
-
-  return cosineSimilarity(userAdj, deptAdj);
+  return dist + GATE_STRENGTH * penalty;
 }
 
 export type DeptResult = {
@@ -106,17 +166,17 @@ export type DeptResult = {
   score: number;
 };
 
-// 全32学科とのコサイン類似度を計算しランキング
+// 全32学科を判定式v2でランキング
 // version を渡すと、文系版/理系版でフィルタ済みの結果を返す
+// similarity は実効距離の単調減少変換（0..1）。順位は実効距離の昇順と一致する
 export function rankDepartments(
   axisScores: number[],
   version: Version = "mixed"
 ): DeptResult[] {
-  const filtered = departments.filter((d) =>
-    !d.versions || d.versions.includes(version)
-  );
-  const results = filtered.map((dept) => {
-    const similarity = cosineSimilarityForDept(axisScores, dept, version);
+  const ctx = getVersionContext(version);
+  const results = ctx.filtered.map((dept, di) => {
+    const effDist = effectiveDistance(axisScores, dept, di, ctx);
+    const similarity = Math.exp(-SIM_K * Math.pow(effDist, SIM_P));
     return {
       department: dept,
       similarity,
