@@ -1,3 +1,7 @@
+// ===== 縦スクロール demo（2026-06-13） =====
+// 本番 /result の横スワイプ（snap-x ページ送り）を、表示形式・順番を変えずに
+// 1本の縦スクロールへ変換した検証用デモ。確認は /result-v?demo=sciences 等。
+// 本番採用が決まるまで result/page.tsx 側は不変更。集計送信はこのページでは無効。
 "use client";
 
 import { useEffect, useState } from "react";
@@ -22,6 +26,7 @@ import {
 // 匿名集計エンドポイント（Google Apps Script v2、kazu39leo@gmail.com 所有）。
 // マスタSheets（個人特定情報なし）と学校別Sheets（クラス・出席番号あり）に振り分けて記録する。
 // 個人を識別する情報は送らない設計。プライバシーポリシー §2 / §3 に対応。
+const DEMO_NO_POST = true; // 縦スクロールdemo: 匿名集計・納得感を送信しない
 const ANALYTICS_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxoGqyDg6ERed2B24LArJZACk5cI5IAoEgF5hmIHtIIvrF-koDoTSy8GNy_XxZznmhX/exec";
 
@@ -171,7 +176,7 @@ function buildDemoData(demoParam: string): StoredResult | null {
   return null;
 }
 
-export default function ResultPage() {
+export default function ResultVerticalDemoPage() {
   const router = useRouter();
   // SSR とクライアント初回レンダーで同じ DOM を返すため null 初期化。
   // lazy initializer で sessionStorage を読むと SSR(null) と client(値あり) で
@@ -245,6 +250,7 @@ export default function ResultPage() {
   // mode: "no-cors" でレスポンスは opaque だが、リクエスト自体は成功する。
   useEffect(() => {
     if (!data) return;
+    if (DEMO_NO_POST) return;
     if (sessionStorage.getItem("quizResultSent")) return;
 
     const r = data.results;
@@ -370,6 +376,7 @@ export default function ResultPage() {
       klass: studentInfoNow?.klass ?? "",
       student_number: studentInfoNow?.number ?? "",
     };
+    if (DEMO_NO_POST) { setSatisfactionSent(true); return; }
     fetch(ANALYTICS_ENDPOINT, {
       method: "POST",
       mode: "no-cors",
@@ -403,13 +410,13 @@ export default function ResultPage() {
   );
 
   return (
-    <div className="flex min-h-dvh snap-x snap-mandatory overflow-x-auto overscroll-x-contain">
+    <div className="flex min-h-dvh flex-col">
       {/* Page 1: 興味マップ（リング） + Top3 統合
           - overscroll-x-contain: 左端で左スワイプしてもブラウザ戻る等が発動しない
           - 単方向誘導: 「→ スワイプ」と右方向のみを示し、左戻りの混乱を防ぐ
           - リング 320px で画面幅いっぱい近くまで広げ、ブランド・ビジュアルの
             インパクトを最大化（リング型 = サービス名の由来） */}
-      <section className="flex min-w-full snap-center flex-col items-center justify-center px-4 py-6">
+      <section className="flex min-h-dvh w-full flex-col items-center justify-center px-4 py-6">
         <h2 className="mb-1 text-base font-bold">あなたの興味マップ</h2>
         <p className="mb-2 text-[10px] text-gray-400">リングの形があなたの個性です</p>
         <Ring strengths={data.categoryStrengths} size={320} version={data.version} />
@@ -450,7 +457,7 @@ export default function ResultPage() {
           </div>
         </div>
 
-        <p className="mt-4 text-xs text-gray-400">スワイプして詳しく見る →</p>
+        <p className="mt-4 text-xs text-gray-400">スクロールして詳しく見る ↓</p>
       </section>
 
       {/* Pages 2-4: 学科詳細（旧 Page 3-5、Top3 一覧をP1に統合したため番号繰上げ） */}
@@ -459,7 +466,7 @@ export default function ResultPage() {
         return (
           <section
             key={r.id}
-            className="flex min-w-full snap-center flex-col items-center justify-center px-6"
+            className="flex min-h-dvh w-full flex-col items-center justify-center px-6"
           >
             <div className="w-full max-w-sm">
               <div className="mb-4 flex items-center gap-3">
@@ -512,7 +519,7 @@ export default function ResultPage() {
           - justify-center で他ページと一貫した縦位置（ヘッダー切れを防ぐ）
           - 各行クリックでモーダル展開: Top4以降の詳細も読める設計（案X）
           - py-12 → py-8 で項目数が多くても画面に収まる余地を増やす */}
-      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6 py-8">
+      <section className="flex min-h-dvh w-full flex-col items-center justify-center px-6 py-8">
         <div className="w-full max-w-sm">
           <h2 className="mb-1 text-lg font-bold">他の学科ランキング</h2>
           <p className="mb-2 text-xs text-gray-400">
@@ -591,7 +598,7 @@ export default function ResultPage() {
       </section>
 
       {/* Page 7: 大学選びの基準 */}
-      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6">
+      <section className="flex min-h-dvh w-full flex-col items-center justify-center px-6">
         <div className="w-full max-w-sm">
           <h2 className="mb-4 text-lg font-bold">
             あなたに合った大学の選び方
@@ -622,7 +629,7 @@ export default function ResultPage() {
       {/* Page 8: フィードバック（納得感 + 理由 + 気になっている学部）
           すべての結果を見終わってから書いてもらうことで、結果を踏まえた回答になる。
           学校モードでは先生の進路指導の核データ、個人モードでも改善・集計に使う。 */}
-      <section className="flex min-w-full snap-center flex-col items-center justify-center px-6 py-12">
+      <section className="flex min-h-dvh w-full flex-col items-center justify-center px-6 py-12">
         <div className="w-full max-w-sm">
           <h2 className="mb-1 text-lg font-bold text-center">
             最後にひとこと聞かせてください
