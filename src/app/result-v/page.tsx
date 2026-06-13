@@ -460,13 +460,16 @@ export default function ResultVerticalDemoPage() {
         <p className="mt-4 text-xs text-gray-400">スクロールして詳しく見る ↓</p>
       </section>
 
-      {/* Pages 2-4: 学科詳細（旧 Page 3-5、Top3 一覧をP1に統合したため番号繰上げ） */}
+      {/* Pages 2-4: 学科詳細（旧 Page 3-5、Top3 一覧をP1に統合したため番号繰上げ）
+          縦スクロールでは各詳細を1画面高に固定しない。min-h-dvh + 中央寄せだと
+          内容が短い学科で上下に大きな空白が生まれ「説明の後が間延びする」(かずき指摘)。
+          自然フロー + 上下 py-12 の一定リズムにし、隣との境界は天面 borderで示す。 */}
       {top3.map((r, i) => {
         const texts = departmentTexts[r.id];
         return (
           <section
             key={r.id}
-            className="flex min-h-dvh w-full flex-col items-center justify-center px-6"
+            className="flex w-full flex-col items-center border-t border-gray-100 px-6 py-12"
           >
             <div className="w-full max-w-sm">
               <div className="mb-4 flex items-center gap-3">
@@ -516,10 +519,10 @@ export default function ResultVerticalDemoPage() {
       })}
 
       {/* Page 6: 4位以降の全学科ランキング
-          - justify-center で他ページと一貫した縦位置（ヘッダー切れを防ぐ）
           - 各行クリックでモーダル展開: Top4以降の詳細も読める設計（案X）
-          - py-12 → py-8 で項目数が多くても画面に収まる余地を増やす */}
-      <section className="flex min-h-dvh w-full flex-col items-center justify-center px-6 py-8">
+          - 縦スクロール統一: min-h-dvh中央寄せをやめ自然フロー+py-12。
+            項目数が可変（13〜32学科）なので1画面固定だと空白/見切れの両極に振れる。 */}
+      <section className="flex w-full flex-col items-center border-t border-gray-100 px-6 py-12">
         <div className="w-full max-w-sm">
           <h2 className="mb-1 text-lg font-bold">他の学科ランキング</h2>
           <p className="mb-2 text-xs text-gray-400">
@@ -597,8 +600,8 @@ export default function ResultVerticalDemoPage() {
         </div>
       </section>
 
-      {/* Page 7: 大学選びの基準 */}
-      <section className="flex min-h-dvh w-full flex-col items-center justify-center px-6">
+      {/* Page 7: 大学選びの基準（縦スクロール統一: 自然フロー+py-12） */}
+      <section className="flex w-full flex-col items-center border-t border-gray-100 px-6 py-12">
         <div className="w-full max-w-sm">
           <h2 className="mb-4 text-lg font-bold">
             あなたに合った大学の選び方
@@ -629,7 +632,7 @@ export default function ResultVerticalDemoPage() {
       {/* Page 8: フィードバック（納得感 + 理由 + 気になっている学部）
           すべての結果を見終わってから書いてもらうことで、結果を踏まえた回答になる。
           学校モードでは先生の進路指導の核データ、個人モードでも改善・集計に使う。 */}
-      <section className="flex min-h-dvh w-full flex-col items-center justify-center px-6 py-12">
+      <section className="flex w-full flex-col items-center border-t border-gray-100 px-6 pb-16 pt-12">
         <div className="w-full max-w-sm">
           <h2 className="mb-1 text-lg font-bold text-center">
             最後にひとこと聞かせてください
