@@ -38,16 +38,17 @@ const CONFIG = {
   },
 
   // diagnoses シートのヘッダー（マスタ・全校横断・個人特定なし）。
-  // 教員も読みやすいよう日本語化。19軸スコアは展開済み。
+  // 教員も読みやすいよう日本語化。22軸スコアは展開済み。
   DIAGNOSES_HEADER: [
     '日時', 'セッションID', '診断バージョン',
     'Top1学科', 'Top2学科', 'Top3学科',
     'Top1適合度', 'Top2適合度', 'Top3適合度',
     'カテゴリ順位',
-    // 19軸スコア（0〜1、計測されない軸は0）
+    // 22軸スコア（0〜1、計測されない軸は0。19-21は2026-06-12追加・理系/混合のみ計測）
     '数理', '暗記力', '実験', '野外', 'プログラミング', '制作',
     '言語', '対人ケア', 'ビジネス', '芸術', '抽象思考', 'チームワーク',
     '資格志向', '研究志向', '生命', '動物', '論証・物語', '法・正義', '身体運動',
+    '純粋志向', '生体・生命現象', '量産・プロセス',
     '回答変更ログ',
     '学校モード', '学校コード', '学校名', '都道府県コード', '学校種',
     '学年', '年齢',
@@ -63,7 +64,7 @@ const CONFIG = {
   ],
 
   // 学校別 students シートのヘッダー（個別生徒・進路指導用）。
-  // 教員が読みやすい順：個人識別 → Top3 → 19軸 → 補助情報
+  // 教員が読みやすい順：個人識別 → Top3 → 22軸 → 補助情報
   SCHOOL_STUDENTS_HEADER: [
     '日時', 'セッションID', '学年', 'クラス', '出席番号',
     'Top1学科', 'Top2学科', 'Top3学科',
@@ -71,6 +72,7 @@ const CONFIG = {
     '数理', '暗記力', '実験', '野外', 'プログラミング', '制作',
     '言語', '対人ケア', 'ビジネス', '芸術', '抽象思考', 'チームワーク',
     '資格志向', '研究志向', '生命', '動物', '論証・物語', '法・正義', '身体運動',
+    '純粋志向', '生体・生命現象', '量産・プロセス',
     '診断バージョン', '所要時間(秒)',
   ],
 
@@ -97,8 +99,10 @@ const SECURITY = {
   DAILY_AUTOCREATE_CAP: 5,
 };
 
-// payload の axis_scores (CSV) を 19要素の配列にする。
-// 不足分は空文字で埋める（理系版/混合版で 19要素揃わない可能性は今のところないが、念のため）。
+// payload の axis_scores (CSV) を 22要素の配列にする。
+// 軸順は frontend の AXIS_NAMES（departments.ts）と一致：
+//   0-15 既存16軸 / 16-18 NARRATIVE,JUSTICE,BODY / 19-21 PURE,BIO,PROC（2026-06-12追加）。
+// 不足分は空文字で埋める（humanities は新3軸が 0 で送られてくる。理系/混合は実値）。
 function parseAxisScores(csv) {
   const parts = (csv || '').split(',');
   const values = parts.map(function (s) {
@@ -106,8 +110,8 @@ function parseAxisScores(csv) {
     const n = Number(s);
     return isFinite(n) ? n : '';
   });
-  while (values.length < 19) values.push('');
-  return values.slice(0, 19);
+  while (values.length < 22) values.push('');
+  return values.slice(0, 22);
 }
 
 // 出席番号は文字列で送られてくるので、数値ソートを効かせるために数値化する。
@@ -315,11 +319,12 @@ function handleDiagnosis(p) {
       p.top2_score || '',
       p.top3_score || '',
       p.categories || '',
-      // 19軸を展開
+      // 22軸を展開（19-21: PURE/BIO/PROC）
       axisValues[0], axisValues[1], axisValues[2], axisValues[3], axisValues[4],
       axisValues[5], axisValues[6], axisValues[7], axisValues[8], axisValues[9],
       axisValues[10], axisValues[11], axisValues[12], axisValues[13], axisValues[14],
       axisValues[15], axisValues[16], axisValues[17], axisValues[18],
+      axisValues[19], axisValues[20], axisValues[21],
       p.change_log || '',
       p.school_mode || '',
       p.school_code || '',
@@ -372,11 +377,12 @@ function handleDiagnosis(p) {
     p.top1_score || '',
     p.top2_score || '',
     p.top3_score || '',
-    // 19軸を展開
+    // 22軸を展開（19-21: PURE/BIO/PROC）
     axisValues[0], axisValues[1], axisValues[2], axisValues[3], axisValues[4],
     axisValues[5], axisValues[6], axisValues[7], axisValues[8], axisValues[9],
     axisValues[10], axisValues[11], axisValues[12], axisValues[13], axisValues[14],
     axisValues[15], axisValues[16], axisValues[17], axisValues[18],
+    axisValues[19], axisValues[20], axisValues[21],
     p.version || '',
     p.duration_sec || '',
   ]);
@@ -444,6 +450,97 @@ function setupMasterSpreadsheet() {
   ensureSheet(ss, 'satisfactions', CONFIG.SATISFACTIONS_HEADER);
 }
 
+// 2026-06-12 追加の新3軸（PURE/BIO/PROC）の日本語ヘッダー。挿入位置の特定にも使う。
+const NEW_AXIS_HEADERS = ['純粋志向', '生体・生命現象', '量産・プロセス'];
+
+/**
+ * 【ワンタイム移行・実行はオーナー判断】既存シートに新3軸（PURE/BIO/PROC）の列を挿入する。
+ *
+ * なぜ必要か:
+ *   新コードは appendRow で「身体運動」と「回答変更ログ/診断バージョン」の間に3軸を書く。
+ *   既存シートは旧レイアウト（その3列がない）でデータが入っているため、移行せずに本番反映すると
+ *   旧行と新行で列がズレる（旧行の回答変更ログ等が新行の軸値と縦に混在する）。
+ *   この関数は既存データの「身体運動」の直後に空の3列を挿入し、ヘッダーを付ける。
+ *   旧行の新3軸セルは空欄のまま（その診断は新軸を計測していないので正しい）。
+ *
+ * 冪等: 既にヘッダーに「純粋志向」があるシートはスキップする。何度実行しても二重挿入しない。
+ *
+ * 対象: マスタ diagnoses ＋ SCHOOL_SHEET_MAP の全 students ＋ 自動生成済み学校の students。
+ *   （satisfactions / feedback は軸列を持たないので対象外）
+ *
+ * 実行後に必ず Apps Script を「新バージョン」で再デプロイすること（README 手順4参照）。
+ */
+function migrateAddNewAxisColumns() {
+  const log = [];
+
+  // 1. マスタ diagnoses（「回答変更ログ」の直前に挿入）
+  const master = SpreadsheetApp.openById(CONFIG.MASTER_SPREADSHEET_ID);
+  log.push(insertAxisColumnsInto_(master, 'diagnoses', '身体運動'));
+
+  // 2. 事前登録の学校別 students（「診断バージョン」の直前 = 「身体運動」の直後に挿入）
+  const seen = {};
+  const codes = Object.keys(CONFIG.SCHOOL_SHEET_MAP);
+  for (let i = 0; i < codes.length; i++) {
+    const id = CONFIG.SCHOOL_SHEET_MAP[codes[i]];
+    if (seen[id]) continue;
+    seen[id] = true;
+    try {
+      const ss = SpreadsheetApp.openById(id);
+      log.push(insertAxisColumnsInto_(ss, 'students', '身体運動'));
+    } catch (e) {
+      log.push('SCHOOL ' + id + ': ERROR ' + e);
+    }
+  }
+
+  // 3. 自動生成済みの学校別 students（PropertiesService に保存されたID）
+  const props = PropertiesService.getScriptProperties().getProperties();
+  for (const key in props) {
+    if (key.indexOf('school_sheet_') !== 0) continue;
+    const id = props[key];
+    if (seen[id]) continue;
+    seen[id] = true;
+    try {
+      const ss = SpreadsheetApp.openById(id);
+      log.push(insertAxisColumnsInto_(ss, 'students', '身体運動'));
+    } catch (e) {
+      log.push('AUTO ' + id + ': ERROR ' + e);
+    }
+  }
+
+  Logger.log(log.join('\n'));
+}
+
+/**
+ * 指定シートの afterHeader 列の直後に、新3軸の空列を挿入してヘッダーを付ける（冪等）。
+ * 戻り値はログ用の1行文字列。
+ */
+function insertAxisColumnsInto_(spreadsheet, sheetName, afterHeader) {
+  const sheet = spreadsheet.getSheetByName(sheetName);
+  if (!sheet) return spreadsheet.getName() + '/' + sheetName + ': シートなし→スキップ';
+
+  const lastCol = sheet.getLastColumn();
+  const headers = sheet.getRange(1, 1, 1, lastCol).getValues()[0];
+
+  // 既に移行済みなら何もしない（冪等）
+  if (headers.indexOf(NEW_AXIS_HEADERS[0]) !== -1) {
+    return spreadsheet.getName() + '/' + sheetName + ': 既に移行済み→スキップ';
+  }
+
+  const anchor = headers.indexOf(afterHeader); // 0始まり
+  if (anchor === -1) {
+    return spreadsheet.getName() + '/' + sheetName +
+      ': アンカー「' + afterHeader + '」が見つからず→スキップ（手動確認）';
+  }
+
+  const insertAt = anchor + 1; // 「身体運動」の直後（1始まりの列番号）
+  sheet.insertColumnsBefore(insertAt + 1, NEW_AXIS_HEADERS.length);
+  sheet.getRange(1, insertAt + 1, 1, NEW_AXIS_HEADERS.length)
+    .setValues([NEW_AXIS_HEADERS]);
+
+  return spreadsheet.getName() + '/' + sheetName +
+    ': ' + NEW_AXIS_HEADERS.length + '列を第' + (insertAt + 1) + '列に挿入完了';
+}
+
 /**
  * 初回セットアップ用：SCHOOL_SHEET_MAPに事前登録した学校別Sheetsにヘッダーを作成
  */
@@ -479,7 +576,8 @@ function listAutoGeneratedSchools() {
  * 配布資料のスクリーンショット用：母校Sheets にリアルな見栄えのデモデータを投入する。
  * - session_id を 'DEMO_' プレフィックスで統一 → 後で一括削除しやすい
  * - 学年/クラス/出席番号 が ばらつき、ソート効果が見える状態にする
- * - 19軸の値は Top1学科 と整合（生徒っぽさを担保）
+ * - 軸の値は Top1学科 と整合（生徒っぽさを担保）。デモ配列は既存19軸分のみで、
+ *   新3軸（PURE/BIO/PROC）は空欄になる（スクショ用途のため許容）
  * 使い方:
  *   1. Apps Script エディタで populateDemoData を選択 → 実行
  *   2. 母校Sheets の students シートを開いてスクショ撮影
@@ -579,6 +677,8 @@ function populateDemoData() {
       axes[0], axes[1], axes[2], axes[3], axes[4], axes[5], axes[6],
       axes[7], axes[8], axes[9], axes[10], axes[11], axes[12], axes[13],
       axes[14], axes[15], axes[16], axes[17], axes[18],
+      // 19-21（PURE/BIO/PROC）: デモ配列は19要素なので空欄。スクショ専用・公開後不要のため捏造しない
+      axes[19] == null ? '' : axes[19], axes[20] == null ? '' : axes[20], axes[21] == null ? '' : axes[21],
       ver, dur,
     ]);
     feedback.appendRow([
