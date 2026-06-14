@@ -122,6 +122,19 @@ function toNumberOrKeep(v) {
   return isFinite(n) ? n : v;
 }
 
+// M-1: Google Sheets 数式（CSV/Formula）インジェクション対策。
+// ユーザーが自由入力できる文字列がそのまま appendRow でセルに書かれると、
+// 先頭が = + - @ や tab/CR の値は「ライブ数式」として評価され、閲覧者（先生/オーナー）の
+// スプレッドシートで IMPORTDATA/HYPERLINK 等が走りデータ漏えい等を起こしうる。
+// 先頭にアポストロフィ ' を前置するとセルが文字列扱いになり、' 自体は表示されない
+// （＝表示は実質不変・数式評価だけ無効化）。非文字列・空はそのまま返す。
+function sanitizeCell(v) {
+  if (typeof v === 'string' && /^[=+\-@\t\r]/.test(v)) {
+    return "'" + v;
+  }
+  return v;
+}
+
 // 学校別シート（students / feedback）を 学年 → クラス → 出席番号 順にソートする。
 // 教員が「クラス順に上から見られる」状態を維持するため、追記直後に毎回呼ぶ。
 // 列番号: 1=日時, 2=セッションID, 3=学年, 4=クラス, 5=出席番号
@@ -327,8 +340,8 @@ function handleDiagnosis(p) {
       axisValues[19], axisValues[20], axisValues[21],
       p.change_log || '',
       p.school_mode || '',
-      p.school_code || '',
-      p.school_name || '',
+      sanitizeCell(p.school_code || ''),
+      sanitizeCell(p.school_name || ''),
       p.school_pref || '',
       p.school_type || '',
       p.grade || '',
@@ -404,11 +417,11 @@ function handleSatisfaction(p) {
     now,
     p.session_id || '',
     p.satisfaction || '',
-    p.reason || '',
-    p.desired_field1 || '',
-    p.desired_field2 || '',
-    p.desired_field3 || '',
-    p.desired_reason || '',
+    sanitizeCell(p.reason || ''),
+    sanitizeCell(p.desired_field1 || ''),
+    sanitizeCell(p.desired_field2 || ''),
+    sanitizeCell(p.desired_field3 || ''),
+    sanitizeCell(p.desired_reason || ''),
   ]);
 
   // 2. 学校モード時、学校別 feedback シートにも記録（クラス・出席番号あり）。
@@ -432,11 +445,11 @@ function handleSatisfaction(p) {
     toNumberOrKeep(p.klass),
     toNumberOrKeep(p.student_number),
     p.satisfaction || '',
-    p.reason || '',
-    p.desired_field1 || '',
-    p.desired_field2 || '',
-    p.desired_field3 || '',
-    p.desired_reason || '',
+    sanitizeCell(p.reason || ''),
+    sanitizeCell(p.desired_field1 || ''),
+    sanitizeCell(p.desired_field2 || ''),
+    sanitizeCell(p.desired_field3 || ''),
+    sanitizeCell(p.desired_reason || ''),
   ]);
   sortSchoolSheet(feedback);
 }

@@ -40,7 +40,23 @@
 
 ## 所見詳細
 
-### M-1 [Medium] Google Sheets 数式（CSV/Formula）インジェクション — GAS 側
+### M-1 [Medium] Google Sheets 数式（CSV/Formula）インジェクション — GAS 側 ✅ 実装済み（2026-06-14）
+
+> **実装済み**: `code.gs` に `sanitizeCell()` を追加し、ユーザー起源の自由記述フィールドへ適用。
+> 仕様: 値が文字列かつ先頭が `= + - @` / tab(0x09) / CR(0x0D) のとき先頭に `'` を前置（表示は実質不変・数式評価のみ無効化）。非文字列・空はそのまま。
+> 構文確認: `cp code.gs /tmp/m1check.js && node --check` → SYNTAX_OK（チェック後 trash 済み）。
+>
+> **適用フィールド一覧**（`appendRow` の各引数を目視確認のうえ、ユーザー自由入力のみに適用）:
+> | 書込先（関数 / シート） | 適用フィールド |
+> |---|---|
+> | `handleDiagnosis` / マスタ diagnoses | `school_code`（`OTHER_<自由入力>` を含みうるため）, `school_name` |
+> | `handleSatisfaction` / マスタ satisfactions | `reason`, `desired_field1`, `desired_field2`, `desired_field3`, `desired_reason` |
+> | `handleSatisfaction` / 学校別 feedback | `reason`, `desired_field1`, `desired_field2`, `desired_field3`, `desired_reason` |
+>
+> **適用しなかったもの（意図的）**: 数値項目（適合度 top1〜3_score・所要時間 duration_sec・年齢）、`toNumberOrKeep` 済みの klass/student_number、アプリ生成の固定値（日時・session_id・version・top1〜3_name・categories・change_log・school_mode・school_pref・school_type・grade・satisfaction・start/end_time）。`handleDiagnosis` の学校別 students シートはユーザー自由記述フィールドを持たないため対象なし。
+> **コミット**: `07ddef7`（push・再デプロイはせず、保留中の「Apps Script 22軸再デプロイ」でオーナーが貼り直す際に一緒に有効化される）。
+
+
 - **場所**: `scripts/apps-script/code.gs` の `appendRow`（handleDiagnosis / handleSatisfaction）。
   自由入力でシートに書かれる値: 学校名「その他」入力（`OTHER_<name>` / `school_name`）、
   納得感の理由 `reason`、希望学部の「その他」入力（`その他: <入力>`）、`desired_reason`。
@@ -154,9 +170,9 @@ Cloudflare Pages が各レスポンスに付与する（ビルドで複製・dif
 
 ## GO 待ち推奨事項（L2・オーナー作業）
 
-1. **M-1 sanitize の GAS 反映**: code.gs の appendRow 前に数式インジェクション対策の
-   `safeCell()` を入れる。**既に保留中の「Apps Script 22軸再デプロイ」と同時**に行うのが最も安全
-   （単独再デプロイ不要・STATUS の保留事項と一括処理）。
+1. ~~**M-1 sanitize の GAS 反映**~~ → **✅ 実装済み（2026-06-14）**: code.gs に `sanitizeCell()` を追加・
+   コミット済み（push・デプロイはしていない）。**保留中の「Apps Script 22軸再デプロイ」でオーナーが
+   貼り直す際に一緒に有効化される**（単独再デプロイ不要）。詳細は上の M-1 節参照。
 2. **M-2 Next 更新**: next@16.2.4→16.2.9。静的配信では実リスク Low のため急がない。上げる場合は
    AGENTS.md 警告に従い別ブランチでビルド＋全ページ手動確認。
 3. **SHARED_TOKEN ローテーション**: 日常的には不要。自動生成スパム急増の通知が来たときのみ、
@@ -167,12 +183,13 @@ Cloudflare Pages が各レスポンスに付与する（ビルドで複製・dif
 
 - **公開トークンの抽出可能性**（I-1）: 静的サイトの構造上不可避。設計通りで受容。
 - **実在校コード総当たりによる自動生成 5件/日**（L-3）: 上限・通知ありで影響小。受容。
-- **M-1 の数式注入**は GO 待ちのため、再デプロイ完了まで残存。緩和策: 当面オーナー/先生は
-  Sheets を開く際、不審な自由記述セル（=や@始まり）に注意。学校配布は夏休み（7月後半〜）で
-  実トラフィック前に M-1 を入れる時間的余裕あり。
+- **M-1 の数式注入**: code.gs 側の対策は**コード上は実装済み（2026-06-14）**。ただし push・再デプロイ
+  はしていないため、本番 Apps Script に反映されるのは保留中の「Apps Script 22軸再デプロイ」をオーナーが
+  実施した時点。それまでは本番で残存。学校配布は夏休み（7月後半〜）で実トラフィック前に再デプロイの余裕あり。
 
 ## 触っていないもの（指示通り）
 判定式・質問・スコアリング（scoring.ts/questions.ts/departments.ts）・リング描画は一切変更なし。
-code.gs も変更なし（GAS は単独再デプロイがオーナー手作業のため、推奨に留めた）。
+code.gs は M-1 sanitize（`sanitizeCell()`）のみ追加（2026-06-14）。それ以外のロジック
+（parseAxisScores / toNumberOrKeep / sortSchoolSheet / 判定式・スコアリング）は不変。push・再デプロイなし。
 既存の未コミット作業（ring-design-preferences.md / v2_verify.ts / analysis 配下）には触れず、
 本セキュリティ成果物のみをコミットする。
