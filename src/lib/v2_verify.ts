@@ -15,7 +15,8 @@ import { departments, AXIS_COUNT } from "./departments";
 import * as fs from "fs";
 
 const M = parseInt(process.argv[2] || "3000", 10);
-const DATE = "2026-06-12";
+// 出力ファイル名の日付。argv[3] で上書き可（過去の記録を上書きしないため）。
+const DATE = process.argv[3] || "2026-06-12";
 const EPS = 1e-9;
 const CHEM = ["chemistry", "applied-chem", "chem-eng", "life-chem"];
 const INFO = ["info-sci", "info-eng"];
