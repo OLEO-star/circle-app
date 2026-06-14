@@ -1,0 +1,33 @@
+# Cloudflare Pages セキュリティヘッダ
+# ---------------------------------------------------------------------------
+# このファイルは public/ に置くと next build（output:"export"）で out/_headers に
+# そのままコピーされ、Cloudflare Pages が配信時に各レスポンスへ付与する。
+# 構文: https://developers.cloudflare.com/pages/configuration/headers/
+#
+# 方針: 「壊さない範囲で保守的に」。本サイトは純静的（output:"export"）で
+# サーバ/SSRランタイムは本番に存在しない。XSSの主シンクも未使用
+# （dangerouslySetInnerHTML / innerHTML / eval いずれもコード上ゼロ）。
+#
+# CSP は意図的に付与しない（content-security-policy を参照）。理由:
+#   - Next.js は静的出力でもハイドレーション用の inline <script> を生成するため、
+#     script-src を 'self' に絞ると 'unsafe-inline'/nonce なしでサイトが壊れる。
+#   - 静的サイトでは nonce 配布の手段がない（サーバが無い）。
+#   - 'unsafe-inline' を許す緩いCSPは保護価値が乏しく、保守コストだけ増える。
+#   将来 inline を排除できたら Content-Security-Policy-Report-Only から段階導入する。
+# ---------------------------------------------------------------------------
+
+/*
+  # クリックジャッキング防止（iframe 埋め込み禁止）。診断UIを偽サイトに重ねさせない。
+  X-Frame-Options: DENY
+  # MIME スニッフィング無効化（誤った Content-Type を実行コードと解釈させない）。
+  X-Content-Type-Options: nosniff
+  # 参照元の漏えいを最小化（別オリジンへはオリジンのみ送出）。
+  Referrer-Policy: strict-origin-when-cross-origin
+  # 不要なブラウザ機能を全面ブロック（本診断はこれらを一切使わない）。
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), interest-cohort=()
+  # iframe 埋め込みの近代的指定（X-Frame-Options の補完。同一オリジンのみ許可）。
+  Content-Security-Policy: frame-ancestors 'self'
+  # クロスオリジンからの誤読み込み対策（リソースは同一サイト内で完結）。
+  Cross-Origin-Resource-Policy: same-origin
+  # HSTS: 一度 https で来たら 2 年間は https を強制（Cloudflare 経由は常に https）。
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
