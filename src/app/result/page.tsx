@@ -7,6 +7,7 @@ import {
   VERSION_CATEGORY_NAMES,
   VERSION_CATEGORY_COLORS,
   departments,
+  isScienceCategory,
 } from "@/lib/departments";
 import { departmentTexts } from "@/lib/result-texts";
 import { careerTexts } from "@/lib/career-texts";
@@ -402,6 +403,20 @@ export default function ResultPage() {
     (d) => !d.versions || d.versions.includes(data.version),
   );
 
+  // ===== uni-finder（進学先マッチング）への導線 =====
+  // 結果上位のうち理系学科のみを ?dept= に渡す。uni-finder は理系のみ対応のため、
+  // 文系学科（categoryIndex 1/2/3/4）は除外する。判定は各結果が持つ categoryIndex で自己完結。
+  // ID は uni-finder の ?dept= がそのまま受け取る同じ 32 学科ID。最大3件・カンマ区切り。
+  const UNI_FINDER_BASE = "https://uni-finder.pages.dev/score/";
+  const scienceTopIds = data.results
+    .filter((r) => isScienceCategory(r.categoryIndex))
+    .slice(0, 3)
+    .map((r) => r.id);
+  const hasScienceTop = scienceTopIds.length > 0;
+  const uniFinderUrl = hasScienceTop
+    ? `${UNI_FINDER_BASE}?dept=${encodeURIComponent(scienceTopIds.join(","))}`
+    : UNI_FINDER_BASE;
+
   return (
     <div className="flex min-h-dvh snap-x snap-mandatory overflow-x-auto overscroll-x-contain">
       {/* Page 1: 興味マップ（リング） + Top3 統合
@@ -615,6 +630,39 @@ export default function ResultPage() {
                 </p>
               </div>
             ))}
+          </div>
+
+          {/* uni-finder への導線（進学先マッチング・β）
+              診断 → 「この学科がある大学を探す」で uni-finder へ送客し、
+              ただの大学検索ではなく診断連携の差別化を活かす。
+              理系上位学科のみ ?dept= に渡す（uni-finder は理系のみ対応）。
+              文系診断（理系上位なし）でもボタンは出し、注記で案内＝クラッシュさせない。
+              ブランド規約に従い box-shadow / 疑似要素の図形描画は使わず border + 実要素で構成。 */}
+          <div className="mt-8 rounded-2xl border border-[#1E40AF]/20 bg-[#E8EFFF] px-5 py-4">
+            <p className="text-sm font-semibold text-[#1E40AF]">
+              次は「行ける大学」を探そう
+            </p>
+            <p className="mt-1 text-xs leading-relaxed text-gray-600">
+              {hasScienceTop
+                ? "あなたに合う学科を扱う大学を、共通テスト得点率から探せます。"
+                : "学力から進学先を探せる姉妹サービスがあります。"}
+            </p>
+            <a
+              href={uniFinderUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-3 block w-full rounded-full bg-[#1E40AF] py-3 text-center text-sm font-medium text-white transition-colors active:bg-[#16308a]"
+            >
+              この学科がある大学を探す →
+            </a>
+            {!hasScienceTop && (
+              <p className="mt-2 text-[10px] leading-relaxed text-gray-400">
+                ※ いまは理系の大学のみ対応しています
+              </p>
+            )}
+            <p className="mt-2 text-[10px] text-gray-400">
+              進学先マッチング（β）・無料 ／ 別タブで開きます
+            </p>
           </div>
         </div>
       </section>

@@ -199,6 +199,19 @@ export const departments: Department[] = [
     scores: [0.4, 0.4, 0.8, 0.0, 0.2, 0.0, 0.2, 0.0, 0.1, 0.0, 0.3, 0.2, 0.0, 0.6, 0.1, 0.0, 0.0, 0.0, 0.0, 0.55, 0.9, 0.3] },
 ];
 
+// 理系カテゴリの categoryIndex 集合。
+// 8カテゴリ（CATEGORY_NAMES）のうち理系＝数理・情報(0)／生命・医療(5)／工学・技術(6)／自然科学(7)。
+// uni-finder は理系学科のみ対応のため、結果ページの「大学を探す」導線でこの集合を使って
+// 理系学科だけを ?dept= に渡す（categoryIndex は各結果に含まれるので自己完結で判定できる）。
+// 注: スポーツ科学(categoryIndex 4=スポーツ・教育)は uni-finder 側には存在するが、
+//     ここでは「理系」に含めない（プロンプト定義の理系4カテゴリに従う）。
+export const SCIENCE_CATEGORY_INDICES: readonly number[] = [0, 5, 6, 7];
+
+// categoryIndex（0-7）が理系カテゴリかどうか。
+export function isScienceCategory(categoryIndex: number): boolean {
+  return SCIENCE_CATEGORY_INDICES.includes(categoryIndex);
+}
+
 // 学科 + バージョンから「リング上のスロット (0-7)」を取得
 export function getSlot(dept: Department, version: Version): number | undefined {
   if (version === "humanities") return dept.humSlot;
