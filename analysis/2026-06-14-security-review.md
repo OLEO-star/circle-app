@@ -54,7 +54,7 @@
 > | `handleSatisfaction` / 学校別 feedback | `reason`, `desired_field1`, `desired_field2`, `desired_field3`, `desired_reason` |
 >
 > **適用しなかったもの（意図的）**: 数値項目（適合度 top1〜3_score・所要時間 duration_sec・年齢）、`toNumberOrKeep` 済みの klass/student_number、アプリ生成の固定値（日時・session_id・version・top1〜3_name・categories・change_log・school_mode・school_pref・school_type・grade・satisfaction・start/end_time）。`handleDiagnosis` の学校別 students シートはユーザー自由記述フィールドを持たないため対象なし。
-> **コミット**: `07ddef7`（push・再デプロイはせず、保留中の「Apps Script 22軸再デプロイ」でオーナーが貼り直す際に一緒に有効化される）。
+> **コミット**: `302c3b9`（push・再デプロイはせず、保留中の「Apps Script 22軸再デプロイ」でオーナーが貼り直す際に一緒に有効化される）。
 
 
 - **場所**: `scripts/apps-script/code.gs` の `appendRow`（handleDiagnosis / handleSatisfaction）。
