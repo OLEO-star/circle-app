@@ -1,0 +1,44 @@
+
+
+========== sciences（学科20・測る軸17） ==========
+測る軸: MATH, MEMO, LAB, FIELD, CODE, MAKE, CARE, ABS, TEAM, CERT, GRAD, LIFE, ANIMAL, BODY, PURE, BIO, PROC
+現在の問題数（覚悟=逆転）: MATH5(覚1) MEMO3(覚1) LAB4(覚0) FIELD4(覚1) CODE5(覚1) MAKE5(覚1) CARE3(覚1) ABS4(覚2) TEAM3(覚1) CERT3(覚1) GRAD3(覚0) LIFE4(覚1) ANIMAL3(覚1) BODY3(覚0) PURE3(覚0) BIO2(覚0) PROC1(覚0)
+
+[数学科] 必須軸=MATH,ABS,PURE | 最近接=物理学科(dist0.27) | 分ける軸: LAB(Δ0.40 4問) / MAKE(Δ0.10 5問) / MATH(Δ0.10 5問)
+[情報科学科] 必須軸=CODE | 最近接=情報工学科(dist0.29) | 分ける軸: PURE(Δ0.30 3問) / GRAD(Δ0.20 3問) / ABS(Δ0.20 4問)
+[データサイエンス学科] 必須軸=MATH,CODE | 最近接=情報科学科(dist0.31) | 分ける軸: FIELD(Δ0.20 4問) / MAKE(Δ0.20 5問) / GRAD(Δ0.20 3問)
+[スポーツ科学科] 必須軸=BODY | 最近接=薬学科(dist0.88) | 分ける軸: BODY(Δ0.90 3問) / CERT(Δ0.50 3問) / MEMO(Δ0.50 3問)
+[医学科] 必須軸=MEMO,CARE,CERT,LIFE | 最近接=看護学科(dist0.48) | 分ける軸: FIELD(Δ0.30 4問) / LAB(Δ0.30 4問) / MEMO(Δ0.30 3問)
+[薬学科] 必須軸=MEMO,LAB,CERT | 最近接=医学科(dist0.56) | 分ける軸: LIFE(Δ0.50 4問) / CARE(Δ0.40 3問) / GRAD(Δ0.30 3問)
+[看護学科] 必須軸=FIELD,CARE,CERT,LIFE | 最近接=医学科(dist0.48) | 分ける軸: FIELD(Δ0.30 4問) / LAB(Δ0.30 4問) / MEMO(Δ0.30 3問)
+[農学科] 必須軸=FIELD | 最近接=生物学科(dist0.30) | 分ける軸: PROC(Δ0.25 ⚠1問) / PURE(Δ0.20 3問) / BIO(Δ0.15 ⚠2問)
+[獣医学科] 必須軸=MEMO,CERT,LIFE,ANIMAL | 最近接=医学科(dist0.61) | 分ける軸: ANIMAL(Δ0.90 3問) / BODY(Δ0.30 3問) / LIFE(Δ0.10 4問)
+[機械工学科] 必須軸=MATH,MAKE | 最近接=電気電子工学科(dist0.28) | 分ける軸: LAB(Δ0.30 4問) / MAKE(Δ0.20 5問) / FIELD(Δ0.10 4問)
+[電気電子工学科] 必須軸=MATH,LAB | 最近接=機械工学科(dist0.28) | 分ける軸: LAB(Δ0.30 4問) / MAKE(Δ0.20 5問) / FIELD(Δ0.10 4問)
+[建築学科] 必須軸=MAKE | 最近接=機械工学科(dist0.48) | 分ける軸: CERT(Δ0.40 3問) / CODE(Δ0.30 5問) / LAB(Δ0.30 4問)
+[情報工学科] 必須軸=CODE | 最近接=情報科学科(dist0.29) | 分ける軸: PURE(Δ0.30 3問) / GRAD(Δ0.20 3問) / ABS(Δ0.20 4問)
+[物理学科] 必須軸=MATH,ABS,PURE | 最近接=数学科(dist0.27) | 分ける軸: LAB(Δ0.40 4問) / MAKE(Δ0.10 5問) / MATH(Δ0.10 5問)
+[生物学科] 必須軸=LAB,BIO | 最近接=農学科(dist0.30) | 分ける軸: PROC(Δ0.25 ⚠1問) / PURE(Δ0.20 3問) / BIO(Δ0.15 ⚠2問)
+[地球科学科] 必須軸=FIELD | 最近接=農学科(dist0.62) | 分ける軸: ANIMAL(Δ0.60 3問) / BIO(Δ0.50 ⚠2問) / LIFE(Δ0.30 4問)
+[化学科] 必須軸=LAB,PURE | 最近接=応用化学科(dist0.28) | 分ける軸: PURE(Δ0.30 3問) / PROC(Δ0.25 ⚠1問) / ABS(Δ0.20 4問)
+[応用化学科] 必須軸=LAB | 最近接=化学科(dist0.28) | 分ける軸: PURE(Δ0.30 3問) / PROC(Δ0.25 ⚠1問) / ABS(Δ0.20 4問)
+[化学工学科] 必須軸=なし | 最近接=電気電子工学科(dist0.36) | 分ける軸: MAKE(Δ0.30 5問) / PROC(Δ0.30 ⚠1問) / BIO(Δ0.25 ⚠2問)
+[生命化学科] 必須軸=LAB,BIO | 最近接=応用化学科(dist0.45) | 分ける軸: BIO(Δ0.60 ⚠2問) / MAKE(Δ0.20 5問) / PROC(Δ0.15 ⚠1問)
+
+========== humanities（学科13・測る軸15） ==========
+測る軸: MATH, MEMO, LAB, FIELD, LANG, CARE, BIZ, ART, ABS, TEAM, CERT, GRAD, NARRATIVE, JUSTICE, BODY
+現在の問題数（覚悟=逆転）: MATH3(覚1) MEMO3(覚1) LAB1(覚0) FIELD4(覚1) LANG4(覚1) CARE5(覚1) BIZ5(覚0) ART3(覚0) ABS5(覚1) TEAM3(覚1) CERT3(覚1) GRAD3(覚0) NARRATIVE4(覚0) JUSTICE4(覚0) BODY3(覚0)
+
+[経済学科] 必須軸=MATH | 最近接=政治学科(dist0.50) | 分ける軸: JUSTICE(Δ0.50 4問) / MATH(Δ0.40 3問) / BIZ(Δ0.20 5問)
+[経営学科] 必須軸=BIZ | 最近接=商学科(dist0.24) | 分ける軸: TEAM(Δ0.30 3問) / CERT(Δ0.20 3問) / CARE(Δ0.10 5問)
+[商学科] 必須軸=BIZ | 最近接=経営学科(dist0.24) | 分ける軸: TEAM(Δ0.30 3問) / CERT(Δ0.20 3問) / CARE(Δ0.10 5問)
+[法学科] 必須軸=MEMO,JUSTICE | 最近接=政治学科(dist0.48) | 分ける軸: CERT(Δ0.60 3問) / MATH(Δ0.30 3問) / MEMO(Δ0.30 3問)
+[政治学科] 必須軸=JUSTICE | 最近接=社会学科(dist0.48) | 分ける軸: FIELD(Δ0.50 4問) / JUSTICE(Δ0.40 4問) / MEMO(Δ0.30 3問)
+[社会学科] 必須軸=なし | 最近接=国際関係学科(dist0.42) | 分ける軸: LANG(Δ0.50 4問) / FIELD(Δ0.30 4問) / BIZ(Δ0.20 5問)
+[国際関係学科] 必須軸=LANG | 最近接=外国語学科(dist0.36) | 分ける軸: JUSTICE(Δ0.30 4問) / MATH(Δ0.30 3問) / LANG(Δ0.20 4問)
+[文学科] 必須軸=LANG,NARRATIVE | 最近接=哲学科(dist0.35) | 分ける軸: ABS(Δ0.40 5問) / JUSTICE(Δ0.20 4問) / NARRATIVE(Δ0.20 4問)
+[外国語学科] 必須軸=LANG | 最近接=国際関係学科(dist0.36) | 分ける軸: JUSTICE(Δ0.30 4問) / MATH(Δ0.30 3問) / LANG(Δ0.20 4問)
+[哲学科] 必須軸=LANG,ABS,NARRATIVE | 最近接=文学科(dist0.35) | 分ける軸: ABS(Δ0.40 5問) / JUSTICE(Δ0.20 4問) / NARRATIVE(Δ0.20 4問)
+[教育学科] 必須軸=CARE | 最近接=心理学科(dist0.57) | 分ける軸: LAB(Δ0.70 ⚠1問) / MATH(Δ0.40 3問) / FIELD(Δ0.30 4問)
+[心理学科] 必須軸=なし | 最近接=教育学科(dist0.57) | 分ける軸: LAB(Δ0.70 ⚠1問) / MATH(Δ0.40 3問) / FIELD(Δ0.30 4問)
+[スポーツ科学科] 必須軸=BODY | 最近接=教育学科(dist0.62) | 分ける軸: BODY(Δ0.70 3問) / LAB(Δ0.40 ⚠1問) / CERT(Δ0.30 3問)

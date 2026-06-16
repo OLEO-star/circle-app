@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import {
   getQuestionsForVersion,
   getSetSizes,
+  SKIP_RULES,
   type Version,
 } from "@/lib/questions";
 import {
@@ -79,6 +80,58 @@ export default function QuizPage() {
 
   const questions = useMemo(() => getQuestionsForVersion(version), [version]);
   const setSizes = useMemo(() => getSetSizes(version), [version]);
+
+  // 覚悟スキップ: kakugo の global index と、trigger 2問の index＋「最も興味のない側」の値。
+  // 「最も興味のない側」= reverse 質問は 5、通常質問は 1。
+  const skipMeta = useMemo(() => {
+    const idToIndex = new Map<string, number>();
+    questions.forEach((q, i) => idToIndex.set(q.id, i));
+    const lo = (i: number) => (questions[i].reverse ? 5 : 1);
+    return SKIP_RULES[version].flatMap((r) => {
+      const ki = idToIndex.get(r.kakugo);
+      const t0 = idToIndex.get(r.triggers[0]);
+      const t1 = idToIndex.get(r.triggers[1]);
+      if (ki === undefined || t0 === undefined || t1 === undefined) return [];
+      return [
+        {
+          ki,
+          t: [
+            { i: t0, low: lo(t0) },
+            { i: t1, low: lo(t1) },
+          ],
+        },
+      ];
+    });
+  }, [questions, version]);
+
+  // 現在の回答で出題しない覚悟質問の global index 集合。
+  // 出題順で kakugo は trigger より後ろのページにあるため、kakugo のページに来た時点で
+  // trigger は回答済み＝判定が確定している（ページ内で質問が消える挙動は起きない）。
+  const hiddenSet = useMemo(() => {
+    const s = new Set<number>();
+    for (const r of skipMeta) {
+      if (
+        answers[r.t[0].i] === r.t[0].low &&
+        answers[r.t[1].i] === r.t[1].low
+      ) {
+        s.add(r.ki);
+      }
+    }
+    return s;
+  }, [skipMeta, answers]);
+
+  // 表示用の通し番号（隠れた質問を飛ばして採番）
+  const visibleNumber = useMemo(() => {
+    const map = new Map<number, number>();
+    let n = 0;
+    for (let i = 0; i < questions.length; i++) {
+      if (!hiddenSet.has(i)) {
+        n++;
+        map.set(i, n);
+      }
+    }
+    return map;
+  }, [questions.length, hiddenSet]);
 
   // クライアントマウント時に localStorage から復元
   useEffect(() => {
@@ -164,23 +217,28 @@ export default function QuizPage() {
     );
   }, [changeCounts, hydrated]);
 
-  // 現在のセットの質問範囲
+  // 現在のセットの質問範囲（隠れた覚悟質問は除外して「表示する質問」だけ並べる）
   const setStart = setSizes.slice(0, currentSet).reduce((a, b) => a + b, 0);
   const setEnd = setStart + (setSizes[currentSet] ?? 0);
-  const currentQuestions = questions.slice(setStart, setEnd);
+  const visibleCurrent = questions
+    .slice(setStart, setEnd)
+    .map((q, i) => ({ q, globalIndex: setStart + i }))
+    .filter((x) => !hiddenSet.has(x.globalIndex));
 
+  // 表示質問が全て回答済みなら進める（全部スキップで0問のページも進める）
   const allAnswered =
-    hydrated &&
-    currentQuestions.length > 0 &&
-    currentQuestions.every((_, i) => answers[setStart + i] !== null);
+    hydrated && visibleCurrent.every((x) => answers[x.globalIndex] !== null);
 
-  const answeredCount = answers.filter((a) => a !== null).length;
-  const totalQuestions = questions.length;
+  // 進捗・カウントは「表示する質問」基準（スキップ分は分母から除く）
+  const answeredCount = answers.filter(
+    (a, i) => a !== null && !hiddenSet.has(i),
+  ).length;
+  const totalQuestions = questions.length - hiddenSet.size;
   const progress = totalQuestions ? (answeredCount / totalQuestions) * 100 : 0;
   const progressPercent = Math.round(progress);
   // 現在セット内の回答済み数（マイクロ達成感メッセージ用）
-  const currentSetAnswered = currentQuestions.filter(
-    (_, i) => answers[setStart + i] !== null,
+  const currentSetAnswered = visibleCurrent.filter(
+    (x) => answers[x.globalIndex] !== null,
   ).length;
 
   // セット切り替わり時にトップへスクロール
@@ -218,12 +276,13 @@ export default function QuizPage() {
     // disabled で押せないより「何が足りないか」を物理的に示す方が分かりやすい。
     if (!allAnswered) {
       setAttemptedAdvance(true);
-      const firstUnansweredIdx = currentQuestions.findIndex(
-        (_, i) => answers[setStart + i] === null,
+      const firstUnanswered = visibleCurrent.find(
+        (x) => answers[x.globalIndex] === null,
       );
-      if (firstUnansweredIdx !== -1) {
-        const globalIdx = setStart + firstUnansweredIdx;
-        const el = document.getElementById(`question-${globalIdx}`);
+      if (firstUnanswered) {
+        const el = document.getElementById(
+          `question-${firstUnanswered.globalIndex}`,
+        );
         if (el) {
           el.scrollIntoView({ behavior: "smooth", block: "center" });
         }
@@ -235,7 +294,11 @@ export default function QuizPage() {
     if (currentSet + 1 < setSizes.length) {
       setCurrentSet(currentSet + 1);
     } else {
-      const finalAnswers = answers as number[];
+      // 未出題（スキップ）の覚悟質問は「最も興味のない側」を補完して採点する。
+      // これで calcAxisScores の軸別正規化（質問セットは固定）の前提を壊さない。
+      const finalAnswers = answers.map((a, i) =>
+        hiddenSet.has(i) ? (questions[i].reverse ? 5 : 1) : (a as number),
+      );
       const axisScores = calcAxisScores(finalAnswers, questions);
       const results = rankDepartments(axisScores, version);
       const top3Categories = getTop3Categories(results);
@@ -307,7 +370,7 @@ export default function QuizPage() {
     setSizes.length >= 4;
   // ラストセットの残り問題数（プログレスヘッダーのカウントダウン表示用）
   const remainingInLastSet = isLastSet
-    ? (setSizes[currentSet] ?? 0) - currentSetAnswered
+    ? visibleCurrent.length - currentSetAnswered
     : 0;
 
   return (
@@ -349,7 +412,7 @@ export default function QuizPage() {
                   🎯 最後のセット！
                 </p>
                 <p className="mt-1 text-xs text-gray-700">
-                  あと <strong className="text-rose-700">{setSizes[currentSet]}</strong> 問で、あなたに合う学部が見えます
+                  あと <strong className="text-rose-700">{visibleCurrent.length}</strong> 問で、あなたに合う学部が見えます
                 </p>
               </div>
             ) : isHalfwayPoint ? (
@@ -382,8 +445,7 @@ export default function QuizPage() {
             </div>
           )}
 
-        {currentQuestions.map((q, i) => {
-          const globalIndex = setStart + i;
+        {visibleCurrent.map(({ q, globalIndex }) => {
           const selected = answers[globalIndex];
           // 未回答強調：attempted を押した後、未回答だけ淡ロゼ背景にする。
           // Baker-Miller Pink の系統の淡色で、ストレッサーになりにくい色味を選択。
@@ -400,7 +462,7 @@ export default function QuizPage() {
             >
               <p className="mb-4 text-sm leading-relaxed">
                 <span className="mr-2 text-xs font-medium text-gray-500">
-                  {globalIndex + 1}.
+                  {visibleNumber.get(globalIndex)}.
                 </span>
                 {q.text}
               </p>

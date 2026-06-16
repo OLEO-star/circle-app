@@ -1,22 +1,19 @@
-// 質問プール（82問）+ 3バージョン対応（mixed / humanities / sciences）
+// 質問プール + 3バージョン対応（mixed / humanities / sciences）
 //
 // バージョン:
-//   mixed      = 文理混合版（66問）
-//   humanities = 文系特化版（53問 = 共通25 + 文系のみ16 + 文系追加6 + 数理共通4 + 具体追加2）
-//                 ※ 2026-05-18: MATH(M1/M2/M3) と LAB(L3) を追加。
-//                   経済・経営・心理など数学・実験要素を持つ文系学科の評価精度向上のため。
-//                 ※ 2026-06-03: 具体設問 J4(法↔政治分離)/Ab5(哲学↔文学分離) を追加。
-//   sciences   = 理系特化版（58問 = 共通25 + 理系のみ19 + 理系追加5 + 具体追加3 + 新軸6）
-//                 ※ 2026-06-03: 動物質問 An2 を削除（An1と重複）→ 動物 4→3。
-//                   具体設問 Li4(医療)/C5(AI・データ)/M5(自然の根本法則) を追加。
-//                   Ce4(医療専門職/CERT) は検討の末 撤回（医療シグナルは Li4 が LIFE軸で担い、
-//                   CERT は汎用の資格職仕分け役に据え置くため）。
-//                 ※ 2026-06-12: 新3軸 PURE/BIO/PROC の6問（P1-P3/Bi1-Bi2/Pr1）を
-//                   sciences+mixed に追加（B原則: humanities には入れない）。
-//                   化学系4学科（化学・応化・化工・生命化学）と情報科学⇄情報工学の
-//                   ベクトル重複を解消するため。設計と監査記録は
-//                   analysis/2026-06-12-question-addition-design.md 参照。
-//                   全問順方向・比較形（REVERSE_MAP の重み歪みと社会的望ましさバイアス回避）。
+//   mixed      = 文理混合版（66問・22軸×3）
+//   humanities = 文系特化版（45問・測定15軸×3）
+//   sciences   = 理系特化版（51問・測定17軸×3）
+//
+// 2026-06-16 大改訂（八並教授「中学生にも分かりやすく」起点）:
+//   ① 全測定軸を「3問ちょうど」に統一（多い軸はトリム・薄い軸＝PROC/BIO/LAB を増強）。
+//      sciences 58→51 / humanities 53→45。化学系判別の主役 PROC/BIO を sciences で3問化。
+//   ② 質問文を中学生向けに具体化（Claude×Codex 二重チェック。設計＝
+//      analysis/2026-06-16-scihum-restructure-plan.md・-difficulty-rewrites.md）。
+//   ③ 覚悟スキップ機構（SKIP_RULES）: 各軸の興味2問が両方とも「最も興味のない側」なら
+//      覚悟質問を出題しない。出題順は各軸の覚悟質問を興味2問より後ろのページに配置。
+//      採点では未出題の覚悟は「最も興味のない側」の値を補完（v2正規化の前提を保つ）。
+//   ④ N2 は ABS への誤割当かつ Ab4 と重複のため humanities から除外（mixed のみ残置）。
 //
 // 軸インデックス:
 //   MATH=0, MEMO=1, LAB=2, FIELD=3, CODE=4, MAKE=5, LANG=6, CARE=7
@@ -33,265 +30,278 @@ export type Question = {
   versions: Version[];
 };
 
-// 全85問のプール（出題順は VERSION_ORDERS で別管理。mixed は22軸×3＝66）
 const ALL_QUESTIONS: Question[] = [
-  // ===== 共通質問（25問・全バージョン） =====
-  { id: "F1",   text: "教室にいるより、外に出て自分の目で見たり体験したりするほうが好きだ",
-    axisIndex: 3,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Ca1",  text: "友達が落ち込んでいるとき、自分から声をかけて話を聞く側になることが多い",
-    axisIndex: 7,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Me1",  text: "興味のあるテーマについて、用語や定義などの細かい知識まで覚えたくなる",
-    axisIndex: 1,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Ce1",  text: "国家資格を取って、その道のプロとして働くことに憧れがある",
-    axisIndex: 12, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "T1",   text: "グループで意見を出し合って進めるほうが、一人で黙々とやるより好きだ",
-    axisIndex: 11, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Ab1",  text: "「自分とは何か」「時間は本当に存在するのか」のような、答えが一つに決まらない問いを考えるのが好きだ",
+  // ===== MATH (0) =====
+  { id: "M1", text: "公式を使って「どうしてこの答えになるのか」を自分で説明できたとき、おもしろいと感じる",
+    axisIndex: 0, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "M2", text: "ふだんの生活で起きることを「数字で説明できないかな」と考えることがある",
+    axisIndex: 0, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "M3", text: "計算問題がずっと続くと、途中で集中が切れてしまうほうだ",
+    axisIndex: 0, reverse: true, versions: ["mixed", "humanities", "sciences"] },  // 覚悟(skippable)
+  // ===== MEMO (1) =====
+  { id: "Me1", text: "興味があることは、こまかい言葉の意味や知識まで、すみずみ覚えたくなる",
+    axisIndex: 1, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "Me2", text: "気になったテーマを、図鑑や Wikipedia で関連知識まで読み込みたくなる",
+    axisIndex: 1, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "Me3", text: "テスト前に大量の暗記が必要だと、気が重くなる",
+    axisIndex: 1, reverse: true, versions: ["mixed", "humanities", "sciences"] },  // 覚悟(skippable)
+  // ===== LAB (2) =====
+  { id: "L1", text: "理科の授業で、ビーカーや試験管を使って実験する時間が好きだ",
+    axisIndex: 2, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "L3", text: "実験が失敗しても、原因をさがしてもう一度やるのは、むしろ平気だ",
+    axisIndex: 2, reverse: false, versions: ["mixed", "humanities", "sciences"] },  // 覚悟(skippable)
+  { id: "L4", text: "自分で薬品を混ぜて反応を起こし、これまでにない新しい材料を作ることに興味がある",
+    axisIndex: 2, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "Lh1", text: "アンケートや心理テストでデータを集めて、人がどう考え・どう行動するかを調べてみたい",
+    axisIndex: 2, reverse: false, versions: ["humanities"] },
+  { id: "Lh2", text: "「たぶんこうだろう」で終わらせず、実際に調べて数字やデータで確かめないと納得できないほうだ",
+    axisIndex: 2, reverse: false, versions: ["humanities"] },
+  // ===== FIELD (3) =====
+  { id: "F1", text: "教室にいるより、外に出て自分の目で見たり体験したりするほうが好きだ",
+    axisIndex: 3, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "F3", text: "真夏のすごく暑い日や雨の日に、外で長い時間活動するのはつらいと思う",
+    axisIndex: 3, reverse: true, versions: ["mixed", "humanities", "sciences"] },  // 覚悟(skippable)
+  { id: "F4", text: "街に出て人に話を聞いたりアンケートを取ったりして、世の中のことを自分の足で調べたい",
+    axisIndex: 3, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  // ===== CODE (4) =====
+  { id: "C1", text: "コードを書いてアプリやゲームを動かすことに興味がある",
+    axisIndex: 4, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "C2", text: "パソコンで「めんどうな作業を自動でやらせたり、データを調べたり」するのが楽しそうだ",
+    axisIndex: 4, reverse: false, versions: ["mixed"] },
+  { id: "C3", text: "パソコンで何かを作っていてうまくいかないと、すぐに諦めたくなるほうだ",
+    axisIndex: 4, reverse: true, versions: ["mixed", "sciences"] },  // 覚悟(skippable)
+  { id: "C5", text: "AIやデータを使って、身のまわりの困りごと（こみ具合や勉強の悩みなど）を解決してみたい",
+    axisIndex: 4, reverse: false, versions: ["sciences"] },
+  // ===== MAKE (5) =====
+  { id: "Mk1", text: "模型や工作など、手を動かして形にする作業が好きだ",
+    axisIndex: 5, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "Mk2", text: "「こういう建物や製品があったらいいな」と頭の中で設計図を描くことがある",
+    axisIndex: 5, reverse: false, versions: ["mixed"] },
+  { id: "Mk3", text: "作品を何度もやり直すのは面倒で、早く完成させたいほうだ",
+    axisIndex: 5, reverse: true, versions: ["mixed", "sciences"] },  // 覚悟(skippable)
+  { id: "Mk5", text: "高いビルや長い橋が、地震や強い風でもこわれにくいのはなぜか、その理由に興味がある",
+    axisIndex: 5, reverse: false, versions: ["sciences"] },
+  // ===== LANG (6) =====
+  { id: "Lg1", text: "外国語を学んで、海外の人とコミュニケーションを取りたい",
+    axisIndex: 6, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "Lg2", text: "古い文章や分厚い本でも、じっくり読んで意味が分かるとうれしい",
+    axisIndex: 6, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "Lg3", text: "毎日コツコツ単語を覚えたり文法問題を解いたりする勉強は退屈に感じる",
+    axisIndex: 6, reverse: true, versions: ["mixed", "humanities"] },  // 覚悟(skippable)
+  // ===== CARE (7) =====
+  { id: "Ca1", text: "友達が落ち込んでいるとき、自分から声をかけて話を聞く側になることが多い",
+    axisIndex: 7, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "Ca2", text: "後輩や友達に勉強を教えるのが得意だし、やりがいを感じる",
+    axisIndex: 7, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "Ca3", text: "泣いたり怒ったりしている人の前にいると、自分もつらくなって対応に困ることがある",
+    axisIndex: 7, reverse: true, versions: ["mixed", "humanities", "sciences"] },  // 覚悟(skippable)
+  { id: "Ca5", text: "人の話をじっくり聴いて、心の悩みに寄り添う仕事をしてみたい",
+    axisIndex: 7, reverse: false, versions: ["humanities"] },
+  // ===== BIZ (8) =====
+  { id: "B1", text: "コンビニやお店が、どうやってお金をかせいでいるのか、そのしくみに興味がある",
+    axisIndex: 8, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "B3", text: "文化祭の出店やフリマで、いくら売りたいか決めて工夫するのは楽しそうだ",
+    axisIndex: 8, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "Bz4", text: "文化祭の実行委員のように、人をまとめて新しい活動を自分で始めてみたい",
+    axisIndex: 8, reverse: false, versions: ["mixed", "humanities"] },
+  // ===== ART (9) =====
+  { id: "A1", text: "デザインや色の組み合わせなど、見た目の美しさにこだわりがある",
+    axisIndex: 9, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "A2", text: "絵を描いたり、写真を撮ったり、自分なりの表現をするのが好きだ",
+    axisIndex: 9, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "A3", text: "「こうすれば正解」が無いことでも、自分の感じ方・センスを信じて取り組むのは怖くない",
+    axisIndex: 9, reverse: false, versions: ["mixed", "humanities"] },
+  // ===== ABS (10) =====
+  { id: "Ab1", text: "「自分って何だろう」「もし時間が戻せたら？」のように、答えが1つに決まらないことをあれこれ考えるのが好きだ",
     axisIndex: 10, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "G1",   text: "大学4年間では足りないくらい、一つのテーマを深く研究してみたい",
-    axisIndex: 13, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Bo1",  text: "運動や筋肉の仕組みを科学的に分析して、身体のパフォーマンスを高めることに興味がある",
-    axisIndex: 18, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "F2",   text: "街や自然の中を実際に歩いて、自分の目や耳で情報を集めるのが好きだ",
-    axisIndex: 3,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Me2",  text: "気になったテーマを、図鑑や Wikipedia で関連知識まで読み込みたくなる",
-    axisIndex: 1,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Ca2",  text: "後輩や友達に勉強を教えるのが得意だし、やりがいを感じる",
-    axisIndex: 7,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Ab2",  text: "目に見えない法則や原理を理解できた瞬間に快感を覚える",
-    axisIndex: 10, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "T2",   text: "チームの中で役割分担を決めて動くのが楽しい",
+  { id: "Ab2", text: "ずっと「なんでだろう」と思っていたことの理由やしくみが分かった瞬間が、すごく好きだ",
+    axisIndex: 10, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "Ab3", text: "考えても考えても答えが出ない問題は、途中で投げ出したくなるほうだ",
+    axisIndex: 10, reverse: true, versions: ["mixed", "humanities", "sciences"] },  // 覚悟(skippable)
+  { id: "Ab5", text: "「何が正しいんだろう」「人は何のために生きるんだろう」のような、答えの出ない問いをずっと考えていたい",
+    axisIndex: 10, reverse: false, versions: ["humanities"] },
+  // ===== TEAM (11) =====
+  { id: "T1", text: "グループで意見を出し合って進めるほうが、一人で黙々とやるより好きだ",
     axisIndex: 11, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Ce2",  text: "「この資格があれば一生食べていける」という安心感に魅力を感じる",
+  { id: "T2", text: "チームの中で役割分担を決めて動くのが楽しい",
+    axisIndex: 11, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "T3", text: "意見が合わない人と一緒に作業すると、ストレスを感じるほうだ",
+    axisIndex: 11, reverse: true, versions: ["mixed", "humanities", "sciences"] },  // 覚悟(skippable)
+  // ===== CERT (12) =====
+  { id: "Ce1", text: "資格を取って、それを生かした仕事のプロになりたい",
     axisIndex: 12, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "G2",   text: "最先端の研究をしている人の話を聞くと、自分もやってみたいと思う",
+  { id: "Ce2", text: "「この資格があれば将来も仕事に困らない」という安心感にひかれる",
+    axisIndex: 12, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "Ce3", text: "同じ教科書を何周もするような勉強生活を何年も続けるのはつらいと思う",
+    axisIndex: 12, reverse: true, versions: ["mixed", "humanities", "sciences"] },  // 覚悟(skippable)
+  // ===== GRAD (13) =====
+  { id: "G1", text: "一つのことを、大学に入ってからも何年もかけてとことん調べてみたい",
     axisIndex: 13, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "F3",   text: "真夏の炎天下や雨の日に外で長時間活動するのは、正直つらいと思う",
-    axisIndex: 3,  reverse: true,  versions: ["mixed", "humanities", "sciences"] },
-  { id: "Ca3",  text: "泣いたり怒ったりしている人の前にいると、自分もつらくなって対応に困ることがある",
-    axisIndex: 7,  reverse: true,  versions: ["mixed", "humanities", "sciences"] },
-  { id: "Me3",  text: "テスト前に大量の暗記が必要だと、気が重くなる",
-    axisIndex: 1,  reverse: true,  versions: ["mixed", "humanities", "sciences"] },
-  { id: "Ab3",  text: "考えても考えても答えが出ない問題は、途中で投げ出したくなるほうだ",
-    axisIndex: 10, reverse: true,  versions: ["mixed", "humanities", "sciences"] },
-  { id: "T3",   text: "意見が合わない人と一緒に作業すると、ストレスを感じるほうだ",
-    axisIndex: 11, reverse: true,  versions: ["mixed", "humanities", "sciences"] },
-  { id: "Ce3",  text: "同じ教科書を何周もするような勉強生活を何年も続けるのはつらいと思う",
-    axisIndex: 12, reverse: true,  versions: ["mixed", "humanities", "sciences"] },
-  { id: "G3",   text: "大学卒業後も2〜5年間、学生として研究を続ける生活に抵抗がない",
+  { id: "G2", text: "まだ誰も知らないことを研究している人の話を聞くと、自分もやってみたくなる",
     axisIndex: 13, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Bo2",  text: "スポーツの戦術や試合の分析・データを見るのが好きだ",
-    axisIndex: 18, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Bo3",  text: "食事・睡眠・トレーニングなど、身体を整える方法に関心がある",
-    axisIndex: 18, reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "F4",   text: "街に出て人々にインタビューやアンケートを行い、社会の実態を自分の足で調べたい",
-    axisIndex: 3,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-
-  // ===== 文系のみ（16問・mixed + humanities） =====
-  { id: "B1",   text: "企業がどうやって利益を出しているか、仕組みに興味がある",
-    axisIndex: 8,  reverse: false, versions: ["mixed", "humanities"] },
-  { id: "Lg1",  text: "外国語を学んで、海外の人とコミュニケーションを取りたい",
-    axisIndex: 6,  reverse: false, versions: ["mixed", "humanities"] },
-  { id: "A1",   text: "デザインや色の組み合わせなど、見た目の美しさにこだわりがある",
-    axisIndex: 9,  reverse: false, versions: ["mixed", "humanities"] },
-  { id: "N1",   text: "小説や詩の表現を深く味わい、作者がなぜその言葉を選んだのかを考えるのが好きだ",
-    axisIndex: 16, reverse: false, versions: ["mixed", "humanities"] },
-  { id: "J1",   text: "法律の条文を正確に読み解き、論理で結論を導きたいと思う",
-    axisIndex: 17, reverse: false, versions: ["mixed", "humanities"] },
-  { id: "B2",   text: "文化祭やイベントで「売上」「集客」を考えるのが楽しい",
-    axisIndex: 8,  reverse: false, versions: ["mixed", "humanities"] },
-  { id: "Lg2",  text: "古い文章や難しい本をじっくり読み解く作業に達成感を覚える",
-    axisIndex: 6,  reverse: false, versions: ["mixed", "humanities"] },
-  { id: "A2",   text: "絵を描いたり、写真を撮ったり、自分なりの表現をするのが好きだ",
-    axisIndex: 9,  reverse: false, versions: ["mixed", "humanities"] },
-  { id: "N2",   text: "ものごとの前提を疑い、「そもそもそれは正しいのか」と論理で問い直すのが好きだ",
-    axisIndex: 16, reverse: false, versions: ["mixed", "humanities"] },
-  { id: "J2",   text: "選挙の仕組みや、政治家・官僚がどう意思決定しているかに興味がある",
-    axisIndex: 17, reverse: false, versions: ["mixed", "humanities"] },
-  { id: "Lg3",  text: "毎日コツコツ単語を覚えたり文法問題を解いたりする勉強は退屈に感じる",
-    axisIndex: 6,  reverse: true,  versions: ["mixed", "humanities"] },
-  { id: "B3",   text: "文化祭の出店やフリマで、売上目標を決めて工夫するのは楽しそうだ",
-    axisIndex: 8,  reverse: false, versions: ["mixed", "humanities"] },
-  { id: "A3",   text: "「正解がない」課題に対して、自分の感性だけで勝負するのは怖くない",
-    axisIndex: 9,  reverse: false, versions: ["mixed", "humanities"] },
-  { id: "Bz4",  text: "人やチームを率いて、新しいビジネスやプロジェクトを立ち上げたい",
-    axisIndex: 8,  reverse: false, versions: ["mixed", "humanities"] },
-  { id: "N3",   text: "言葉や物語が人の心を動かす力に魅力を感じる",
-    axisIndex: 16, reverse: false, versions: ["mixed", "humanities"] },
-  { id: "J3",   text: "不公平な状況を見ると、「どう正すべきか」を考えたくなる",
-    axisIndex: 17, reverse: false, versions: ["mixed", "humanities"] },
-
-  // ===== 理系のみ（19問・基本 mixed + sciences。M1/M2/M3/L3 の4問は3版共通） =====
-  { id: "L1",   text: "理科の授業で、ビーカーや試験管を使って実験する時間が好きだ",
-    axisIndex: 2,  reverse: false, versions: ["mixed", "sciences"] },
-  { id: "C1",   text: "コードを書いてアプリやゲームを動かすことに興味がある",
-    axisIndex: 4,  reverse: false, versions: ["mixed", "sciences"] },
-  { id: "Mk1",  text: "模型や工作など、手を動かして形にする作業が好きだ",
-    axisIndex: 5,  reverse: false, versions: ["mixed", "sciences"] },
-  { id: "M1",   text: "数式を使って法則を導き出す作業にワクワクする",
-    axisIndex: 0,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "An1",  text: "動物の生態や行動を観察するのが好きだ",
-    axisIndex: 15, reverse: false, versions: ["mixed", "sciences"] },
-  { id: "Li1",  text: "将来、生き物の生死に直接関わる現場で働きたいと思う",
+  { id: "G3", text: "大学を卒業したあとも、さらに数年「学校に残って研究を続ける」のも、自分はアリだと思う",
+    axisIndex: 13, reverse: false, versions: ["mixed", "humanities", "sciences"] },  // 覚悟(skippable)
+  // ===== LIFE (14) =====
+  { id: "Li1", text: "病気やケガをした人や動物の命に、直接かかわる仕事をしたい",
     axisIndex: 14, reverse: false, versions: ["mixed", "sciences"] },
-  { id: "L2",   text: "実験で試薬を混ぜたり温度を変えたりして、結果がどう変わるか観察するのが楽しい",
-    axisIndex: 2,  reverse: false, versions: ["mixed", "sciences"] },
-  { id: "C2",   text: "パソコンで作業を自動化したり、データを分析したりするのが楽しそうだ",
-    axisIndex: 4,  reverse: false, versions: ["mixed", "sciences"] },
-  { id: "Mk2",  text: "「こういう建物や製品があったらいいな」と頭の中で設計図を描くことがある",
-    axisIndex: 5,  reverse: false, versions: ["mixed", "sciences"] },
-  { id: "M2",   text: "日常の現象を「数字で説明できないか」と考えることがある",
-    axisIndex: 0,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "Li2",  text: "手術や解剖の映像を見ても、怖さより「どんな処置をしているのか」に注目するほうだ",
-    axisIndex: 14, reverse: false, versions: ["mixed", "sciences"] },
-  { id: "M3",   text: "計算問題がずっと続くと、途中で集中が切れてしまうほうだ",
-    axisIndex: 0,  reverse: true,  versions: ["mixed", "humanities", "sciences"] },
-  { id: "L3",   text: "実験が失敗しても原因を探してやり直すことに抵抗がない",
-    axisIndex: 2,  reverse: false, versions: ["mixed", "humanities", "sciences"] },
-  { id: "C3",   text: "パソコンで何かを作っていてうまくいかないと、すぐに諦めたくなるほうだ",
-    axisIndex: 4,  reverse: true,  versions: ["mixed", "sciences"] },
-  { id: "Mk3",  text: "作品を何度もやり直すのは面倒で、早く完成させたいほうだ",
-    axisIndex: 5,  reverse: true,  versions: ["mixed", "sciences"] },
-  { id: "Li3",  text: "生き物が苦しんでいる様子を目にすると、自分もつらくなって見ていられなくなる",
-    axisIndex: 14, reverse: true,  versions: ["mixed", "sciences"] },
-  { id: "An3",  text: "動物の排泄物の処理や、汚れた環境での長時間の作業には抵抗がある",
-    axisIndex: 15, reverse: true,  versions: ["mixed", "sciences"] },
-  { id: "An4",  text: "動物の解剖実習や、治療中の動物が亡くなる場面があっても、仕事として続けられると思う",
-    axisIndex: 15, reverse: false, versions: ["mixed", "sciences"] },
-  { id: "L4",   text: "化学反応を自分で起こして、新しい素材や物質を作り出すことに興味がある",
-    axisIndex: 2,  reverse: false, versions: ["mixed", "sciences"] },
-
-  // ===== 文系版のみの追加質問（6問・humanities のみ） =====
-  { id: "Ca4",  text: "学校や福祉の現場で、子どもや家庭を支える仕事に魅力を感じる",
-    axisIndex: 7,  reverse: false, versions: ["humanities"] },
-  { id: "Ca5",  text: "人の話をじっくり聴いて、心の悩みに寄り添う仕事をしてみたい",
-    axisIndex: 7,  reverse: false, versions: ["humanities"] },
-  { id: "Lg4",  text: "原文で外国の文学や思想を読み、翻訳では失われるニュアンスを味わいたい",
-    axisIndex: 6,  reverse: false, versions: ["humanities"] },
-  { id: "Bz5",  text: "経営者や起業家の話を読んで、自分も意思決定する側に立ちたいと思う",
-    axisIndex: 8,  reverse: false, versions: ["humanities"] },
-  { id: "N4",   text: "歴史的な文章や思想を読み解いて、長く読み継がれる理由を考えるのが好きだ",
-    axisIndex: 16, reverse: false, versions: ["humanities"] },
-  { id: "Ab4",  text: "「常識」や「当たり前」を一度疑って、自分の頭で考え直す習慣がある",
-    axisIndex: 10, reverse: false, versions: ["humanities"] },
-
-  // ===== 文系版・具体設問（2問・humanities のみ・2026-06-03 追加） =====
-  // J4: 法学↔政治学の分離（法=JUSTICE最大）。Ab5: 哲学↔文学の分離（哲学=ABS最大）。
-  { id: "J4",   text: "法律やルールを正確に読み解いて、もめごとの白黒をつけることに関心がある",
-    axisIndex: 17, reverse: false, versions: ["humanities"] },
-  { id: "Ab5",  text: "「正しさとは何か」「人はどう生きるべきか」といった、答えの出ない問いを深く考えたい",
-    axisIndex: 10, reverse: false, versions: ["humanities"] },
-
-  // ===== 理系版のみの追加質問（5問・sciences のみ） =====
-  { id: "M4",   text: "集合論・群論・位相空間など、抽象的な数学の世界に触れてみたい",
-    axisIndex: 0,  reverse: false, versions: ["sciences"] },
-  { id: "C4",   text: "プログラムの計算量を減らしたり、効率を追求することに快感を覚える",
-    axisIndex: 4,  reverse: false, versions: ["sciences"] },
-  { id: "Mk4",  text: "機械や装置を分解して、内部の仕組みを観察するのが好きだ",
-    axisIndex: 5,  reverse: false, versions: ["sciences"] },
-  { id: "Mk5",  text: "建物・橋・乗り物などの構造が、どう力を支えているかに興味がある",
-    axisIndex: 5,  reverse: false, versions: ["sciences"] },
-  { id: "Ab4r", text: "抽象的な議論より、目の前の具体的な問題を解くほうが好きだ",
-    axisIndex: 10, reverse: true,  versions: ["sciences"] },
-
-  // ===== 理系版・具体設問（3問・sciences のみ・2026-06-03 追加） =====
-  // 「認識しやすい進路イメージ」で回答品質と学科判別を上げる狙い。各設問は単一軸に対応。
-  // ※ Ce4(医療専門職/CERT) は撤回：医療の名指しを汎用の資格軸に載せると建築・獣医を濁し、
-  //   かつ医療シグナルは LIFE軸の Li4 が正しく担うため重複。CERT は汎用の仕分け役に据え置く。
-  { id: "Li4",  text: "病気やケガで苦しむ人を、医療の力で直接助ける仕事に就きたい",
+  { id: "Li2", text: "手術の映像を見ても、「こわい」より「今どんなことをしているんだろう」と気になるほうだ",
+    axisIndex: 14, reverse: false, versions: ["mixed"] },
+  { id: "Li3", text: "生き物が苦しんでいる様子を目にすると、自分もつらくなって見ていられなくなる",
+    axisIndex: 14, reverse: true, versions: ["mixed", "sciences"] },  // 覚悟(skippable)
+  { id: "Li4", text: "病気やケガで苦しむ人を、医療の力で直接助ける仕事に就きたい",
     axisIndex: 14, reverse: false, versions: ["sciences"] },
-  { id: "C5",   text: "AIやデータ分析を使って、社会や生活の課題を解決することに興味がある",
-    axisIndex: 4,  reverse: false, versions: ["sciences"] },
-  { id: "M5",   text: "宇宙や物質の根源など、自然界の根本法則を数式で解き明かしたい",
-    axisIndex: 0,  reverse: false, versions: ["sciences"] },
-
-  // ===== 新3軸 PURE/BIO/PROC（6問・mixed + sciences・2026-06-12 追加） =====
-  // PURE(19): 純粋（原理・理論）志向。低スコア＝応用・実装志向。比較形で強制選択させる。
-  //   化学科⇄応化・化工、情報科学⇄情報工学の分離が目的。
-  // BIO(20): 生体・生命現象への興味。生命化学・生物のシグナル（LIFE=臨床医療とは別物）。
-  // PROC(21): 量産・プロセス設計への興味。化学工学のシグナル。1問軸のためゲート対象外。
-  { id: "P1",   text: "すぐに役立つかどうかよりも、「なぜそうなるのか」という原理やしくみを解き明かすことのほうに興味がある",
+  // ===== ANIMAL (15) =====
+  { id: "An1", text: "動物のくらし方や行動をじっくり観察するのが好きだ",
+    axisIndex: 15, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "An3", text: "動物の排泄物の処理や、汚れた環境での長時間の作業には抵抗がある",
+    axisIndex: 15, reverse: true, versions: ["mixed", "sciences"] },
+  { id: "An4", text: "動物が死んでしまう場面に立ち会うことがあっても、動物を助ける仕事を続けられると思う",
+    axisIndex: 15, reverse: false, versions: ["mixed", "sciences"] },  // 覚悟(skippable)
+  // ===== NARRATIVE (16) =====
+  { id: "N1", text: "好きな小説や歌の歌詞で、作者がどうしてその言葉を選んだのかを考えるのが好きだ",
+    axisIndex: 16, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "N2", text: "みんなが「当たり前」と思っていることでも、「本当にそうかな？」と一度疑って考えるのが好きだ",
+    axisIndex: 16, reverse: false, versions: ["mixed"] },
+  { id: "N3", text: "物語や一つの言葉で、人の気持ちが大きく変わるところがおもしろいと思う",
+    axisIndex: 16, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "N4", text: "何百年も前に書かれた物語や考え方が、今でも読まれ続けているのはなぜかを考えるのが好きだ",
+    axisIndex: 16, reverse: false, versions: ["humanities"] },
+  // ===== JUSTICE (17) =====
+  { id: "J1", text: "法律やルールの文章をきちんと読んで、「どっちが正しいか」を理由をつけて決めたい",
+    axisIndex: 17, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "J2", text: "選挙のしくみや、政治家たちが「どうやって世の中のことを決めているのか」に興味がある",
+    axisIndex: 17, reverse: false, versions: ["mixed", "humanities"] },
+  { id: "J3", text: "ずるいことや不公平なことを見ると、「どうすれば公平になるか」を考えたくなる",
+    axisIndex: 17, reverse: false, versions: ["mixed", "humanities"] },
+  // ===== BODY (18) =====
+  { id: "Bo1", text: "運動や筋肉のしくみを調べて、「もっと速く・強く動けるようにする」ことに興味がある",
+    axisIndex: 18, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "Bo2", text: "スポーツの戦術や試合の分析・データを見るのが好きだ",
+    axisIndex: 18, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  { id: "Bo3", text: "食事・睡眠・トレーニングなど、身体を整える方法に関心がある",
+    axisIndex: 18, reverse: false, versions: ["mixed", "humanities", "sciences"] },
+  // ===== PURE (19) =====
+  { id: "P1", text: "「これは何の役に立つの？」よりも、「そもそも、なぜそうなるの？」を知りたいタイプだ",
     axisIndex: 19, reverse: false, versions: ["mixed", "sciences"] },
-  { id: "P2",   text: "新しい製品やサービスを生み出すことよりも、物質や自然現象の性質そのものを深く調べることのほうが好きだ",
+  { id: "P2", text: "新しい商品を作ることよりも、もの自体がどうなっているのかを深く調べるほうが好きだ",
     axisIndex: 19, reverse: false, versions: ["mixed", "sciences"] },
-  { id: "P3",   text: "アプリやゲームを完成させることよりも、その裏で動くアルゴリズムや計算のしくみを考えることのほうが楽しい",
+  { id: "P3", text: "ゲームを完成させること自体よりも、「どういう計算で動いているんだろう」と中身のしくみを考えるほうが楽しい",
     axisIndex: 19, reverse: false, versions: ["mixed", "sciences"] },
-  { id: "Bi1",  text: "植物が光からエネルギーを作ったり、食べたものが体の中で分解されたりする、生き物の中の化学反応に興味がある",
+  // ===== BIO (20) =====
+  { id: "Bi1", text: "植物が日光で育ったり、食べたものが体の中でエネルギーに変わったり…そんな「生き物の中で起きていること」に興味がある",
     axisIndex: 20, reverse: false, versions: ["mixed", "sciences"] },
-  { id: "Bi2",  text: "微生物や酵素など、生き物のはたらきを利用して薬や食品を作る技術に興味がある",
+  { id: "Bi2", text: "納豆やヨーグルトのように、小さな生き物の力を使って薬や食べ物を作ることに興味がある",
     axisIndex: 20, reverse: false, versions: ["mixed", "sciences"] },
-  { id: "Pr1",  text: "「誰が作っても同じ品質で、大量に作れるしくみ」を考えることに面白さを感じる",
+  { id: "Bi3", text: "親に似て自分の顔つきや体質が決まる「遺伝」のしくみに興味がある",
+    axisIndex: 20, reverse: false, versions: ["mixed", "sciences"] },
+  // ===== PROC (21) =====
+  { id: "Pr1", text: "「誰が作っても同じくらい上手に、たくさん作れる方法」を考えるのが面白い",
     axisIndex: 21, reverse: false, versions: ["mixed", "sciences"] },
-
-  // ===== 2026-06-16 mixed を3問×22軸に均等化するため追加（BIO+1・PROC+2）。当面 mixed のみ =====
-  // 既存 Bi1(体内の化学反応)・Bi2(微生物/酵素のバイオ技術) と重複しない「遺伝・設計図」角度。
-  { id: "Bi3",  text: "親から子へ特徴が伝わる「遺伝」のしくみや、生き物の体の「設計図」に興味がある",
-    axisIndex: 20, reverse: false, versions: ["mixed"] },
-  // 化学工学の核：スケールアップ（実験室→工場）。
-  { id: "Pr2",  text: "実験室で少しだけ作れたものを、工場で大量に作るにはどうすればいいかを考えるのは面白そうだ",
-    axisIndex: 21, reverse: false, versions: ["mixed"] },
-  // プロセス最適化（安全・無駄なく・安く）。
-  { id: "Pr3",  text: "ものを「安全に・むだなく・安く」作るための手順やしくみを工夫することに興味がある",
-    axisIndex: 21, reverse: false, versions: ["mixed"] },
+  { id: "Pr2", text: "ひとつ作るのは簡単でも、それを「工場で何万個も作る」にはどうすればいいかを考えるのは面白そうだ",
+    axisIndex: 21, reverse: false, versions: ["mixed", "sciences"] },
+  { id: "Pr3", text: "同じものを「安全に・むだなく・安く」作る方法を考えるのが面白そうだ",
+    axisIndex: 21, reverse: false, versions: ["mixed", "sciences"] },
 ];
 
-// バージョンごとの出題順
+// バージョンごとの出題順（2026-06-16 再構成）。
+// 覚悟(skippable)質問は各軸の興味2問より後ろのページに配置（SKIP_RULES が機能する前提）。
+// 同一軸の連続配置は回避。末尾セットほど軽め（ゴール勾配）。
 const VERSION_ORDERS: Record<Version, readonly string[]> = {
-  // 混合版 66問（2026-06-12: 新軸6問をセット分散配置。同一軸の連続配置は避ける）
   mixed: [
-    // 2026-06-16: 各軸ちょうど3問に均等化（22軸×3＝66）。L2/F2/B2を削除し Pr2/Bi3/Pr3 を分散追加。
-    // ページ区切り 11×6（setSizes 参照）。同一軸の連続配置は避ける。
     // セット1（11問）
-    "L1", "Ca1", "C1", "F1", "Mk1", "B1", "Lg1", "Bi1", "M1", "A1", "An1",
+    "Ce1", "A3", "Me1", "M2", "Lg1", "N3", "Ab2", "Bo3", "L4", "J1", "Li1",
     // セット2（11問）
-    "Ab1", "T1", "Ce1", "G1", "Li1", "Me1", "Pr2", "P1", "Bi3", "C2", "Mk2",
+    "P3", "Bi2", "T2", "N1", "L1", "Ab1", "An1", "Ce2", "Bi3", "J3", "T1",
     // セット3（11問）
-    "Ca2", "Lg2", "M2", "P2", "A2", "Pr3", "Ab2", "T2", "Ce2", "G2", "Me2",
+    "Mk2", "F1", "Ca1", "G1", "B1", "C2", "Me2", "N2", "Mk1", "Bo2", "M1",
     // セット4（11問）
-    "Li2", "M3", "L3", "F3", "Bi2", "C3", "Mk3", "Lg3", "Ca3", "B3", "A3",
+    "Ca2", "G2", "An3", "A2", "B3", "Pr3", "C1", "Bi1", "Li2", "P1", "J2",
     // セット5（11問）
-    "Ab3", "T3", "P3", "Ce3", "G3", "Li3", "An3", "An4", "Me3", "N1", "J1",
+    "A1", "F4", "Pr2", "Lg2", "Pr1", "P2", "Bz4", "Bo1", "T3", "Me3", "Mk3",
     // セット6（11問）
-    "Bo1", "N2", "J2", "Bo2", "F4", "Pr1", "Bz4", "L4", "N3", "J3", "Bo3",
+    "Ce3", "An4", "Lg3", "L3", "F3", "M3", "C3", "Li3", "G3", "Ca3", "Ab3",
   ],
-  // 文系版 53問（2026-05-18: 経済・経営・心理など数理要素を持つ文系学科の評価精度向上のため
-  // MATH 3問 (M1/M2/M3) と LAB 1問 (L3) を追加。2026-06-03: 具体設問 J4/Ab5 を追加）
   humanities: [
-    // セット1（10）
-    "F1", "Ca1", "B1", "Lg1", "A1", "N1", "J1", "Me1", "Ce1", "T1",
-    // セット2（11）
-    "Ab1", "Bo1", "G1", "M1", "Bz4", "Ca4", "Ca5", "F2", "Lg2", "N2", "J2",
-    // セット3（11）
-    "Me2", "B2", "A2", "M2", "Ab2", "T2", "Ce2", "G2", "Lg4", "N3", "J3",
-    // セット4（11）
-    "F3", "M3", "Lg3", "Ca3", "Me3", "Ab3", "T3", "Ce3", "B3", "A3", "Bo2",
-    // セット5（10・2026-06-03: J4/Ab5 追加）
-    "Ca2", "F4", "L3", "Ab4", "G3", "Bz5", "N4", "Bo3", "J4", "Ab5",
+    // セット1（9問）
+    "Ce1", "B1", "N1", "Lh2", "Ce2", "M1", "A1", "Ca1", "A2",
+    // セット2（9問）
+    "Lh1", "Lg2", "B3", "Bo1", "F4", "Lg1", "Ca5", "Ab5", "N4",
+    // セット3（9問）
+    "Bz4", "Me1", "Bo2", "J2", "T2", "J1", "A3", "Me2", "F1",
+    // セット4（9問）
+    "Bo3", "Ab1", "T1", "M2", "N3", "G1", "J3", "G2", "Ca3",
+    // セット5（9問）
+    "Me3", "F3", "G3", "L3", "T3", "Ab3", "Lg3", "Ce3", "M3",
   ],
-  // 理系版 58問（2026-06-03: An2 削除、具体設問 M5/C5/Li4 を追加。Ce4 は撤回。
-  // 2026-06-12: 新軸6問をセット分散配置）
   sciences: [
-    // セット1（12）
-    "L1", "Ca1", "C1", "F1", "Bi1", "Mk1", "M1", "M5", "Me1", "Ce1", "T1", "An1",
-    // セット2（12）
-    "Ab1", "G1", "Li1", "Bo1", "L2", "P1", "F2", "C2", "C5", "Mk2", "Me2", "Ca2",
-    // セット3（12）
-    "M2", "Ab2", "T2", "P2", "Ce2", "G2", "M4", "C4", "Mk4", "Bi2", "Mk5", "Li2",
-    // セット4（11）
-    "Li4", "F3", "M3", "C3", "Mk3", "Ca3", "P3", "L3", "L4", "Bo2", "Ab4r",
-    // セット5（11）
-    "F4", "Bo3", "Pr1", "Ab3", "T3", "Ce3", "G3", "Li3", "An3", "An4", "Me3",
+    // セット1（11問）
+    "P2", "Bo2", "Me1", "Mk1", "M1", "Pr1", "Ab1", "F1", "Ab2", "Me2", "F4",
+    // セット2（10問）
+    "M2", "G1", "Li4", "L4", "Bi1", "An3", "Bo3", "An1", "Pr3", "C5",
+    // セット3（10問）
+    "T1", "Ca2", "T2", "C1", "Bi3", "Ca1", "P3", "Bo1", "L1", "Ce2",
+    // セット4（10問）
+    "G2", "Li1", "Ce1", "Bi2", "Pr2", "Mk5", "P1", "M3", "An4", "Me3",
+    // セット5（10問）
+    "F3", "Ce3", "G3", "Mk3", "Li3", "Ab3", "T3", "C3", "L3", "Ca3",
   ],
 };
 
-// バージョンごとのセット区切り。
-// 心理学的配慮（2026-06-13）: 各ページの所要を均等化し（予測可能性＝不確実性ストレス減）、
-// 末尾セットを最重にしない（ゴール勾配効果＝終盤は軽い方が完答率が上がる）。
-//   mixed 66問は 11×6 で完全均等。humanities/sciences は既に末尾が最軽・ほぼ均等のため据え置き。
+// バージョンごとのセット区切り。心理的配慮（均等化＋ゴール勾配）。
 export const VERSION_SET_SIZES: Record<Version, readonly number[]> = {
   mixed:      [11, 11, 11, 11, 11, 11],
-  humanities: [10, 11, 11, 11, 10],
-  sciences:   [12, 12, 12, 11, 11],
+  humanities: [9, 9, 9, 9, 9],
+  sciences:   [11, 10, 10, 10, 10],
+};
+
+// 覚悟スキップ定義: 同一軸の trigger 2問が両方とも「最も興味のない側」を選んだとき
+// kakugo(覚悟質問)を出題しない。「最も興味のない側」= reverse質問なら5・通常なら1。
+// 出題順では kakugo は triggers より後ろのページに来る（quiz が出題時に判定可能）。
+export type SkipRule = { kakugo: string; triggers: [string, string] };
+export const SKIP_RULES: Record<Version, readonly SkipRule[]> = {
+  mixed: [
+    { kakugo: "M3", triggers: ["M1", "M2"] },
+    { kakugo: "L3", triggers: ["L1", "L4"] },
+    { kakugo: "F3", triggers: ["F1", "F4"] },
+    { kakugo: "C3", triggers: ["C1", "C2"] },
+    { kakugo: "Mk3", triggers: ["Mk1", "Mk2"] },
+    { kakugo: "Lg3", triggers: ["Lg1", "Lg2"] },
+    { kakugo: "Ca3", triggers: ["Ca1", "Ca2"] },
+    { kakugo: "Ab3", triggers: ["Ab1", "Ab2"] },
+    { kakugo: "T3", triggers: ["T1", "T2"] },
+    { kakugo: "Ce3", triggers: ["Ce1", "Ce2"] },
+    { kakugo: "G3", triggers: ["G1", "G2"] },
+    { kakugo: "Li3", triggers: ["Li1", "Li2"] },
+    { kakugo: "An4", triggers: ["An1", "An3"] },
+    { kakugo: "Me3", triggers: ["Me1", "Me2"] },
+  ],
+  humanities: [
+    { kakugo: "M3", triggers: ["M1", "M2"] },
+    { kakugo: "Me3", triggers: ["Me1", "Me2"] },
+    { kakugo: "L3", triggers: ["Lh1", "Lh2"] },
+    { kakugo: "F3", triggers: ["F1", "F4"] },
+    { kakugo: "Lg3", triggers: ["Lg1", "Lg2"] },
+    { kakugo: "Ca3", triggers: ["Ca1", "Ca5"] },
+    { kakugo: "Ab3", triggers: ["Ab1", "Ab5"] },
+    { kakugo: "T3", triggers: ["T1", "T2"] },
+    { kakugo: "Ce3", triggers: ["Ce1", "Ce2"] },
+    { kakugo: "G3", triggers: ["G1", "G2"] },
+  ],
+  sciences: [
+    { kakugo: "M3", triggers: ["M1", "M2"] },
+    { kakugo: "Me3", triggers: ["Me1", "Me2"] },
+    { kakugo: "L3", triggers: ["L1", "L4"] },
+    { kakugo: "F3", triggers: ["F1", "F4"] },
+    { kakugo: "C3", triggers: ["C1", "C5"] },
+    { kakugo: "Mk3", triggers: ["Mk1", "Mk5"] },
+    { kakugo: "Ca3", triggers: ["Ca1", "Ca2"] },
+    { kakugo: "Ab3", triggers: ["Ab1", "Ab2"] },
+    { kakugo: "T3", triggers: ["T1", "T2"] },
+    { kakugo: "Ce3", triggers: ["Ce1", "Ce2"] },
+    { kakugo: "G3", triggers: ["G1", "G2"] },
+    { kakugo: "Li3", triggers: ["Li1", "Li4"] },
+    { kakugo: "An4", triggers: ["An1", "An3"] },
+  ],
 };
 
 // バージョン指定で出題順の質問配列を取得
