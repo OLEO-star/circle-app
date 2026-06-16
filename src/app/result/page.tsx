@@ -404,6 +404,9 @@ export default function ResultPage() {
   );
 
   // ===== uni-finder（進学先マッチング）への導線 =====
+  // 2026-06-16: 学部診断の質問文改修中につき、一旦 学部診断→大学診断 の送客を停止（混線防止）。
+  // 大学診断側を独立した「重視軸マッチング」として固めてから、改めて結線する。再開は true に戻すだけ。
+  const SHOW_UNIFINDER_LINK = false;
   // 結果上位のうち理系学科のみを ?dept= に渡す。uni-finder は理系のみ対応のため、
   // 文系学科（categoryIndex 1/2/3/4）は除外する。判定は各結果が持つ categoryIndex で自己完結。
   // ID は uni-finder の ?dept= がそのまま受け取る同じ 32 学科ID。最大3件・カンマ区切り。
@@ -638,6 +641,7 @@ export default function ResultPage() {
               理系上位学科のみ ?dept= に渡す（uni-finder は理系のみ対応）。
               文系診断（理系上位なし）でもボタンは出し、注記で案内＝クラッシュさせない。
               ブランド規約に従い box-shadow / 疑似要素の図形描画は使わず border + 実要素で構成。 */}
+          {SHOW_UNIFINDER_LINK && (
           <div className="mt-8 rounded-2xl border border-[#1E40AF]/20 bg-[#E8EFFF] px-5 py-4">
             <p className="text-sm font-semibold text-[#1E40AF]">
               次は「行ける大学」を探そう
@@ -664,6 +668,7 @@ export default function ResultPage() {
               進学先マッチング（β）・無料 ／ 別タブで開きます
             </p>
           </div>
+          )}
         </div>
       </section>
 
