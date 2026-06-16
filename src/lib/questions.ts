@@ -33,7 +33,7 @@ export type Question = {
   versions: Version[];
 };
 
-// 全82問のプール（出題順は VERSION_ORDERS で別管理）
+// 全85問のプール（出題順は VERSION_ORDERS で別管理。mixed は22軸×3＝66）
 const ALL_QUESTIONS: Question[] = [
   // ===== 共通質問（25問・全バージョン） =====
   { id: "F1",   text: "教室にいるより、外に出て自分の目で見たり体験したりするほうが好きだ",
@@ -222,19 +222,31 @@ const ALL_QUESTIONS: Question[] = [
     axisIndex: 20, reverse: false, versions: ["mixed", "sciences"] },
   { id: "Pr1",  text: "「誰が作っても同じ品質で、大量に作れるしくみ」を考えることに面白さを感じる",
     axisIndex: 21, reverse: false, versions: ["mixed", "sciences"] },
+
+  // ===== 2026-06-16 mixed を3問×22軸に均等化するため追加（BIO+1・PROC+2）。当面 mixed のみ =====
+  // 既存 Bi1(体内の化学反応)・Bi2(微生物/酵素のバイオ技術) と重複しない「遺伝・設計図」角度。
+  { id: "Bi3",  text: "親から子へ特徴が伝わる「遺伝」のしくみや、生き物の体の「設計図」に興味がある",
+    axisIndex: 20, reverse: false, versions: ["mixed"] },
+  // 化学工学の核：スケールアップ（実験室→工場）。
+  { id: "Pr2",  text: "実験室で少しだけ作れたものを、工場で大量に作るにはどうすればいいかを考えるのは面白そうだ",
+    axisIndex: 21, reverse: false, versions: ["mixed"] },
+  // プロセス最適化（安全・無駄なく・安く）。
+  { id: "Pr3",  text: "ものを「安全に・むだなく・安く」作るための手順やしくみを工夫することに興味がある",
+    axisIndex: 21, reverse: false, versions: ["mixed"] },
 ];
 
 // バージョンごとの出題順
 const VERSION_ORDERS: Record<Version, readonly string[]> = {
   // 混合版 66問（2026-06-12: 新軸6問をセット分散配置。同一軸の連続配置は避ける）
   mixed: [
-    // 出題順は不変。ページ区切りのみ 11×6 均等に再設定（2026-06-13・setSizes 参照）。
+    // 2026-06-16: 各軸ちょうど3問に均等化（22軸×3＝66）。L2/F2/B2を削除し Pr2/Bi3/Pr3 を分散追加。
+    // ページ区切り 11×6（setSizes 参照）。同一軸の連続配置は避ける。
     // セット1（11問）
     "L1", "Ca1", "C1", "F1", "Mk1", "B1", "Lg1", "Bi1", "M1", "A1", "An1",
     // セット2（11問）
-    "Ab1", "T1", "Ce1", "G1", "Li1", "Me1", "L2", "P1", "F2", "C2", "Mk2",
+    "Ab1", "T1", "Ce1", "G1", "Li1", "Me1", "Pr2", "P1", "Bi3", "C2", "Mk2",
     // セット3（11問）
-    "Ca2", "B2", "Lg2", "M2", "P2", "A2", "Ab2", "T2", "Ce2", "G2", "Me2",
+    "Ca2", "Lg2", "M2", "P2", "A2", "Pr3", "Ab2", "T2", "Ce2", "G2", "Me2",
     // セット4（11問）
     "Li2", "M3", "L3", "F3", "Bi2", "C3", "Mk3", "Lg3", "Ca3", "B3", "A3",
     // セット5（11問）
