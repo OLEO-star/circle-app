@@ -14,6 +14,41 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
+
+  /* 表紙の「スクロールして詳しく見る ↓」矢印の上下バウンス。
+     Tailwind v4 流儀（spin/bounce と同じく @theme 内に keyframe を置く）で定義し、
+     animate-scroll-bounce ユーティリティとして使う。控えめな振幅(6px)・2秒周期。
+     ※ globals.css 直書きの @keyframes は Lightning CSS に未使用として除去されるため、
+       必ず --animate-* トークン＋@theme 内 keyframe で定義する。 */
+  --animate-scroll-bounce: scrollBounce 2s ease-in-out infinite;
+
+  @keyframes scrollBounce {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(6px);
+    }
+  }
+
+  /* PC版（result-v 横型）の中央モーダルのフェードイン。
+     ResultDesktop.jsx の rmFade（opacity 0→1・8px 持ち上げ・200ms ease-out）を再現。
+     scrollBounce と同じ Tailwind v4 流儀（@theme 内に --animate-* トークン＋keyframe）で
+     定義し、animate-modal-fade ユーティリティとして使う。
+     ※直書き @keyframes は Lightning CSS に未使用判定で除去されるため必ずこの方式。 */
+  --animate-modal-fade: modalFade 200ms ease-out;
+
+  @keyframes modalFade {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
 }
 
 body {
@@ -35,6 +70,15 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .animate-\[slideUp_250ms_ease-out\] {
+    animation: none !important;
+  }
+  /* スクロール誘導の矢印バウンスは reduced-motion で停止（"続きがある"の
+     情報自体は静止テキスト「スクロールして詳しく見る」で担保されるので消えない）。 */
+  .animate-scroll-bounce {
+    animation: none !important;
+  }
+  /* PC版の中央モーダルのフェードインも reduced-motion で停止（内容は即時表示）。 */
+  .animate-modal-fade {
     animation: none !important;
   }
 }

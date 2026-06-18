@@ -4,7 +4,7 @@ import "./globals.css";
 const SITE_URL = "https://ring-map.com";
 const SITE_NAME = "ring-map 学部診断";
 const SITE_DESCRIPTION =
-  "60問の質問に答えて、あなたに合う大学の学科を見つけよう。32学科×19軸のリング型診断で、文理選択と進路の手がかりに。";
+  "約45〜66問（学部選択により異なる）の質問に答えて、あなたに合う大学の学科を見つけよう。36学科×19軸のリング型診断で、文理選択と進路の手がかりに。";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),

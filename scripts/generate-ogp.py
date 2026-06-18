@@ -67,7 +67,7 @@ def main() -> None:
 
     # Subtitle (chip-ish)
     f_chip = ImageFont.truetype(FONT_REGULAR, 26)
-    draw.text((text_x, 432), "32 学科  ×  19 軸  ×  60 問", font=f_chip, fill=TEXT_SECONDARY)
+    draw.text((text_x, 432), "36 学科  ×  19 軸  ×  約45〜66問", font=f_chip, fill=TEXT_SECONDARY)
 
     # URL (bottom)
     f_url = ImageFont.truetype(FONT_REGULAR, 28)

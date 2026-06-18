@@ -4,12 +4,12 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "ring-map – Career Path Diagnosis for Japanese Universities",
   description:
-    "A free career path diagnosis tool for high school students considering Japanese universities. Designed for international school counselors supporting students with diverse pathways. 32 fields × 19 axes, based on Holland Code and Big Five.",
+    "A free career path diagnosis tool for high school students considering Japanese universities. Designed for international school counselors supporting students with diverse pathways. 36 fields × 19 axes, based on Holland Code and Big Five.",
   alternates: { canonical: "https://ring-map.com/en" },
   openGraph: {
     title: "ring-map – Career Path Diagnosis for Japanese Universities",
     description:
-      "A free diagnostic tool for international school counselors supporting students considering Japanese universities. 32 fields × 19 axes.",
+      "A free diagnostic tool for international school counselors supporting students considering Japanese universities. 36 fields × 19 axes.",
     url: "https://ring-map.com/en",
     type: "website",
     locale: "en_US",
@@ -44,8 +44,8 @@ export default function EnglishPage() {
             <li className="flex gap-2">
               <span className="text-rose-600">●</span>
               <span>
-                A free online diagnostic with about 60 questions, mapping students against{" "}
-                <strong>32 Japanese university departments using 19 axes</strong>
+                A free online diagnostic with about 45–66 questions (depending on the track chosen), mapping students against{" "}
+                <strong>36 Japanese university departments using 19 axes</strong>
               </span>
             </li>
             <li className="flex gap-2">
@@ -141,7 +141,7 @@ export default function EnglishPage() {
           Each leads to different careers, requires different entrance exam strategies, and has different academic cultures. Existing Japanese career-guidance services rarely explain these distinctions in a way that international school students (or their counselors, parents) can navigate.
         </p>
         <p className="mb-4">
-          ring-map fills this gap by mapping 32 representative departments across 19 axes of interest and aptitude, helping students and counselors have informed conversations about which Japanese departments fit a student&apos;s profile.
+          ring-map fills this gap by mapping 36 representative departments across 19 axes of interest and aptitude, helping students and counselors have informed conversations about which Japanese departments fit a student&apos;s profile.
         </p>
       </section>
 
@@ -150,13 +150,13 @@ export default function EnglishPage() {
         <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">How it works</h2>
         <ol className="mb-4 ml-6 list-decimal space-y-2">
           <li>
-            Students answer ~50–60 questions (10–15 minutes) covering interests, thinking style, and tolerance for various academic environments.
+            Students answer ~45–66 questions (10–15 minutes, depending on the track chosen) covering interests, thinking style, and tolerance for various academic environments.
           </li>
           <li>
             Their responses are scored across 19 axes (derived from Holland Code RIASEC and Big Five personality traits, adapted for the Japanese university context).
           </li>
           <li>
-            A cosine similarity is calculated against 32 representative Japanese university departments.
+            A cosine similarity is calculated against 36 representative Japanese university departments.
           </li>
           <li>
             Results show ranked compatibility with each department, with descriptions of what daily life and career outcomes typically look like.
@@ -179,7 +179,7 @@ export default function EnglishPage() {
             <strong className="text-gray-900">19 axes:</strong> Built from 16 core axes (math, memorization, lab, fieldwork, code, making, language, care, business, art, abstract thought, team, certification, graduate-school intent, life-relevance, animal-relevance), plus 3 added after bias audit (narrative, justice, body).
           </li>
           <li>
-            <strong className="text-gray-900">Department scoring:</strong> Each of 32 departments was scored 0.0–1.0 on each axis by cross-referencing syllabi from 6 tiers of Japanese universities (national flagships through teaching-focused institutions), capturing a representative cross-section rather than a single tier.
+            <strong className="text-gray-900">Department scoring:</strong> Each of 36 departments was scored 0.0–1.0 on each axis by cross-referencing syllabi from 6 tiers of Japanese universities (national flagships through teaching-focused institutions), capturing a representative cross-section rather than a single tier.
           </li>
           <li>
             <strong className="text-gray-900">Career data:</strong> Sourced from Japan&apos;s Ministry of Health, Labour and Welfare occupational classification and the US O*NET database. Individual company names, salary figures, and placement rates are intentionally omitted.
@@ -302,7 +302,7 @@ export default function EnglishPage() {
         </p>
         <p className="mb-3">
           ring-map exists to make these encounters{" "}
-          <strong>intentional rather than accidental</strong>, and to give students a realistic preview of department life before they commit. Each design choice (32 departments mapped, 19 axes scored, weekly schedule descriptions intentionally tilted toward the higher-rigor end, occupation data based on official Japan and US labor classifications) is a direct response to a specific gap I personally felt.
+          <strong>intentional rather than accidental</strong>, and to give students a realistic preview of department life before they commit. Each design choice (36 departments mapped, 19 axes scored, weekly schedule descriptions intentionally tilted toward the higher-rigor end, occupation data based on official Japan and US labor classifications) is a direct response to a specific gap I personally felt.
         </p>
       </section>
 

@@ -12,7 +12,7 @@ import {
   calcAxisScores,
   rankDepartments,
   getTop3Categories,
-  calcCategoryStrengths,
+  calcRingStrengths,
 } from "@/lib/scoring";
 import { getSlot } from "@/lib/departments";
 import { isSchoolMode, getStudentInfo } from "@/lib/school-mode";
@@ -77,6 +77,11 @@ export default function QuizPage() {
   // 「セットを完了する」を未回答ありで押したか。これが立つと未回答の帯を
   // ストレスの少ない淡ロゼで強調する（Baker-Miller Pink の鎮静系統の淡色版）。
   const [attemptedAdvance, setAttemptedAdvance] = useState(false);
+  // PC版（≥1024px / lg）かどうか。SSR とクライアント初回で同じ DOM を返すため
+  // null 初期化し、マウント後に matchMedia を評価して確定する（result-v/page.tsx と同流儀）。
+  // null の間はモバイルJSXを返す（SSRはモバイル前提）→ マウント後に PC幅なら 2カラムへ。
+  // 採点/保存ロジック・状態・ハンドラは完全共有し、レイアウトだけ組み替える。
+  const [isDesktop, setIsDesktop] = useState<boolean | null>(null);
 
   const questions = useMemo(() => getQuestionsForVersion(version), [version]);
   const setSizes = useMemo(() => getSetSizes(version), [version]);
@@ -198,6 +203,17 @@ export default function QuizPage() {
     setHydrated(true);
   }, []);
 
+  // PC版判定。マウント後に matchMedia を評価し、ブレークポイントの変化にも追従する。
+  // SSR では実行されない（useEffect）。breakpoint = Tailwind lg = 1024px。
+  useEffect(() => {
+    if (typeof window === "undefined" || !window.matchMedia) return;
+    const mql = window.matchMedia("(min-width: 1024px)");
+    setIsDesktop(mql.matches);
+    const onChange = (e: MediaQueryListEvent) => setIsDesktop(e.matches);
+    mql.addEventListener("change", onChange);
+    return () => mql.removeEventListener("change", onChange);
+  }, []);
+
   // 回答を localStorage に都度保存（hydrate 完了後のみ）
   useEffect(() => {
     if (!hydrated) return;
@@ -302,7 +318,9 @@ export default function QuizPage() {
       const axisScores = calcAxisScores(finalAnswers, questions);
       const results = rankDepartments(axisScores, version);
       const top3Categories = getTop3Categories(results);
-      const categoryStrengths = calcCategoryStrengths(results, version);
+      // リング制御点の強度。mixed=36学科の適合度（確定デザイン new9x4r_A 方式）、
+      // humanities/sciences=8カテゴリ強度。キー名は後方互換のため categoryStrengths のまま。
+      const categoryStrengths = calcRingStrengths(results, version);
 
       const resultData = {
         version,
@@ -373,6 +391,243 @@ export default function QuizPage() {
     ? visibleCurrent.length - currentSetAnswered
     : 0;
 
+  // ── 共有レンダー部品 ──────────────────────────────────────────────
+  // モバイル/PC の両レイアウトで同一の DOM・採点ハンドラを使う唯一の正本。
+  // ここに集約することで「2 コピーが将来ドリフトする」事故を防ぐ。
+
+  // セット境界の達成感バナー（Goal Gradient Effect）。currentSet>0 の時だけ出す。
+  const renderBanner = () => {
+    if (currentSet <= 0) return null;
+    if (isLastSet) {
+      return (
+        <div className="mb-5 rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 to-amber-50 px-4 py-4 text-center leading-relaxed">
+          <p className="text-sm font-semibold text-rose-700">
+            🎯 最後のセット！
+          </p>
+          <p className="mt-1 text-xs text-gray-700">
+            あと <strong className="text-rose-700">{visibleCurrent.length}</strong> 問で、あなたに合う学部が見えます
+          </p>
+        </div>
+      );
+    }
+    if (isHalfwayPoint) {
+      return (
+        <div className="mb-5 rounded-xl bg-amber-50 px-4 py-3 text-center text-xs leading-relaxed text-amber-800">
+          <span className="font-semibold">🚩 折り返し地点！</span>
+          <span className="ml-2 text-amber-700">
+            ここから後半。残り {remainingSets + 1} セットです
+          </span>
+        </div>
+      );
+    }
+    return (
+      <div className="mb-5 rounded-xl bg-[#F0F7F2] px-4 py-3 text-center text-xs leading-relaxed text-[#3F7B59]">
+        <span className="font-semibold">✓ セット{currentSet} 完了！</span>
+        <span className="ml-2 text-[#5A8C72]">残り {remainingSets + 1} セット</span>
+      </div>
+    );
+  };
+
+  // ラストセット内・残り少数の時のマイクロ達成感（5問以下になったら表示）
+  const renderMicroAchievement = () =>
+    isLastSet &&
+    currentSetAnswered > 0 &&
+    remainingInLastSet > 0 &&
+    remainingInLastSet <= 5 ? (
+      <div className="mb-4 text-center text-xs font-semibold text-rose-700">
+        あと {remainingInLastSet} 問！
+      </div>
+    ) : null;
+
+  // 質問1問のカード（リッカート円ボタン込み）。採点は handleAnswer に集約。
+  const renderQuestion = ({
+    q,
+    globalIndex,
+  }: {
+    q: (typeof visibleCurrent)[number]["q"];
+    globalIndex: number;
+  }) => {
+    const selected = answers[globalIndex];
+    // 未回答強調：attempted を押した後、未回答だけ淡ロゼ背景にする。
+    // Baker-Miller Pink の系統の淡色で、ストレッサーになりにくい色味を選択。
+    const highlight = attemptedAdvance && selected === null;
+    return (
+      <div
+        key={q.id}
+        id={`question-${globalIndex}`}
+        className={`-mx-3 rounded-2xl border px-3 py-5 transition-colors ${
+          highlight
+            ? "border-rose-200 bg-rose-50"
+            : "border-transparent border-b-gray-50"
+        }`}
+      >
+        <p className="mb-4 text-sm leading-relaxed">
+          <span className="mr-2 text-xs font-medium text-gray-500">
+            {visibleNumber.get(globalIndex)}.
+          </span>
+          {q.text}
+        </p>
+        <div className="flex items-center justify-center gap-2 sm:gap-3">
+          <span className="whitespace-nowrap text-[10px] text-[#7B9BB5] sm:text-xs">
+            そう思わない
+          </span>
+          <div className="flex items-center gap-2 sm:gap-3">
+            {CIRCLE_OPTIONS.map((opt) => (
+              <button
+                key={opt.value}
+                onClick={() => handleAnswer(globalIndex, opt.value)}
+                className={`${opt.size} rounded-full transition-all ${
+                  selected === opt.value
+                    ? `${opt.color} scale-110 ring-2 ring-offset-2 ring-gray-300`
+                    : selected !== null
+                      ? "bg-gray-200"
+                      : `${opt.color} opacity-80`
+                }`}
+                aria-label={`${opt.value}点`}
+              />
+            ))}
+          </div>
+          <span className="whitespace-nowrap text-[10px] text-[#5BAB7B] sm:text-xs">
+            そう思う
+          </span>
+        </div>
+      </div>
+    );
+  };
+
+  const nextButtonLabel = isLastSet
+    ? "結果を見る"
+    : `セット${currentSet + 1}を完了する（次：${setSizes[currentSet + 1]}問）`;
+
+  // ── PC版（≥1024px）：sticky プログレスヘッダー + 2カラム ───────────────
+  // 左に sticky な set-stepper レール（横幅を活用）、右に広い回答エリア。
+  // 設計正本: ui_kits/diagnostic-app-desktop/QuizDesktop.jsx。
+  // 状態・ハンドラ・採点はモバイルと完全共有（renderBanner/renderQuestion 等を再利用）。
+  // isDesktop が null（マウント前）/ false のときは下のモバイル return に落ちる。
+  if (isDesktop) {
+    return (
+      <div className="min-h-dvh bg-white text-gray-900">
+        {/* sticky ヘッダー：プログレスバー＋ロゴ＋ X / Y 問の数値表示（全幅） */}
+        <header className="sticky top-0 z-30 border-b border-gray-100 bg-white">
+          <div className="h-1.5 bg-gray-100">
+            <div
+              className="h-full bg-gray-900 transition-all duration-300"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+          <div className="flex items-center justify-between px-10 py-3">
+            <div className="flex items-center gap-3">
+              {/* ロゴ: リング型の小マークを実 div の二重円(border)で表現
+                  （box-shadow/疑似要素は不使用・result-v の PC ヘッダーと同流儀）。 */}
+              <span
+                className="block h-6 w-6 rounded-full border-[3px]"
+                style={{ borderColor: "#1E40AF" }}
+                aria-hidden="true"
+              />
+              <span className="text-base font-bold tracking-tight">ring-map</span>
+              <span className="text-xs text-gray-400">学部診断</span>
+            </div>
+            <span className="text-sm text-gray-500">
+              <span className="font-semibold text-gray-900">{answeredCount}</span>
+              <span className="text-gray-300"> / </span>
+              {totalQuestions} 問
+              <span className="ml-2 text-gray-300">（{progressPercent}%）</span>
+            </span>
+          </div>
+        </header>
+
+        <div className="mx-auto flex max-w-[1000px] items-start gap-12 px-10">
+          {/* sticky set-stepper レール（横幅を活用） */}
+          <aside className="sticky top-24 w-[220px] shrink-0 self-start py-10">
+            <p className="mb-4 text-xs font-medium uppercase tracking-[0.06em] text-gray-400">
+              {setSizes.length}つのセット
+            </p>
+            <div className="flex flex-col gap-1">
+              {setSizes.map((_, idx) => {
+                const state =
+                  idx < currentSet
+                    ? "done"
+                    : idx === currentSet
+                      ? "current"
+                      : "upcoming";
+                const cur = state === "current";
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    // 既訪のセットへは戻れる（モバイルの「← 前のセット」と同等の自由度）。
+                    // 未訪のセットへはスキップさせない（順送りの前提＝採点ロジック不変）。
+                    onClick={() => {
+                      if (idx < currentSet) {
+                        setAttemptedAdvance(false);
+                        setCurrentSet(idx);
+                      }
+                    }}
+                    disabled={idx >= currentSet}
+                    className={`flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+                      cur ? "bg-gray-50" : "bg-transparent"
+                    } ${idx < currentSet ? "hover:bg-gray-50" : ""} ${
+                      idx > currentSet ? "cursor-default" : ""
+                    }`}
+                  >
+                    <span
+                      className={`inline-flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full text-[10px] font-bold ${
+                        state === "done"
+                          ? "bg-[#E6F2EC] text-[#3F7B59]"
+                          : cur
+                            ? "bg-gray-900 text-white"
+                            : "bg-gray-100 text-gray-400"
+                      }`}
+                    >
+                      {state === "done" ? "✓" : idx + 1}
+                    </span>
+                    <span
+                      className={`text-xs ${
+                        cur
+                          ? "font-semibold text-gray-900"
+                          : state === "done"
+                            ? "text-gray-600"
+                            : "text-gray-400"
+                      }`}
+                    >
+                      セット{idx + 1}
+                      <span className="ml-1 text-[10px] text-gray-300">
+                        （{setSizes[idx]}問）
+                      </span>
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+          </aside>
+
+          {/* 質問カラム（広い回答エリア・左 hairline） */}
+          <main className="min-w-0 flex-1 border-l border-gray-100 py-10 pl-12">
+            {renderBanner()}
+            {renderMicroAchievement()}
+            {visibleCurrent.map((item) => renderQuestion(item))}
+
+            {/* 次のセットボタン（PC では固定フッターにせず本文末に中央配置） */}
+            <div className="flex justify-center pb-14 pt-10">
+              <button
+                id="next-button"
+                onClick={handleNext}
+                className={`min-w-[280px] rounded-full px-8 py-3 text-sm font-medium transition-colors ${
+                  allAnswered
+                    ? "bg-gray-900 text-white hover:bg-gray-700"
+                    : "bg-gray-300 text-white hover:bg-gray-400"
+                }`}
+              >
+                {nextButtonLabel}
+              </button>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
+
+  // ── モバイル版（既存・不変更）──────────────────────────────────────
   return (
     <div className="min-h-dvh bg-white">
       {/* ヘッダー（固定）：プログレスバー＋ X / Y 問の数値表示 */}
@@ -402,97 +657,9 @@ export default function QuizPage() {
 
       {/* 質問リスト */}
       <div className="px-6 pb-24 pt-4">
-        {/* セット境界の達成感バナー：節目で表現を変える Goal Gradient Effect */}
-        {currentSet > 0 && (
-          <>
-            {isLastSet ? (
-              // ラストセット：最大の高揚感（温色＋強調）
-              <div className="mb-5 rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 to-amber-50 px-4 py-4 text-center leading-relaxed">
-                <p className="text-sm font-semibold text-rose-700">
-                  🎯 最後のセット！
-                </p>
-                <p className="mt-1 text-xs text-gray-700">
-                  あと <strong className="text-rose-700">{visibleCurrent.length}</strong> 問で、あなたに合う学部が見えます
-                </p>
-              </div>
-            ) : isHalfwayPoint ? (
-              // 中間点：折り返しの実感
-              <div className="mb-5 rounded-xl bg-amber-50 px-4 py-3 text-center text-xs leading-relaxed text-amber-800">
-                <span className="font-semibold">🚩 折り返し地点！</span>
-                <span className="ml-2 text-amber-700">
-                  ここから後半。残り {remainingSets + 1} セットです
-                </span>
-              </div>
-            ) : (
-              // 通常のセット完了
-              <div className="mb-5 rounded-xl bg-[#F0F7F2] px-4 py-3 text-center text-xs leading-relaxed text-[#3F7B59]">
-                <span className="font-semibold">✓ セット{currentSet} 完了！</span>
-                <span className="ml-2 text-[#5A8C72]">
-                  残り {remainingSets + 1} セット
-                </span>
-              </div>
-            )}
-          </>
-        )}
-
-        {/* ラストセット内・残り少数の時のマイクロ達成感（5問以下になったら表示） */}
-        {isLastSet &&
-          currentSetAnswered > 0 &&
-          remainingInLastSet > 0 &&
-          remainingInLastSet <= 5 && (
-            <div className="mb-4 text-center text-xs font-semibold text-rose-700">
-              あと {remainingInLastSet} 問！
-            </div>
-          )}
-
-        {visibleCurrent.map(({ q, globalIndex }) => {
-          const selected = answers[globalIndex];
-          // 未回答強調：attempted を押した後、未回答だけ淡ロゼ背景にする。
-          // Baker-Miller Pink の系統の淡色で、ストレッサーになりにくい色味を選択。
-          const highlight = attemptedAdvance && selected === null;
-          return (
-            <div
-              key={q.id}
-              id={`question-${globalIndex}`}
-              className={`-mx-3 rounded-2xl border px-3 py-5 transition-colors ${
-                highlight
-                  ? "border-rose-200 bg-rose-50"
-                  : "border-transparent border-b-gray-50"
-              }`}
-            >
-              <p className="mb-4 text-sm leading-relaxed">
-                <span className="mr-2 text-xs font-medium text-gray-500">
-                  {visibleNumber.get(globalIndex)}.
-                </span>
-                {q.text}
-              </p>
-              <div className="flex items-center justify-center gap-2 sm:gap-3">
-                <span className="whitespace-nowrap text-[10px] text-[#7B9BB5] sm:text-xs">
-                  そう思わない
-                </span>
-                <div className="flex items-center gap-2 sm:gap-3">
-                  {CIRCLE_OPTIONS.map((opt) => (
-                    <button
-                      key={opt.value}
-                      onClick={() => handleAnswer(globalIndex, opt.value)}
-                      className={`${opt.size} rounded-full transition-all ${
-                        selected === opt.value
-                          ? `${opt.color} scale-110 ring-2 ring-offset-2 ring-gray-300`
-                          : selected !== null
-                            ? "bg-gray-200"
-                            : `${opt.color} opacity-80`
-                      }`}
-                      aria-label={`${opt.value}点`}
-                    />
-                  ))}
-                </div>
-                <span className="whitespace-nowrap text-[10px] text-[#5BAB7B] sm:text-xs">
-                  そう思う
-                </span>
-              </div>
-            </div>
-          );
-        })}
+        {renderBanner()}
+        {renderMicroAchievement()}
+        {visibleCurrent.map((item) => renderQuestion(item))}
       </div>
 
       {/* 次のセットボタン（固定フッター） */}
@@ -506,9 +673,7 @@ export default function QuizPage() {
               : "bg-gray-300 text-white active:bg-gray-400"
           }`}
         >
-          {isLastSet
-            ? "結果を見る"
-            : `セット${currentSet + 1}を完了する（次：${setSizes[currentSet + 1]}問）`}
+          {nextButtonLabel}
         </button>
       </div>
     </div>

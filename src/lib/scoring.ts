@@ -1,4 +1,11 @@
-import { departments, AXIS_COUNT, getSlot, type Department } from "./departments";
+import {
+  departments,
+  AXIS_COUNT,
+  getSlot,
+  VERSION_CATEGORY_NAMES,
+  MIXED_RING_ORDER,
+  type Department,
+} from "./departments";
 import { type Question, type Version } from "./questions";
 
 // バージョン別の計測軸（質問が存在する軸の集合）。
@@ -205,14 +212,16 @@ export function getTop3Categories(results: DeptResult[]): number[] {
   return top;
 }
 
-// 8カテゴリごとの強度（リング描画用）
-// バージョンによってリング上のスロット割り当てが異なる
+// カテゴリごとの強度（= 各カテゴリ内 similarity 平均。リング描画用）。
+// カテゴリ数 N はバージョンで可変（mixed=9 / humanities=sciences=8）。
+// VERSION_CATEGORY_NAMES[version].length を正としてハードコード(8)を排除。
 export function calcCategoryStrengths(
   results: DeptResult[],
   version: Version = "mixed"
 ): number[] {
-  const strengths: number[] = new Array(8).fill(0);
-  const counts: number[] = new Array(8).fill(0);
+  const n = VERSION_CATEGORY_NAMES[version].length;
+  const strengths: number[] = new Array(n).fill(0);
+  const counts: number[] = new Array(n).fill(0);
 
   for (const r of results) {
     const slot = getSlot(r.department, version);
@@ -221,11 +230,31 @@ export function calcCategoryStrengths(
     counts[slot]++;
   }
 
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < n; i++) {
     if (counts[i] > 0) {
       strengths[i] = strengths[i] / counts[i];
     }
   }
 
   return strengths;
+}
+
+// mixed リング（9×4＝36制御点）の強度。確定デザイン new9x4r_A の方式：
+// 「36学科を確定順（MIXED_RING_ORDER）に並べ、各学科の similarity をそのまま制御点にする」。
+// カテゴリ集約（9点平均）ではなく学科単位 36点。Ring.tsx が 144本をコサイン補間で描く。
+// 値はユーザー内 min-max 正規化を Ring.tsx 側で行うため、ここでは生 similarity を返す。
+export function calcMixedRingStrengths(results: DeptResult[]): number[] {
+  const byId = new Map(results.map((r) => [r.department.id, r.similarity]));
+  return MIXED_RING_ORDER.map((id) => byId.get(id) ?? 0);
+}
+
+// バージョンに応じたリング制御点配列を返す統一エントリ。
+//   mixed: 36学科の similarity（MIXED_RING_ORDER 順）
+//   humanities/sciences: 8カテゴリ強度（従来どおり）
+export function calcRingStrengths(
+  results: DeptResult[],
+  version: Version = "mixed"
+): number[] {
+  if (version === "mixed") return calcMixedRingStrengths(results);
+  return calcCategoryStrengths(results, version);
 }

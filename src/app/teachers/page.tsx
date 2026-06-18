@@ -4,12 +4,12 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "教員の皆様へ",
   description:
-    "ring-map 学部診断の導入をご検討の進路指導の先生方へ。60問・19軸・32学科の根拠、データの扱い、導入の流れをまとめています。",
+    "ring-map 学部診断の導入をご検討の進路指導の先生方へ。約45〜66問・19軸・36学科の根拠、データの扱い、導入の流れをまとめています。",
   alternates: { canonical: "https://ring-map.com/teachers" },
   openGraph: {
     title: "教員の皆様へ | ring-map 学部診断",
     description:
-      "ring-map 学部診断の導入をご検討の進路指導の先生方へ。60問・19軸・32学科の根拠、データの扱い、導入の流れをまとめています。",
+      "ring-map 学部診断の導入をご検討の進路指導の先生方へ。約45〜66問・19軸・36学科の根拠、データの扱い、導入の流れをまとめています。",
     url: "https://ring-map.com/teachers",
     type: "article",
     locale: "ja_JP",
@@ -53,8 +53,8 @@ export default function TeachersPage() {
             <li className="flex gap-2">
               <span className="text-rose-600">●</span>
               <span>
-                60問の質問で、生徒の興味を{" "}
-                <strong>19軸 × 32学科</strong>{" "}
+                約45〜66問（学部選択により異なる）の質問で、生徒の興味を{" "}
+                <strong>19軸 × 36学科</strong>{" "}
                 で可視化する無料の進路診断ツールです
               </span>
             </li>
@@ -202,7 +202,7 @@ export default function TeachersPage() {
         <ul className="mb-4 ml-6 list-disc space-y-2">
           <li>
             <strong className="text-gray-900">① 多角的な比較：</strong>
-            32 学科 × 19 軸で「得意」とは別の物差しを提供。「やりたいこと」「興味の方向」で比較できるようにしました。
+            36 学科 × 19 軸で「得意」とは別の物差しを提供。「やりたいこと」「興味の方向」で比較できるようにしました。
           </li>
           <li>
             <strong className="text-gray-900">② 学部の中身を可視化：</strong>
@@ -266,7 +266,7 @@ export default function TeachersPage() {
       {/* 3. 設計の考え方 */}
       <section id="design" className="mb-12 scroll-mt-6">
         <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">
-          3. 設計の考え方：質問・19軸・32学科
+          3. 設計の考え方：質問・19軸・36学科
         </h2>
 
         <h3 className="mb-2 mt-6 text-base font-semibold text-gray-900">
@@ -343,9 +343,9 @@ export default function TeachersPage() {
           中高生の負担を減らすため、生徒が事前に「文系・理系・どちらも」を選べる 3 バージョン構成にしています。
         </p>
         <ul className="mb-4 ml-6 list-disc">
-          <li className="mb-1">文系版：51 問</li>
-          <li className="mb-1">理系版：50 問</li>
-          <li className="mb-1">混合版（どちらも）：61 問</li>
+          <li className="mb-1">文系版：45 問</li>
+          <li className="mb-1">理系版：51 問</li>
+          <li className="mb-1">混合版（どちらも）：66 問</li>
         </ul>
         <p className="mb-4">所要時間は 10〜15 分程度です。</p>
 
@@ -377,22 +377,23 @@ export default function TeachersPage() {
         </p>
 
         <h3 className="mb-2 mt-6 text-base font-semibold text-gray-900">
-          32 学科の選び方
+          36 学科の選び方
         </h3>
         <p className="mb-4">
-          8 つの大カテゴリの中に、各 3〜7 学科を配置しています。カテゴリは「リング」のビジュアルで時計方向に並べています（12 時：数理・情報 → 1〜2 時：経済・ビジネス → 3 時：法・政治・社会 → 4〜5 時：言語・表現 → 6 時：スポーツ・教育 → 7〜8 時：生命・医療 → 9 時：工学・技術 → 10〜11 時：自然科学）。
+          混合版（文系・理系どちらも）のリングでは、36 学科を 9 つの大カテゴリに分けて配置しています。カテゴリは「リング」のビジュアルで時計方向に並べています。
         </p>
         <ul className="mb-4 ml-6 list-disc text-xs">
-          <li className="mb-1">数理・情報系（3）：数学／情報科学／データサイエンス</li>
-          <li className="mb-1">経済・ビジネス系（3）：経済／経営／商</li>
-          <li className="mb-1">法・政治・社会系（4）：法／政治／社会／国際関係</li>
-          <li className="mb-1">言語・表現系（3）：文学／外国語／哲学</li>
-          <li className="mb-1">スポーツ・教育系（3）：教育／心理／スポーツ科学</li>
-          <li className="mb-1">生命・医療系（5）：医／薬／看護／農／獣医</li>
-          <li className="mb-1">工学・技術系（4）：機械工／電気電子工／建築／情報工</li>
-          <li className="mb-1">自然科学系（7）：物理／生物／地球科学／化学／応用化学／化学工／生命化学</li>
+          <li className="mb-1">数理・情報</li>
+          <li className="mb-1">物理・化学</li>
+          <li className="mb-1">機械・材料</li>
+          <li className="mb-1">建設・環境</li>
+          <li className="mb-1">生命・医療</li>
+          <li className="mb-1">健康・こころ</li>
+          <li className="mb-1">教育・人文</li>
+          <li className="mb-1">法・政治・社会</li>
+          <li className="mb-1">経済・経営</li>
         </ul>
-        <p className="mb-4">合計 32 学科。</p>
+        <p className="mb-4">合計 36 学科。</p>
 
         <h3 className="mb-2 mt-6 text-base font-semibold text-gray-900">
           学科の軸スコアの決め方（6 偏差値帯のシラバス横断検証）
@@ -467,7 +468,7 @@ export default function TeachersPage() {
             生徒の回答を集計し、19 軸スコア（0.0〜1.0、負値・1.0 超もあり）を算出
           </li>
           <li className="mb-1">
-            32 学科それぞれの「学科ベクトル」とコサイン類似度を計算
+            36 学科それぞれの「学科ベクトル」とコサイン類似度を計算
           </li>
           <li className="mb-1">類似度が高い順にランキング表示</li>
         </ol>
@@ -493,7 +494,7 @@ export default function TeachersPage() {
         <ul className="mb-4 ml-6 list-disc">
           <li className="mb-1">学年・クラス・出席番号</li>
           <li className="mb-1">19 軸のスコア</li>
-          <li className="mb-1">32 学科ランキング</li>
+          <li className="mb-1">36 学科ランキング</li>
           <li className="mb-1">所要時間</li>
           <li className="mb-1">回答変更ログ（迷った質問の特定）</li>
           <li className="mb-1">結果ページでの納得感（任意回答）</li>
@@ -566,7 +567,7 @@ export default function TeachersPage() {
               <tr className="border-b border-gray-200">
                 <td className="py-2 pr-2 font-semibold">質問数</td>
                 <td className="py-2 pr-2">100〜300 問</td>
-                <td className="py-2">50〜61 問（約 10 分）</td>
+                <td className="py-2">約 45〜66 問（約 10 分）</td>
               </tr>
               <tr className="border-b border-gray-200">
                 <td className="py-2 pr-2 font-semibold">軸の数</td>
@@ -790,13 +791,13 @@ export default function TeachersPage() {
           </div>
           <Faq
             q="各学科の紹介文はどうやって作りましたか？"
-            short="AI（Claude）で初稿、開発者が全 32 学科を校閲・修正しています。"
+            short="AI（Claude）で初稿、開発者が全 36 学科を校閲・修正しています。"
             a="AI には「6 偏差値帯のシラバス情報」と「学科の典型的な活動内容」をインプットとして与え、学生視点で 2〜3 文に要約させました。その後、不自然な表現や誇張、誤りを人の目で校正しています。完全に自動生成ではなく、最終的な責任は開発者が負っています。"
           />
           <Faq
             q="リング図は何を表しているのですか？"
-            short="8 カテゴリへの興味の強さを「線の長さ」で示したイコライザー型ビジュアルです。"
-            a="8 つのカテゴリ（数理・情報、経済・ビジネス、法・政治・社会、言語・表現、スポーツ・教育、生命・医療、工学・技術、自然科学）を時計方向に配置し、12 時 = 数理・情報から並んでいます。サービス名「ring-map」（リング型の進路マップ）の由来でもあります。"
+            short="分野カテゴリへの興味の強さを「線の長さ」で示したイコライザー型ビジュアルです。"
+            a="混合版では 9 つのカテゴリ（数理・情報、物理・化学、機械・材料、建設・環境、生命・医療、健康・こころ、教育・人文、法・政治・社会、経済・経営）を時計方向に配置し、12 時 = 数理・情報から並んでいます。サービス名「ring-map」（リング型の進路マップ）の由来でもあります。"
           />
           <Faq
             q="「マッチング○○%」という数字は何を意味していますか？"

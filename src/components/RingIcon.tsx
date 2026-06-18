@@ -62,21 +62,22 @@ export default function RingIcon({ size = 140 }: { size?: number }) {
     const innerRadius = size * 0.3;
     const outerRadius = size * 0.46;
     const categoryHsls = CATEGORY_COLORS.map(hexToHsl);
-    const segmentAngle = 360 / 8;
+    const N_CAT = CATEGORY_COLORS.length; // 9（2026-06-18 9×4化に追随）
+    const segmentAngle = 360 / N_CAT;
 
     for (let i = 0; i < LINE_COUNT; i++) {
       const angleDeg = (i / LINE_COUNT) * 360;
       const angleRad = ((angleDeg - 90) * Math.PI) / 180;
 
       const catPosition = angleDeg / segmentAngle;
-      const catIndex = Math.floor(catPosition) % 8;
-      const nextCatIndex = (catIndex + 1) % 8;
+      const catIndex = Math.floor(catPosition) % N_CAT;
+      const nextCatIndex = (catIndex + 1) % N_CAT;
       const catFraction = catPosition - Math.floor(catPosition);
 
       const blendZone = 0.25;
       let color: string;
       if (catFraction < blendZone) {
-        const prevCatIndex = (catIndex - 1 + 8) % 8;
+        const prevCatIndex = (catIndex - 1 + N_CAT) % N_CAT;
         const t = 0.5 + (catFraction / blendZone) * 0.5;
         color = lerpHsl(categoryHsls[prevCatIndex], categoryHsls[catIndex], t);
       } else if (catFraction > 1 - blendZone) {
