@@ -198,3 +198,9 @@
 - **ロゴ/ファビコン**＝山谷を持たない均一リング（ブランドマーク）。色は9カテゴリ revcolor（=9×4）。`RingIcon` の線幅を **size 比例(2.5@140)** に変更し、小サイズ(24px ヘッダー)でも塊にならず細く見えるよう統一（ファビコン `generate-icon.py` も RingIcon 忠実移植の細線・透過）。
 - 調整レバー（次に触るならここ）：`AnimatedRing` の `periodMs`（速さ）と強度レンジ（`0.15 + random*0.85`＝振れ幅）。山谷を穏やかにするなら下限↑・上限↓。
 - 注意（Tailスタイル運用）：このノート内に `` `animate-[...]` `` の生トークンを書くと Tailwind が壊れCSSを生成するため**バッククォートで生のarbitrary classを書かない**（2026-06-18 実害確認済・トークンは言葉で説明する）。
+
+## 2026-06-18 mix ゆらぎリングの「いじりまくる」土台（commit 0c60a92）
+- **調整ラボ＝`/ring-lab`**（本番 noindex・非リンク・URL直打ち。robots.txt Disallow 済）。スライダーで速さ/揺れ幅/本数/線幅/内外径/モードを即反映、下部に現在値JSONを表示。**気に入った値の JSON をオーナーが伝える→ Claude がデフォルトに焼き込む**運用。
+- **mix 描画を `src/components/mix-ring.ts` に隔離**（`drawMixRing` + `MixRingParams` + `DEFAULT_MIX_PARAMS`）。結果リング(`ring-draw.ts`)・文系/理系とは独立＝**ここをいじっても mix プレビューにしか効かない**。色HSLヘルパも自前で持つ。
+- アニメ設定 `MixAnimConfig`（`AnimatedRing.tsx`）＝`mode: sync(脈打つ)|wave(各点独立にゆらぐ)`・`periodMs`・`ampMin/ampMax`・`waveSpread`。**既定値＝現行本番と同一**（home/s/s-info の見た目は焼き込むまで不変）。
+- 焼き込み手順：オーナーが伝えた JSON の `anim` を `DEFAULT_MIX_ANIM`（AnimatedRing.tsx）、`mixParams` を `DEFAULT_MIX_PARAMS`（mix-ring.ts）に反映してコミット。
