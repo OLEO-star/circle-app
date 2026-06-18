@@ -28,20 +28,9 @@ def main() -> None:
     img = Image.new("RGB", (WIDTH, HEIGHT), BG_COLOR)
     draw = ImageDraw.Draw(img)
 
-    # Ring icon on the left — make white background transparent so it blends with BG
+    # Ring icon on the left。icon.png は既に透過の細い9色リング（白台紙なし）なので
+    # そのまま貼るだけ。旧版の「白背景を透過に抜く」処理は不要（淡い色を誤って抜く副作用も回避）。
     ring = Image.open(RING_ICON).convert("RGBA")
-    pixels = ring.load()
-    w, h = ring.size
-    for y in range(h):
-        for x in range(w):
-            r, g, b, a = pixels[x, y]
-            # Treat near-white pixels as transparent
-            if r > 240 and g > 240 and b > 240:
-                pixels[x, y] = (r, g, b, 0)
-            elif r > 220 and g > 220 and b > 220:
-                # Soft fade for edges to avoid jaggies
-                fade = max(0, 255 - (min(r, g, b) - 220) * 12)
-                pixels[x, y] = (r, g, b, fade)
 
     ring_size = 460
     ring = ring.resize((ring_size, ring_size), Image.LANCZOS)
