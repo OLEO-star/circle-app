@@ -3,13 +3,8 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import Ring from "@/components/Ring";
-import { previewStrengths } from "@/lib/departments";
+import AnimatedRing from "@/components/AnimatedRing";
 import { clearSchoolMode, enableSchoolMode } from "@/lib/school-mode";
-
-// ホームと同じプレビュー強度。トーンを揃え、入口で安心感を出す。
-// mixed は 36制御点（9×4）の均一円。
-const PREVIEW_STRENGTHS = previewStrengths("mixed");
 
 export default function SchoolEntryPage() {
   const router = useRouter();
@@ -50,12 +45,7 @@ export default function SchoolEntryPage() {
     return (
       <div className="flex min-h-dvh flex-col items-center justify-center px-10 py-12">
         <div className="flex max-w-[820px] items-center gap-16">
-          <Ring
-            strengths={PREVIEW_STRENGTHS}
-            version="mixed"
-            size={240}
-            showLabels={false}
-          />
+          <AnimatedRing version="mixed" size={240} showLabels={false} />
 
           {/* 縦罫線（リングと右カラムを視覚的に分離） */}
           <div className="w-px self-stretch bg-gray-200" />
@@ -107,12 +97,7 @@ export default function SchoolEntryPage() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-10">
       <div className="w-full max-w-sm text-center">
-        <Ring
-          strengths={PREVIEW_STRENGTHS}
-          version="mixed"
-          size={200}
-          showLabels={false}
-        />
+        <AnimatedRing version="mixed" size={200} showLabels={false} />
 
         {/* サイトのアイデンティティ（ホームと同じトーン） */}
         <h1 className="mb-3 mt-4 text-2xl font-bold">学部診断</h1>

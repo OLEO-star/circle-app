@@ -97,7 +97,9 @@ export default function RingIcon({ size = 140 }: { size?: number }) {
         cy + outerRadius * Math.sin(angleRad)
       );
       ctx.strokeStyle = color;
-      ctx.lineWidth = 2.5;
+      // 線幅は size に比例させる（size 基準 2.5@140）。固定だと size 24 等で
+      // 線が太すぎて塊に見えるため、どのサイズでも同じ「細い」密度比を保つ。
+      ctx.lineWidth = (size / 140) * 2.5;
       ctx.lineCap = "round";
       ctx.stroke();
     }

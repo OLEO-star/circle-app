@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Ring from "@/components/Ring";
+import AnimatedRing from "@/components/AnimatedRing";
 import RingIcon from "@/components/RingIcon";
 import type { Version } from "@/lib/questions";
-import { previewStrengths } from "@/lib/departments";
 import { getStudentAge, setStudentAge } from "@/lib/school-mode";
 
 // 開始前の見通し：セット数も見せて「分割されている＝細切れに進められる」と
@@ -83,12 +82,7 @@ export default function Home() {
   return (
     <div className="flex min-h-dvh flex-col items-center justify-center px-6 py-10">
       <div className="w-full max-w-sm text-center">
-        <Ring
-          strengths={previewStrengths(selected)}
-          version={selected}
-          size={200}
-          showLabels={false}
-        />
+        <AnimatedRing version={selected} size={200} showLabels={false} />
 
         {/* 学部診断の趣旨を 2 行で伝える。
             上：promotion 焦点（やりたい・新しい発見）
@@ -231,12 +225,7 @@ function StartDesktopView({
       <div className="flex max-w-[880px] items-center gap-16">
         {/* 左：リング + 文理トグル */}
         <div className="flex shrink-0 flex-col items-center">
-          <Ring
-            strengths={previewStrengths(selected)}
-            version={selected}
-            size={260}
-            showLabels={false}
-          />
+          <AnimatedRing version={selected} size={260} showLabels={false} />
 
           <p className="mb-2 mt-5 text-center text-sm font-medium leading-snug text-gray-800">
             文理が決まっている方はこちら

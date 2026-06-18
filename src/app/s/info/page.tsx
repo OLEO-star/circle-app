@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import Ring from "@/components/Ring";
-import { previewStrengths } from "@/lib/departments";
+import AnimatedRing from "@/components/AnimatedRing";
 import {
   getSchoolInfo,
   isSchoolMode,
@@ -13,7 +12,7 @@ import {
 } from "@/lib/school-mode";
 import type { Version } from "@/lib/questions";
 
-// プレビュー強度は Ring 内で version 別の制御点数に合わせて生成する（previewStrengths）。
+// プレビューは AnimatedRing（version 別の制御点数で内部生成・常時アニメ）を使う。
 // 文理選択でリング色・形が変わるので、学校モードでも個人モードと同じ視覚的フィードバックを得られる。
 
 // ホーム（/）と同じ問題数表示にする。ユーザーが「全学科で比較」を選んだ場合の
@@ -132,12 +131,7 @@ export default function StudentInfoPage() {
             {/* 左 — 文理リングプレビュー + トグル */}
             <div className="text-center">
               <div className="flex justify-center">
-                <Ring
-                  strengths={previewStrengths(version)}
-                  version={version}
-                  size={240}
-                  showLabels={false}
-                />
+                <AnimatedRing version={version} size={240} showLabels={false} />
               </div>
               <p className="mb-2 mt-3 text-sm font-medium leading-snug text-gray-800">
                 文理が決まっている方はこちら
@@ -350,12 +344,7 @@ export default function StudentInfoPage() {
 
         {/* 文理選択（ホームと同じ仕様。リングで色変化を見せ、全学科で比較する場合は何も選ばない） */}
         <div className="-my-2 flex justify-center">
-          <Ring
-            strengths={previewStrengths(version)}
-            version={version}
-            size={140}
-            showLabels={false}
-          />
+          <AnimatedRing version={version} size={140} showLabels={false} />
         </div>
         <p className="mb-2 text-center text-sm font-medium leading-snug text-gray-800">
           文理が決まっている方はこちら
