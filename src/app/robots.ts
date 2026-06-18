@@ -13,7 +13,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/result", "/result-v"],
+      disallow: ["/result", "/result-v", "/ring-lab"],
     },
     sitemap: `${SITE_URL}/sitemap.xml`,
   };
