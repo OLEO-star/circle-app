@@ -7,7 +7,8 @@ import {
   DEFAULT_MIX_PARAMS,
   type MixRingParams,
 } from "./mix-ring";
-import { ringStrengthCount } from "@/lib/departments";
+import { ringStrengthCount, AXIS_COUNT } from "@/lib/departments";
+import { rankDepartments, calcRingStrengths } from "@/lib/scoring";
 import type { Version } from "@/lib/questions";
 
 // 「生きた」リング。診断前プレビュー用。各制御点の強度を動かし続け、山谷の長さが常に変化する。
@@ -27,9 +28,12 @@ export type MixAnimConfig = {
   // in=だんだん速く/out=だんだん遅く/inout=強弱を easePower で誇張。
   easeMode: EaseMode;
   easePower: number; // in/out/inout の強弱（1≈穏やか, 大きいほど急加減速）
+  // 形状ソース。real=ランダムな22軸プロフィールを本番判定式に通した「実際に起こりうる形」
+  // （理系↑なら文系↓等の相関が出る）/ random=各点を独立にランダム（相関なし）。real は sync で有効。
+  shape: "real" | "random";
 };
 
-// デフォルト＝現行本番と同一の見た目（sync・2.6秒・0.15〜1.0・cosine）。
+// デフォルト＝sync・2.6秒・cosine。形状は real（実際の判定式の出力をゆらす）。
 export const DEFAULT_MIX_ANIM: MixAnimConfig = {
   mode: "sync",
   periodMs: 2600,
@@ -38,6 +42,7 @@ export const DEFAULT_MIX_ANIM: MixAnimConfig = {
   waveSpread: 0.6,
   easeMode: "cosine",
   easePower: 2,
+  shape: "real",
 };
 
 type AnimatedRingProps = {
@@ -86,12 +91,27 @@ export default function AnimatedRing({
     const span = Math.max(0, cfg.ampMax - cfg.ampMin);
     const randArr = () => Array.from({ length: n }, () => lo + Math.random() * span);
 
+    // 形状ソース real: ランダムな興味プロフィール(22軸)を本番の判定式に通して
+    // 「実際に起こりうる学科適合度」を得る → 理系↑なら文系↓等の相関が自然に出る。
+    const randomAxisVector = () => {
+      const v = Array.from({ length: AXIS_COUNT }, () => Math.random() * 0.45);
+      const peaks = 3 + Math.floor(Math.random() * 4); // 3〜6軸を強めに＝興味の尖りを作る
+      for (let k = 0; k < peaks; k++) {
+        v[Math.floor(Math.random() * AXIS_COUNT)] = 0.6 + Math.random() * 0.4;
+      }
+      return v;
+    };
+    const realArr = () =>
+      calcRingStrengths(rankDepartments(randomAxisVector(), version), version);
+    // sync の目標値。real=本番判定式の出力 / random=独立ランダム。
+    const nextTarget = () => (cfg.shape === "real" ? realArr() : randArr());
+
     // reduced-motion: 1枚だけ静止描画。
     const reduce =
       typeof window.matchMedia === "function" &&
       window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (reduce) {
-      render(randArr());
+      render(nextTarget());
       return;
     }
 
@@ -136,15 +156,15 @@ export default function AnimatedRing({
             return (1 - Math.cos(x * Math.PI)) / 2;
         }
       };
-      let from = randArr();
-      let to = randArr();
+      let from = nextTarget();
+      let to = nextTarget();
       let segStart: number | null = null;
       const frame = (ts: number) => {
         if (segStart === null) segStart = ts;
         let t = (ts - segStart) / Math.max(1, cfg.periodMs);
         if (t >= 1) {
           from = to;
-          to = randArr();
+          to = nextTarget();
           segStart = ts;
           t = 0;
         }

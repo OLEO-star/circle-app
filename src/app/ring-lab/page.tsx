@@ -104,6 +104,22 @@ export default function RingLabPage() {
               リセット
             </button>
           </div>
+          <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
+            <span>形状ソース:</span>
+            {(["real", "random"] as const).map((sh) => (
+              <button
+                key={sh}
+                onClick={() => setAnim((s) => ({ ...s, shape: sh }))}
+                className={`rounded-full border px-3 py-1 ${anim.shape === sh ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 text-gray-700"}`}
+              >
+                {sh === "real" ? "リアル22軸（相関あり）" : "ランダム（独立）"}
+              </button>
+            ))}
+          </div>
+          <p className="mt-1 text-[11px] text-gray-400">
+            リアル22軸＝ランダムな興味を本番判定式に通した実際に起こりうる形（理系↑で文系↓）。
+            sync モードで有効。ampMin/Max はランダム時のみ効く。
+          </p>
         </div>
 
         {/* コントロール */}
