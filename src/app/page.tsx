@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Ring from "@/components/Ring";
+import RingIcon from "@/components/RingIcon";
 import type { Version } from "@/lib/questions";
 import { previewStrengths } from "@/lib/departments";
 import { getStudentAge, setStudentAge } from "@/lib/school-mode";
@@ -219,11 +220,9 @@ function StartDesktopView({
     <div className="flex min-h-dvh flex-col items-center justify-center px-10 py-12">
       {/* ロゴ行（result-v PC ヘッダーと同じリング小マークで表現） */}
       <div className="mb-10 flex items-center gap-3">
-        <span
-          className="block h-6 w-6 rounded-full border-[3px]"
-          style={{ borderColor: "#1E40AF" }}
-          aria-hidden="true"
-        />
+        <span className="inline-flex shrink-0">
+          <RingIcon size={24} />
+        </span>
         <span className="text-lg font-bold tracking-tight">ring-map</span>
         <span className="text-xs text-gray-400">学部診断</span>
       </div>

@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Ring from "@/components/Ring";
+import RingIcon from "@/components/RingIcon";
 import {
   VERSION_CATEGORY_NAMES,
   VERSION_CATEGORY_COLORS,
@@ -1215,11 +1216,9 @@ function ResultDesktopView({
         <div className="flex items-center gap-3">
           {/* ロゴ: アプリにロゴ画像アセットを新規に持ち込まず、リング型の小マークを
               実 div の二重円(border)で表現（box-shadow/疑似要素は不使用）。 */}
-          <span
-            className="block h-6 w-6 rounded-full border-[3px]"
-            style={{ borderColor: "#1E40AF" }}
-            aria-hidden="true"
-          />
+          <span className="inline-flex shrink-0">
+            <RingIcon size={24} />
+          </span>
           <span className="text-base font-bold tracking-tight">ring-map</span>
           <span className="text-xs text-gray-400">学部診断</span>
         </div>

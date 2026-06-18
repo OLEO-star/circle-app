@@ -16,6 +16,7 @@ import {
 } from "@/lib/scoring";
 import { getSlot } from "@/lib/departments";
 import { isSchoolMode, getStudentInfo } from "@/lib/school-mode";
+import RingIcon from "@/components/RingIcon";
 
 // 進捗保存に localStorage を使う理由：
 // sessionStorage はタブ kill / iOS Safari の低メモリ時に消えるため、
@@ -519,11 +520,9 @@ export default function QuizPage() {
             <div className="flex items-center gap-3">
               {/* ロゴ: リング型の小マークを実 div の二重円(border)で表現
                   （box-shadow/疑似要素は不使用・result-v の PC ヘッダーと同流儀）。 */}
-              <span
-                className="block h-6 w-6 rounded-full border-[3px]"
-                style={{ borderColor: "#1E40AF" }}
-                aria-hidden="true"
-              />
+              <span className="inline-flex shrink-0">
+                <RingIcon size={24} />
+              </span>
               <span className="text-base font-bold tracking-tight">ring-map</span>
               <span className="text-xs text-gray-400">学部診断</span>
             </div>
