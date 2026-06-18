@@ -156,7 +156,7 @@ export default function EnglishPage() {
             Their responses are scored across 19 axes (derived from Holland Code RIASEC and Big Five personality traits, adapted for the Japanese university context).
           </li>
           <li>
-            A cosine similarity is calculated against 36 representative Japanese university departments.
+            A variance-weighted distance (with an essential-axis gate) is calculated against 36 representative Japanese university departments.
           </li>
           <li>
             Results show ranked compatibility with each department, with descriptions of what daily life and career outcomes typically look like.

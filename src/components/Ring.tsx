@@ -163,8 +163,11 @@ export default function Ring({
       const STRANDS = 144;
       // 制御点ごとの色（HSL）= その学科のカテゴリ色。4学科ごと同色なので
       // カテゴリ内は色平坦・境界だけ補間 → 9色グラデを維持。
-      const facHsls = MIXED_RING_CATEGORY_INDEX.map((ci) =>
-        hexToHsl(CATEGORY_COLORS[ci])
+      // 制御点ごとの色。通常 NFAC===36 で MIXED_RING_CATEGORY_INDEX と一致するが、
+      // 万一 strengths が非36長でも添字落ち（undefined→hexToHsl 例外）しないよう
+      // NFAC 長で安全に引く（36 のときは従来と完全に同一の出力）。
+      const facHsls = Array.from({ length: NFAC }, (_, k) =>
+        hexToHsl(CATEGORY_COLORS[MIXED_RING_CATEGORY_INDEX[k] ?? 0])
       );
 
       // alpha（12時=0°、時計回り）で制御点間をサンプル。
@@ -220,14 +223,14 @@ export default function Ring({
         ctx.stroke();
       }
 
-      // カテゴリラベル（9個・各カテゴリ 4学科 = 45° の中央に配置）
+      // カテゴリラベル（9個・各カテゴリ 4学科 = 40°（9×40=360）の中央に配置）
       if (showLabels) {
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         ctx.font = `bold ${size * 0.035}px sans-serif`;
         ctx.fillStyle = "#888";
         const N_CAT = CATEGORY_NAMES.length; // 9
-        const catSpan = 4 * SEG; // 各カテゴリ = 4学科分 = 45°
+        const catSpan = 4 * SEG; // 各カテゴリ = 4学科分 = 40°（9×40=360）
         for (let c = 0; c < N_CAT; c++) {
           const centerAlpha = c * catSpan + catSpan / 2;
           const angleRad = ((centerAlpha - 90) * Math.PI) / 180;

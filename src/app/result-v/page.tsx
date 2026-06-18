@@ -62,7 +62,7 @@ type StoredResult = {
 // デモデータ生成。
 //   demo=1 / demo=humanities → 文系版
 //   demo=sciences            → 理系版
-//   demo=mixed               → 全学科版（32学科すべて）
+//   demo=mixed               → 全学科版（36学科すべて）
 // 結果ページの UI を実データなしで確認するため。
 function buildDemoData(demoParam: string): StoredResult | null {
   if (demoParam === "1" || demoParam === "humanities") {
@@ -210,8 +210,8 @@ export default function ResultVerticalDemoPage() {
   // モーダルで詳細展開する学科ID。null = 非表示。
   // Top4以降の学科の詳細を、ページ遷移せずに読めるようにする UI（案X）。
   const [expandedDept, setExpandedDept] = useState<string | null>(null);
-  // 「他の学科ランキング」で 19 位以降を隠すかどうか。
-  // 全 32 学科だと縦に長すぎて視認性が落ちるため、デフォルトは 18 位まで表示。
+  // 「他の学科ランキング」で 16 位以降を隠すかどうか。
+  // 全 36 学科だと縦に長すぎて視認性が落ちるため、デフォルトは 15 位まで表示。
   const [showAllRemaining, setShowAllRemaining] = useState(false);
   // PC版（≥1024px / lg）かどうか。SSR とクライアント初回で同じ DOM を返すため
   // null 初期化し、マウント後に matchMedia を評価して確定する（既存の data 同様の流儀）。
@@ -225,14 +225,15 @@ export default function ResultVerticalDemoPage() {
     //   ?demo=1         → 文系版（後方互換）
     //   ?demo=humanities → 文系版
     //   ?demo=sciences  → 理系版
-    //   ?demo=mixed     → 全学科版（32学科すべて表示）
+    //   ?demo=mixed     → 全学科版（36学科すべて表示）
     // 送信状態もクリアして Page 8 の初期表示を見られるようにする。
     // 実データは別の sessionStorage キーには保存しない（あくまで一時的なプレビュー）。
     if (typeof window !== "undefined") {
       const demoParam = new URLSearchParams(window.location.search).get("demo");
       const dummy = demoParam ? buildDemoData(demoParam) : null;
       if (dummy) {
-        sessionStorage.setItem("quizResult", JSON.stringify(dummy));
+        // デモは本番キー(quizResult)へ保存しない。後で素の /result を開いても
+        // デモが実データとして表示・送信されないようにする（プレビューは一時的）。
         sessionStorage.removeItem("satisfactionSent");
         sessionStorage.removeItem("satisfactionValue");
         setData(dummy);
@@ -612,7 +613,7 @@ export default function ResultVerticalDemoPage() {
       {/* Page 6: 4位以降の全学科ランキング
           - 各行クリックでモーダル展開: Top4以降の詳細も読める設計（案X）
           - 縦スクロール統一: min-h-dvh中央寄せをやめ自然フロー+py-12。
-            項目数が可変（13〜32学科）なので1画面固定だと空白/見切れの両極に振れる。 */}
+            項目数が可変（13〜36学科）なので1画面固定だと空白/見切れの両極に振れる。 */}
       <section className="flex w-full flex-col items-center px-6 py-6">
         {/* カード統一: Top3 詳細・FB欄と同じ bg-gray-50 カードに寄せる。 */}
         <div className="w-full max-w-sm rounded-2xl border border-gray-100 bg-gray-50 px-5 py-5">

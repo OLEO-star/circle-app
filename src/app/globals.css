@@ -57,21 +57,7 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
-/* 学科詳細モーダルの下から滑り上がりアニメーション。
-   prefers-reduced-motion を尊重して、設定オンなら即時表示にする。 */
-@keyframes slideUp {
-  from {
-    transform: translateY(100%);
-  }
-  to {
-    transform: translateY(0);
-  }
-}
-
 @media (prefers-reduced-motion: reduce) {
-  .animate-\[slideUp_250ms_ease-out\] {
-    animation: none !important;
-  }
   /* スクロール誘導の矢印バウンスは reduced-motion で停止（"続きがある"の
      情報自体は静止テキスト「スクロールして詳しく見る」で担保されるので消えない）。 */
   .animate-scroll-bounce {

@@ -49,7 +49,7 @@
   - 改善見込み: 「リングのこの山（色）＝この学科」が視覚で繋がる。sciences（寒色）/humanities（暖色）/mixed（8色）全版で帯色がリングと一致するのを実機確認済み。
 - **【3】スクロール誘導のバウンス（採用）**
   - 判断: 静止テキスト「スクロールして詳しく見る ↓」の矢印だけを上下バウンス（振幅 6px・2秒・ease-in-out・infinite）。テキストは静止のまま矢印のみ動かし、間延びさせない。
-  - **技術メモ（ハマりどころ）**: 当初 `globals.css` に直書きの `@keyframes scrollBounce` + arbitrary class `animate-[scrollBounce_2s...]` で実装したが、**Tailwind v4 + Lightning CSS が「未使用」と判断して keyframe を CSSOM から除去**し、`transform` が `none` のまま動かなかった（slideUp が動くのは別ルートのクラス文字列を scanner が拾うため）。正解は **`@theme` 内に `--animate-scroll-bounce: scrollBounce ...` トークン + `@keyframes` を定義し、named utility `animate-scroll-bounce` で使う**（Tailwind 標準の spin/bounce と同じ流儀）。今後 result-v / Ring 周りで keyframe を足すときは必ずこの方式。
+  - **技術メモ（ハマりどころ）**: 当初 `globals.css` に直書きの `@keyframes scrollBounce` + arbitrary class（`animate-` に scrollBounce 2s を直書きする方式）で実装したが、**Tailwind v4 + Lightning CSS が「未使用」と判断して keyframe を CSSOM から除去**し、`transform` が `none` のまま動かなかった（slideUp が動くのは別ルートのクラス文字列を scanner が拾うため）。正解は **`@theme` 内に `--animate-scroll-bounce: scrollBounce ...` トークン + `@keyframes` を定義し、named utility `animate-scroll-bounce` で使う**（Tailwind 標準の spin/bounce と同じ流儀）。今後 result-v / Ring 周りで keyframe を足すときは必ずこの方式。
   - reduced-motion: `@media (prefers-reduced-motion: reduce)` で `.animate-scroll-bounce { animation: none }`。停止しても「スクロールして詳しく見る」テキストが残るので affordance は消えない。Playwright で motion ON＝translateY 0→6→0 周回 / reduce＝`none` 固定を実測確認。
 - **【4】表紙の縦バランス（採用・控えめ）**
   - 判断: 表紙上部の余白が広かった。リング `size 320 → 344`（+7.5%、390px 幅カラムに収まる範囲）。タイトル `text-base → text-lg`、上余白 `py-6 → pt-4 pb-6`、見出し下マージン微縮。`justify-center` は維持（hero だけ `min-h-dvh` 全画面カバーの方針は不変更）。
@@ -168,7 +168,7 @@
 - **デザインの目的**: スマホで Top4 以降の学科をタップしたとき出る詳細を、表紙のリング・Top3 詳細カードと**同じ視覚言語**に揃える。ボトムシートは「一時的に下から覗く」感が強く、Top3 詳細（中央カラムのカード）と別物に見えていた。中央カード＋左色帯にすることで「これも同じ"学科カード"だ」と一目で繋がる。
 - **なぜこの変更を加えたか（変更点）**:
   - 配置 `items-end` → **`items-center`**（画面中央）。scrim `bg-black/40` は維持。
-  - アニメ `animate-[slideUp_250ms_ease-out]` → **`animate-modal-fade`**（PC で足した `@theme` 内 `--animate-modal-fade` トークンを再利用。opacity 0→1・8px 持ち上げ・200ms。`prefers-reduced-motion` で停止＝globals.css の既存 reduced-motion 規則が `.animate-modal-fade` を `animation:none` にする）。
+  - アニメ（旧 slideUp arbitrary class・250ms ease-out） → **`animate-modal-fade`**（PC で足した `@theme` 内 `--animate-modal-fade` トークンを再利用。opacity 0→1・8px 持ち上げ・200ms。`prefers-reduced-motion` で停止＝globals.css の既存 reduced-motion 規則が `.animate-modal-fade` を `animation:none` にする）。
   - 形 `rounded-t-3xl`（上だけ角丸） → **全角丸 `rounded-2xl`**。**グラブハンドル（`h-1 w-10 bg-gray-300`）を廃止**。
   - 見た目を **Top3 カードと同一**に＝外枠 `overflow-hidden rounded-2xl border border-gray-100 bg-gray-50`、左端に **幅 `w-1.5`（6px）の色帯 `colors[dept.slot]`**（Top3 カードと同じ太さ・slot→色対応はリング描画と同一）。中身（学科について／1週間の流れ／主な進路）は不変。
   - 小画面対応: scrim に `p-5`（画面端に密着させない）・カード `max-w-sm`（スマホ幅にフィット）・`max-h-[85vh]`＋**内部スクロール**（色帯と本文を `flex` で並べ、本文側 `flex-1 overflow-y-auto px-5 pb-5 pt-4`。色帯は `shrink-0` で full-height）・縦も中央。
