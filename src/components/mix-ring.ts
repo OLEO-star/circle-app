@@ -11,6 +11,10 @@ export type MixRingParams = {
   outerRatio: number; // 最大外径 / size（山の最大の長さ）
   minLenRatio: number; // 谷の最小長 / size（谷を完全に潰さない下限）
   lineWidth: number; // 線の太さ(px)
+  rotationDeg: number; // リング全体の回転（度・時計回り）
+  lineCap: "round" | "butt" | "square"; // 線の先端形
+  satMul: number; // 彩度倍率（1=元の鮮やかさ・<1で淡く・>1で鮮やかに）
+  lightMul: number; // 明度倍率（1=元・<1で暗く・>1で明るく）
 };
 
 // デフォルト＝現行本番と同一（変更すると mix プレビューの初期見た目が変わる）。
@@ -20,6 +24,10 @@ export const DEFAULT_MIX_PARAMS: MixRingParams = {
   outerRatio: 0.44,
   minLenRatio: 0.02,
   lineWidth: 2,
+  rotationDeg: 0,
+  lineCap: "round",
+  satMul: 1,
+  lightMul: 1,
 };
 
 function hexToHsl(hex: string): [number, number, number] {
@@ -43,12 +51,12 @@ function hslToString(h: number, s: number, l: number): string {
   return `hsl(${h}, ${s * 100}%, ${l * 100}%)`;
 }
 
-// 隣接カテゴリ色を淡色経由で補間（drawRing の lerpHsl と同系。mix 9色グラデ維持）。
-function lerpHsl(
+// 隣接カテゴリ色を淡色経由で補間し [h,s,l] を返す（drawRing の lerpHsl と同系）。
+function lerpHslTuple(
   [h1, s1, l1]: [number, number, number],
   [h2, s2, l2]: [number, number, number],
   t: number
-): string {
+): [number, number, number] {
   let dh = h2 - h1;
   if (dh > 180) dh -= 360;
   else if (dh < -180) dh += 360;
@@ -63,8 +71,10 @@ function lerpHsl(
   const u = 4 * t * (1 - t);
   const s = Math.max(0, (s1 + (s2 - s1) * t) * (1 - peakDesat * u));
   const l = Math.min(1, (l1 + (l2 - l1) * t) + peakLight * u);
-  return hslToString(h, s, l);
+  return [h, s, l];
 }
+
+const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
 // mix リング描画（clearRect + 36制御点をコサイン補間で strands 本に展開）。
 // strengths は長さ36（各学科の強度）。アニメ側がフレーム毎に渡す。
@@ -80,7 +90,9 @@ export function drawMixRing(
   const cy = size / 2;
   const innerRadius = size * params.innerRatio;
   const maxOuterRadius = size * params.outerRatio;
-  const minLineLength = size * params.minLenRatio;
+  const band = Math.max(0, maxOuterRadius - innerRadius);
+  // 谷の最小長は帯幅を超えないようクランプ（超えると山谷が反転するため）。
+  const minLineLength = Math.min(size * params.minLenRatio, band);
 
   // ユーザー内 min-max 正規化（差を強調）: 最弱=0.05、最強=1.0。
   const minStr = Math.min(...strengths);
@@ -112,18 +124,20 @@ export function drawMixRing(
       t = frac - 0.5;
     }
     const tt = (1 - Math.cos(t * Math.PI)) / 2;
+    const [h, s, l] = lerpHslTuple(facHsls[lo], facHsls[hi], tt);
     return {
       v: norm[lo] + (norm[hi] - norm[lo]) * tt,
-      color: lerpHsl(facHsls[lo], facHsls[hi], tt),
+      // 彩度・明度倍率を適用（淡く/鮮やかに・暗く/明るく）。
+      color: hslToString(h, clamp01(s * params.satMul), clamp01(l * params.lightMul)),
     };
   };
 
   for (let i = 0; i < STRANDS; i++) {
     const alpha = (i / STRANDS) * 360;
-    const angleRad = ((alpha - 90) * Math.PI) / 180;
+    // -90 で12時起点、+rotationDeg で全体回転。
+    const angleRad = ((alpha - 90 + params.rotationDeg) * Math.PI) / 180;
     const { v, color } = sampleAt(alpha);
-    const lineLength =
-      minLineLength + v * (maxOuterRadius - innerRadius - minLineLength);
+    const lineLength = minLineLength + v * (band - minLineLength);
     const outerR = innerRadius + lineLength;
     ctx.beginPath();
     ctx.moveTo(
@@ -133,7 +147,7 @@ export function drawMixRing(
     ctx.lineTo(cx + outerR * Math.cos(angleRad), cy + outerR * Math.sin(angleRad));
     ctx.strokeStyle = color;
     ctx.lineWidth = params.lineWidth;
-    ctx.lineCap = "round";
+    ctx.lineCap = params.lineCap;
     ctx.stroke();
   }
 }

@@ -53,13 +53,17 @@ export default function RingLabPage() {
     { key: "ampMin", label: "強度下限 ampMin（谷の深さ）", min: 0, max: 0.9, step: 0.01, get: () => anim.ampMin, set: (v) => a("ampMin", v) },
     { key: "ampMax", label: "強度上限 ampMax（山の高さ）", min: 0.1, max: 1, step: 0.01, get: () => anim.ampMax, set: (v) => a("ampMax", v) },
     { key: "waveSpread", label: "ゆらぎ分散 waveSpread（waveのみ）", min: 0, max: 1.5, step: 0.05, get: () => anim.waveSpread, set: (v) => a("waveSpread", v) },
+    { key: "easePower", label: "速度の強弱 easePower（in/out/inoutで効く）", min: 0.5, max: 6, step: 0.1, get: () => anim.easePower, set: (v) => a("easePower", v) },
   ];
   const visualRows: Row[] = [
     { key: "strands", label: "本数 strands", min: 36, max: 360, step: 4, get: () => mp.strands, set: (v) => p("strands", v) },
     { key: "lineWidth", label: "線の太さ lineWidth", min: 0.5, max: 8, step: 0.5, get: () => mp.lineWidth, set: (v) => p("lineWidth", v) },
     { key: "innerRatio", label: "内径 innerRatio（穴の大きさ）", min: 0.05, max: 0.4, step: 0.005, get: () => mp.innerRatio, set: (v) => p("innerRatio", v) },
     { key: "outerRatio", label: "外径 outerRatio（最大の長さ）", min: 0.25, max: 0.49, step: 0.005, get: () => mp.outerRatio, set: (v) => p("outerRatio", v) },
-    { key: "minLenRatio", label: "谷の最小長 minLenRatio", min: 0, max: 0.1, step: 0.005, get: () => mp.minLenRatio, set: (v) => p("minLenRatio", v) },
+    { key: "minLenRatio", label: "谷の最小長 minLenRatio（帯幅で自動クランプ）", min: 0, max: 0.35, step: 0.005, get: () => mp.minLenRatio, set: (v) => p("minLenRatio", v) },
+    { key: "rotationDeg", label: "回転 rotationDeg（度・時計回り）", min: 0, max: 360, step: 5, get: () => mp.rotationDeg, set: (v) => p("rotationDeg", v) },
+    { key: "satMul", label: "彩度倍率 satMul（淡⇄鮮）", min: 0, max: 1.6, step: 0.05, get: () => mp.satMul, set: (v) => p("satMul", v) },
+    { key: "lightMul", label: "明度倍率 lightMul（暗⇄明）", min: 0.6, max: 1.4, step: 0.05, get: () => mp.lightMul, set: (v) => p("lightMul", v) },
   ];
 
   const json = JSON.stringify({ anim, mixParams: mp }, null, 2);
@@ -111,12 +115,36 @@ export default function RingLabPage() {
                 <Slider key={r.key} row={r} />
               ))}
             </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-gray-600">
+              <span>速度カーブ ease（syncのみ）:</span>
+              {(["cosine", "linear", "in", "out", "inout"] as const).map((em) => (
+                <button
+                  key={em}
+                  onClick={() => setAnim((s) => ({ ...s, easeMode: em }))}
+                  className={`rounded-full border px-3 py-1 ${anim.easeMode === em ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 text-gray-700"}`}
+                >
+                  {em}
+                </button>
+              ))}
+            </div>
           </div>
           <div>
             <h2 className="mb-2 text-sm font-bold text-gray-800">見た目</h2>
             <div className="space-y-3">
               {visualRows.map((r) => (
                 <Slider key={r.key} row={r} />
+              ))}
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
+              <span>先端 lineCap:</span>
+              {(["round", "butt", "square"] as const).map((c) => (
+                <button
+                  key={c}
+                  onClick={() => setMp((s) => ({ ...s, lineCap: c }))}
+                  className={`rounded-full border px-3 py-1 ${mp.lineCap === c ? "border-gray-900 bg-gray-900 text-white" : "border-gray-300 text-gray-700"}`}
+                >
+                  {c}
+                </button>
               ))}
             </div>
           </div>

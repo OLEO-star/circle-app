@@ -15,21 +15,29 @@ import type { Version } from "@/lib/questions";
 // 文系/理系は従来どおり共用 drawRing。
 
 // ---- アニメ（動き）パラメータ（/ring-lab のスライダー対象）----
+export type EaseMode = "cosine" | "linear" | "in" | "out" | "inout";
+
 export type MixAnimConfig = {
   mode: "sync" | "wave"; // sync=全点が同じ目標へ脈打つ / wave=各点が独立にゆらぐ
   periodMs: number; // sync: 目標→次目標の時間 / wave: 基準周期（小さいほど速い）
   ampMin: number; // 強度の下限（谷の深さ）
   ampMax: number; // 強度の上限（山の高さ）
   waveSpread: number; // wave のみ: 各点の周期ばらつき（0=全点同期, 大きいほどバラバラに揺れる）
+  // 速度カーブ（sync のみ）。cosine=現行(ゆっくり→速く→ゆっくり)/linear=等速/
+  // in=だんだん速く/out=だんだん遅く/inout=強弱を easePower で誇張。
+  easeMode: EaseMode;
+  easePower: number; // in/out/inout の強弱（1≈穏やか, 大きいほど急加減速）
 };
 
-// デフォルト＝現行本番と同一の見た目（sync・2.6秒・0.15〜1.0）。
+// デフォルト＝現行本番と同一の見た目（sync・2.6秒・0.15〜1.0・cosine）。
 export const DEFAULT_MIX_ANIM: MixAnimConfig = {
   mode: "sync",
   periodMs: 2600,
   ampMin: 0.15,
   ampMax: 1.0,
   waveSpread: 0.6,
+  easeMode: "cosine",
+  easePower: 2,
 };
 
 type AnimatedRingProps = {
@@ -108,8 +116,26 @@ export default function AnimatedRing({
       };
       raf = requestAnimationFrame(frame);
     } else {
-      // sync: ランダム目標へコサイン ease で全点まとめて補間 → 脈打つ。
-      const ease = (t: number) => (1 - Math.cos(Math.min(1, t) * Math.PI)) / 2;
+      // sync: ランダム目標へ ease で全点まとめて補間 → 脈打つ。ease で速度の強弱を変える。
+      const ep = Math.max(0.2, cfg.easePower);
+      const ease = (t: number): number => {
+        const x = Math.min(1, Math.max(0, t));
+        switch (cfg.easeMode) {
+          case "linear":
+            return x;
+          case "in":
+            return Math.pow(x, ep);
+          case "out":
+            return 1 - Math.pow(1 - x, ep);
+          case "inout":
+            return x < 0.5
+              ? 0.5 * Math.pow(2 * x, ep)
+              : 1 - 0.5 * Math.pow(2 * (1 - x), ep);
+          case "cosine":
+          default:
+            return (1 - Math.cos(x * Math.PI)) / 2;
+        }
+      };
       let from = randArr();
       let to = randArr();
       let segStart: number | null = null;
