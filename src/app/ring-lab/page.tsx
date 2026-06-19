@@ -43,7 +43,9 @@ function Slider({ row }: { row: Row }) {
 export default function RingLabPage() {
   const [size, setSize] = useState(300);
   const [anim, setAnim] = useState<MixAnimConfig>({ ...DEFAULT_MIX_ANIM });
-  const [mp, setMp] = useState<MixRingParams>({ ...DEFAULT_MIX_PARAMS });
+  // ラボは初期表示を「鮮やか提案(midVivid=1)」にして確認しやすくする。
+  // 本番デフォルトは従来(midVivid=0)のまま＝OKをもらってから bake する。
+  const [mp, setMp] = useState<MixRingParams>({ ...DEFAULT_MIX_PARAMS, midVivid: 1 });
 
   const a = (k: keyof MixAnimConfig, v: number) => setAnim((s) => ({ ...s, [k]: v }));
   const p = (k: keyof MixRingParams, v: number) => setMp((s) => ({ ...s, [k]: v }));

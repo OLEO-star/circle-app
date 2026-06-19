@@ -31,7 +31,7 @@ export const DEFAULT_MIX_PARAMS: MixRingParams = {
   lineCap: "round",
   satMul: 1,
   lightMul: 1,
-  midVivid: 1, // 既定＝鮮やか（紫⇄ピンクのくすみを解消）。0で従来のくすみに戻せる。
+  midVivid: 0, // 既定＝従来（くすみ）。鮮やか版(1)はオーナーが /ring-lab で確認・OK後に bake する。
 };
 
 function hexToHsl(hex: string): [number, number, number] {
