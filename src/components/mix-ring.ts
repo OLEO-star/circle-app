@@ -38,15 +38,14 @@ export const DEFAULT_MIX_PARAMS: MixRingParams = {
   lineCap: "round",
   satMul: 1,
   lightMul: 1,
-  // 既定＝従来の見た目（境界をくすませる旧U字 desat0.6/light+0.22 相当）。
-  // boundarySat 0.4・boundaryLight 0.22 が旧「くすみ」と同等。鮮やか版(boundarySat1/light0)は
-  // オーナーが /ring-lab で確認・OK後に bake する。
-  boundarySat: 0.4,
-  boundaryLight: 0.22,
-  boundaryWidth: 1,
+  // 2026-06-19 オーナー確定（最終JSON）＝鮮やか境界＋やや広いにじみ。
+  boundarySat: 1, // 鮮やか（境界をくすませない）
+  boundaryLight: 0,
+  boundaryWidth: 1.8, // 色のにじみ幅 やや広め
   boundaryHueBias: 0,
-  pink: "#E05A9F", // 既定＝現行ピンク（本番不変）。ラボで案B等に差し替えて比較。
-  yellow: "#F5D442", // 既定＝現行黄（本番不変）。ラボで案C等に差し替えて比較。
+  // ピンク/黄は CATEGORY_COLORS に焼き込み済み(#E05ADD/#F5EE42)。ここの既定も一致させる。
+  pink: "#E05ADD",
+  yellow: "#F5EE42",
 };
 
 function hexToHsl(hex: string): [number, number, number] {
