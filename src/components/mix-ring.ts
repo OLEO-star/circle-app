@@ -2,7 +2,7 @@
 // 結果画面の Ring（ring-draw.ts の drawRing）とも、文系/理系の 8カテゴリ描画とも独立。
 // ここの定数・描画を変えても mix のアニメプレビューにしか影響しない。
 // HSL ヘルパも自前で持つ（ring-draw に手を入れずに色も自由にいじれるように）。
-import { CATEGORY_COLORS, MIXED_RING_CATEGORY_INDEX } from "@/lib/departments";
+import { CATEGORY_COLORS } from "@/lib/departments";
 
 // ---- 見た目パラメータ（/ring-lab のスライダー対象）----
 export type MixRingParams = {
@@ -64,15 +64,14 @@ function hslToString(h: number, s: number, l: number): string {
   return `hsl(${h}, ${s * 100}%, ${l * 100}%)`;
 }
 
-// 隣接カテゴリ色を淡色経由で補間し [h,s,l] を返す（drawRing の lerpHsl と同系）。
 type BoundaryParams = {
   bSat: number; // 境界中央の彩度倍率（1=変化なし）
   bLight: number; // 境界中央の明度オフセット（0=変化なし）
-  bWidth: number; // 境界の幅(にじみ)（1=標準）
   bHue: number; // 境界中央の色相シフト(度)（0=変化なし）
 };
-// 隣接色の補間 [h,s,l]。境界（色が変わる所）だけに彩度/明度/色相シフトを効かせる。
-// 効きの重み w = 色相差(hueDistance) × 中央寄りカーブ(u)。同色(hueDistance=0)では w=0＝無効果。
+// 隣接カテゴリ色の補間 [h,s,l]。t は 0=lo純色 / 0.5=境界中央 / 1=hi純色。
+// 彩度/明度/色相シフトは境界中央(t=0.5)で最大の U字 u で効かせる（端では0＝単色へ連続）。
+// ※「にじみ幅」は呼び出し側の blendZone（色の変化が広がる角度幅）で決める。
 function lerpHslTuple(
   [h1, s1, l1]: [number, number, number],
   [h2, s2, l2]: [number, number, number],
@@ -86,18 +85,13 @@ function lerpHslTuple(
     const midShort = ((h1 + dh / 2) % 360 + 360) % 360;
     if (midShort > 90 && midShort < 270) dh = dh > 0 ? dh - 360 : dh + 360;
   }
-  const hueDistance = Math.min(1, Math.abs(dh) / 180);
-  // 中央寄りカーブ。bWidth が大きいほど広く（滲む）、小さいほど鋭く中央集中。
-  const base = 4 * t * (1 - t); // 端0→中央1→端0
-  const u = Math.pow(Math.max(0, base), 1 / Math.max(0.2, bp.bWidth));
-  const w = hueDistance * u; // 境界のみ・中央ほど強い重み
-
   const hBase = ((h1 + dh * t) % 360 + 360) % 360;
-  const h = ((hBase + bp.bHue * w) % 360 + 360) % 360;
+  const u = 4 * t * (1 - t); // 端0→中央(t=0.5)1→端0
+  const h = ((hBase + bp.bHue * u) % 360 + 360) % 360;
   const sBase = s1 + (s2 - s1) * t;
   const lBase = l1 + (l2 - l1) * t;
-  const s = Math.min(1, Math.max(0, sBase * (1 + (bp.bSat - 1) * w)));
-  const l = Math.min(1, Math.max(0, lBase + bp.bLight * w));
+  const s = Math.min(1, Math.max(0, sBase * (1 + (bp.bSat - 1) * u)));
+  const l = Math.min(1, Math.max(0, lBase + bp.bLight * u));
   return [h, s, l];
 }
 
@@ -131,17 +125,14 @@ export function drawMixRing(
   const SEG = 360 / NFAC;
   const STRANDS = Math.max(NFAC, Math.round(params.strands));
 
-  const facHsls = Array.from({ length: NFAC }, (_, k) =>
-    hexToHsl(CATEGORY_COLORS[MIXED_RING_CATEGORY_INDEX[k] ?? 0])
-  );
-  const bp = {
+  const bp: BoundaryParams = {
     bSat: params.boundarySat,
     bLight: params.boundaryLight,
-    bWidth: params.boundaryWidth,
     bHue: params.boundaryHueBias,
   };
 
-  const sampleAt = (alpha: number): { v: number; color: string } => {
+  // ===== 長さ（山谷）＝学部36制御点のコサイン補間（実データの形。色とは独立）=====
+  const lenAt = (alpha: number): number => {
     const a = ((alpha % 360) + 360) % 360;
     const pos = a / SEG;
     const j0 = Math.floor(pos) % NFAC;
@@ -157,19 +148,44 @@ export function drawMixRing(
       t = frac - 0.5;
     }
     const tt = (1 - Math.cos(t * Math.PI)) / 2;
-    const [h, s, l] = lerpHslTuple(facHsls[lo], facHsls[hi], tt, bp);
-    return {
-      v: norm[lo] + (norm[hi] - norm[lo]) * tt,
-      // 彩度・明度倍率を適用（淡く/鮮やかに・暗く/明るく）。
-      color: hslToString(h, clamp01(s * params.satMul), clamp01(l * params.lightMul)),
-    };
+    return norm[lo] + (norm[hi] - norm[lo]) * tt;
+  };
+
+  // ===== 色＝9カテゴリ。boundaryWidth → 色が変わる角度幅 blendZone =====
+  //   blendZone 小 → 各カテゴリ弧の中央は単色・境界だけ細く変化（鋭い）。
+  //   blendZone=0.5 → 単色域が消え、中央まで隣色へ溶ける＝ほぼ連続な虹（最大の滲み）。
+  const catHslsArr = CATEGORY_COLORS.map(hexToHsl); // 9
+  const N_CAT = CATEGORY_COLORS.length; // 9
+  const CAT_SPAN = 360 / N_CAT; // 40°
+  const blendZone = Math.min(0.5, Math.max(0.01, params.boundaryWidth * 0.1));
+
+  const colorAt = (alpha: number): string => {
+    const a = ((alpha % 360) + 360) % 360;
+    const pos = a / CAT_SPAN;
+    const c0 = Math.floor(pos) % N_CAT;
+    const frac = pos - Math.floor(pos);
+    let h: number, s: number, l: number;
+    if (frac < blendZone) {
+      const lo = (c0 - 1 + N_CAT) % N_CAT;
+      const t = 0.5 + (frac / blendZone) * 0.5; // 境界中央(0.5)→単色(1)
+      [h, s, l] = lerpHslTuple(catHslsArr[lo], catHslsArr[c0], t, bp);
+    } else if (frac > 1 - blendZone) {
+      const hi = (c0 + 1) % N_CAT;
+      const t = ((frac - (1 - blendZone)) / blendZone) * 0.5; // 単色(0)→境界中央(0.5)
+      [h, s, l] = lerpHslTuple(catHslsArr[c0], catHslsArr[hi], t, bp);
+    } else {
+      [h, s, l] = catHslsArr[c0]; // 単色域（境界効果なし）
+    }
+    // 全体の彩度・明度倍率を適用。
+    return hslToString(h, clamp01(s * params.satMul), clamp01(l * params.lightMul));
   };
 
   for (let i = 0; i < STRANDS; i++) {
     const alpha = (i / STRANDS) * 360;
     // -90 で12時起点、+rotationDeg で全体回転。
     const angleRad = ((alpha - 90 + params.rotationDeg) * Math.PI) / 180;
-    const { v, color } = sampleAt(alpha);
+    const v = lenAt(alpha);
+    const color = colorAt(alpha);
     const lineLength = minLineLength + v * (band - minLineLength);
     const outerR = innerRadius + lineLength;
     ctx.beginPath();
