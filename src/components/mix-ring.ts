@@ -15,6 +15,9 @@ export type MixRingParams = {
   lineCap: "round" | "butt" | "square"; // 線の先端形
   satMul: number; // 彩度倍率（1=元の鮮やかさ・<1で淡く・>1で鮮やかに）
   lightMul: number; // 明度倍率（1=元・<1で暗く・>1で明るく）
+  // 隣接色の境界の鮮やかさ。0=現行（中間を淡色U字でくすませる）/ 1=鮮やか（脱彩度なし）。
+  // 紫⇄ピンク等の境界のくすみを解消するレバー（色そのものは変えない）。
+  midVivid: number;
 };
 
 // デフォルト＝現行本番と同一（変更すると mix プレビューの初期見た目が変わる）。
@@ -28,6 +31,7 @@ export const DEFAULT_MIX_PARAMS: MixRingParams = {
   lineCap: "round",
   satMul: 1,
   lightMul: 1,
+  midVivid: 1, // 既定＝鮮やか（紫⇄ピンクのくすみを解消）。0で従来のくすみに戻せる。
 };
 
 function hexToHsl(hex: string): [number, number, number] {
@@ -55,7 +59,8 @@ function hslToString(h: number, s: number, l: number): string {
 function lerpHslTuple(
   [h1, s1, l1]: [number, number, number],
   [h2, s2, l2]: [number, number, number],
-  t: number
+  t: number,
+  desatScale = 1 // 中間の脱彩度の強さ。0=脱彩度なし＝鮮やか / 1=従来のくすみ。
 ): [number, number, number] {
   let dh = h2 - h1;
   if (dh > 180) dh -= 360;
@@ -66,8 +71,8 @@ function lerpHslTuple(
   }
   const h = ((h1 + dh * t) % 360 + 360) % 360;
   const hueDistance = Math.min(1, Math.abs(dh) / 180);
-  const peakDesat = 0.6 * hueDistance;
-  const peakLight = 0.22 * hueDistance;
+  const peakDesat = 0.6 * hueDistance * desatScale;
+  const peakLight = 0.22 * hueDistance * desatScale;
   const u = 4 * t * (1 - t);
   const s = Math.max(0, (s1 + (s2 - s1) * t) * (1 - peakDesat * u));
   const l = Math.min(1, (l1 + (l2 - l1) * t) + peakLight * u);
@@ -107,6 +112,8 @@ export function drawMixRing(
   const facHsls = Array.from({ length: NFAC }, (_, k) =>
     hexToHsl(CATEGORY_COLORS[MIXED_RING_CATEGORY_INDEX[k] ?? 0])
   );
+  // midVivid 1 → desatScale 0（脱彩度なし＝鮮やか）/ midVivid 0 → desatScale 1（従来のくすみ）。
+  const desatScale = Math.max(0, 1 - params.midVivid);
 
   const sampleAt = (alpha: number): { v: number; color: string } => {
     const a = ((alpha % 360) + 360) % 360;
@@ -124,7 +131,7 @@ export function drawMixRing(
       t = frac - 0.5;
     }
     const tt = (1 - Math.cos(t * Math.PI)) / 2;
-    const [h, s, l] = lerpHslTuple(facHsls[lo], facHsls[hi], tt);
+    const [h, s, l] = lerpHslTuple(facHsls[lo], facHsls[hi], tt, desatScale);
     return {
       v: norm[lo] + (norm[hi] - norm[lo]) * tt,
       // 彩度・明度倍率を適用（淡く/鮮やかに・暗く/明るく）。

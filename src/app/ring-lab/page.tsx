@@ -64,6 +64,7 @@ export default function RingLabPage() {
     { key: "rotationDeg", label: "回転 rotationDeg（度・時計回り）", min: 0, max: 360, step: 5, get: () => mp.rotationDeg, set: (v) => p("rotationDeg", v) },
     { key: "satMul", label: "彩度倍率 satMul（淡⇄鮮）", min: 0, max: 1.6, step: 0.05, get: () => mp.satMul, set: (v) => p("satMul", v) },
     { key: "lightMul", label: "明度倍率 lightMul（暗⇄明）", min: 0.6, max: 1.4, step: 0.05, get: () => mp.lightMul, set: (v) => p("lightMul", v) },
+    { key: "midVivid", label: "境界の鮮やかさ midVivid（0=くすむ→1=鮮やか／紫⇄ピンク対策）", min: 0, max: 1, step: 0.05, get: () => mp.midVivid, set: (v) => p("midVivid", v) },
   ];
 
   const json = JSON.stringify({ anim, mixParams: mp }, null, 2);
