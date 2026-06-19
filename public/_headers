@@ -17,8 +17,11 @@
 # ---------------------------------------------------------------------------
 
 /*
-  # クリックジャッキング防止（iframe 埋め込み禁止）。診断UIを偽サイトに重ねさせない。
-  X-Frame-Options: DENY
+  # クリックジャッキング防止。別サイトからの iframe 埋め込みは全面禁止し、同一オリジン
+  # （ring-map.com 自身）だけ許可する。玄関(/)が結果デモ(/result)を画面内に埋め込んで
+  # 触れるようにするため SAMEORIGIN（CSP frame-ancestors 'self' と一致）。偽サイトに
+  # 重ねさせない目的は維持される。
+  X-Frame-Options: SAMEORIGIN
   # MIME スニッフィング無効化（誤った Content-Type を実行コードと解釈させない）。
   X-Content-Type-Options: nosniff
   # 参照元の漏えいを最小化（別オリジンへはオリジンのみ送出）。

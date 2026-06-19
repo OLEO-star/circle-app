@@ -34,8 +34,9 @@ export default function SchoolEntryPage() {
 
   const goPersonal = () => {
     // 個人モードに戻る生徒のため、誤って残った schoolMode を念のため掃除する。
+    // 2026-06-19: ルート(/)は先生向け玄関になったので、個人診断は /start へ。
     clearSchoolMode();
-    router.push("/");
+    router.push("/start");
   };
 
   // PC版（≥1024px）。状態・ハンドラはモバイルと完全共有し、レイアウトだけ
