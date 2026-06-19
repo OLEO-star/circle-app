@@ -56,7 +56,7 @@ export default function RingLabPage() {
     { key: "strands", label: "本数 strands（グラデの密度）", min: 36, max: 720, step: 4, get: () => mp.strands, set: (v) => p("strands", v) },
     { key: "boundarySat", label: "境界の彩度 boundarySat（<1くすむ／1元／>1濃く）", min: 0, max: 1.6, step: 0.05, get: () => mp.boundarySat, set: (v) => p("boundarySat", v) },
     { key: "boundaryLight", label: "境界の明度 boundaryLight（−暗⇄＋明・0=変化なし）", min: -0.4, max: 0.4, step: 0.02, get: () => mp.boundaryLight, set: (v) => p("boundaryLight", v) },
-    { key: "boundaryWidth", label: "境界の幅 boundaryWidth（小=鋭い⇄大=滲む）", min: 0.3, max: 3, step: 0.1, get: () => mp.boundaryWidth, set: (v) => p("boundaryWidth", v) },
+    { key: "boundaryWidth", label: "境界の幅 boundaryWidth（小=鋭い⇄大=滲む）", min: 0.3, max: 5, step: 0.1, get: () => mp.boundaryWidth, set: (v) => p("boundaryWidth", v) },
     { key: "boundaryHueBias", label: "境界の色相シフト boundaryHueBias（度・±で色味調整）", min: -60, max: 60, step: 2, get: () => mp.boundaryHueBias, set: (v) => p("boundaryHueBias", v) },
   ];
 
