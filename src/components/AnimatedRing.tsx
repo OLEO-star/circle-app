@@ -33,14 +33,15 @@ export type MixAnimConfig = {
   shape: "real" | "random";
 };
 
-// デフォルト＝sync・2.6秒・cosine。形状は real（実際の判定式の出力をゆらす）。
+// デフォルト＝オーナー確定値（2026-06-19 JSON）：sync・2.6秒・inout・real。
+// 動き系はこの値で確定（/ring-lab から該当スライダーは撤去）。残る調整対象は色境界の3つのみ。
 export const DEFAULT_MIX_ANIM: MixAnimConfig = {
   mode: "sync",
   periodMs: 2600,
   ampMin: 0.15,
   ampMax: 1.0,
   waveSpread: 0.6,
-  easeMode: "cosine",
+  easeMode: "inout",
   easePower: 2,
   shape: "real",
 };
