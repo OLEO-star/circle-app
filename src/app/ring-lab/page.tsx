@@ -46,16 +46,25 @@ export default function RingLabPage() {
     boundarySat: 1,
     boundaryLight: 0,
     pink: "#E05ADD", // 案B（本番は未確定・ここで確認用）
+    yellow: "#F5EE42", // 案C（本番は未確定・ここで確認用）
   });
   const p = (k: keyof MixRingParams, v: number) =>
     setMp((s) => ({ ...s, [k]: v }));
   const setPink = (hex: string) => setMp((s) => ({ ...s, pink: hex }));
+  const setYellow = (hex: string) => setMp((s) => ({ ...s, yellow: hex }));
   const PINKS: [string, string][] = [
     ["ベース", "#E05A9F"],
     ["案A", "#E05AC0"],
     ["案B★", "#E05ADD"],
     ["案C", "#C75AE0"],
     ["案D", "#AC5AE0"],
+  ];
+  const YELLOWS: [string, string][] = [
+    ["ベース", "#F5D442"],
+    ["案A", "#F5DC42"],
+    ["案B", "#F5E542"],
+    ["案C★", "#F5EE42"],
+    ["案D", "#F2F542"],
   ];
 
   // 動き系は確定値で固定（スライダー撤去）。
@@ -71,7 +80,7 @@ export default function RingLabPage() {
 
   const json = JSON.stringify({ anim, mixParams: mp }, null, 2);
   const reset = () => {
-    setMp({ ...DEFAULT_MIX_PARAMS, boundarySat: 1, boundaryLight: 0, pink: "#E05ADD" });
+    setMp({ ...DEFAULT_MIX_PARAMS, boundarySat: 1, boundaryLight: 0, pink: "#E05ADD", yellow: "#F5EE42" });
     setSize(300);
   };
 
@@ -110,8 +119,21 @@ export default function RingLabPage() {
             </button>
           ))}
         </div>
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
+          <span className="text-gray-600">黄(生命医療):</span>
+          {YELLOWS.map(([lab, hex]) => (
+            <button
+              key={hex}
+              onClick={() => setYellow(hex)}
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 ${mp.yellow === hex ? "border-gray-900 font-bold" : "border-gray-300 text-gray-700"}`}
+            >
+              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: hex }} />
+              {lab}
+            </button>
+          ))}
+        </div>
         <p className="mt-1 text-[11px] text-gray-400">
-          ピンク(cat7)はラボ確認用の差し替え。本番（家/結果/ファビコン/共有カード）は現行ピンクのまま。
+          ピンク(cat7)・黄(cat4)はラボ確認用の差し替え。本番（家/結果/ファビコン/共有カード）は現行色のまま。
         </p>
       </div>
 

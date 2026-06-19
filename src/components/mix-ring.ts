@@ -21,9 +21,10 @@ export type MixRingParams = {
   boundaryLight: number; // 境界の明度オフセット（中央）。0=変化なし / +で明るく / −で暗く
   boundaryWidth: number; // 境界の幅(にじみ)。1=標準 / 大きいほど広く滲む / 小さいほど鋭い
   boundaryHueBias: number; // 境界の色相シフト(度)。中央の色味を±にずらす（0=変化なし）
-  // cat7(法・政治・社会=ピンク)の色を差し替えるプレビュー用。本番焼き込み前の比較に使う。
-  // 既定は現行 CATEGORY_COLORS[7]。本番に確定したら departments.ts 側を直接書き換える。
+  // cat7(法・政治・社会=ピンク)/cat4(生命・医療=黄)の色を差し替えるプレビュー用。
+  // 既定は現行 CATEGORY_COLORS。本番に確定したら departments.ts 側を直接書き換える。
   pink: string;
+  yellow: string;
 };
 
 // デフォルト＝現行本番と同一（変更すると mix プレビューの初期見た目が変わる）。
@@ -45,6 +46,7 @@ export const DEFAULT_MIX_PARAMS: MixRingParams = {
   boundaryWidth: 1,
   boundaryHueBias: 0,
   pink: "#E05A9F", // 既定＝現行ピンク（本番不変）。ラボで案B等に差し替えて比較。
+  yellow: "#F5D442", // 既定＝現行黄（本番不変）。ラボで案C等に差し替えて比較。
 };
 
 function hexToHsl(hex: string): [number, number, number] {
@@ -158,8 +160,10 @@ export function drawMixRing(
   // ===== 色＝9カテゴリ。boundaryWidth → 色が変わる角度幅 blendZone =====
   //   blendZone 小 → 各カテゴリ弧の中央は単色・境界だけ細く変化（鋭い）。
   //   blendZone=0.5 → 単色域が消え、中央まで隣色へ溶ける＝ほぼ連続な虹（最大の滲み）。
-  // cat7(法・政治・社会=ピンク)だけ params.pink に差し替え可能（本番焼き込み前の比較用）。
-  const cols = CATEGORY_COLORS.map((c, i) => (i === 7 ? params.pink : c));
+  // cat7(ピンク)/cat4(黄)を params で差し替え可能（本番焼き込み前の比較用）。
+  const cols = CATEGORY_COLORS.map((c, i) =>
+    i === 7 ? params.pink : i === 4 ? params.yellow : c
+  );
   const catHslsArr = cols.map(hexToHsl); // 9
   const N_CAT = CATEGORY_COLORS.length; // 9
   const CAT_SPAN = 360 / N_CAT; // 40°
