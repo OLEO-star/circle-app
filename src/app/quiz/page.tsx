@@ -12,7 +12,7 @@ import {
   calcAxisScores,
   rankDepartments,
   getTop3Categories,
-  calcRingStrengths,
+  calcResultRingStrengths,
 } from "@/lib/scoring";
 import { getSlot } from "@/lib/departments";
 import { isSchoolMode, getStudentInfo } from "@/lib/school-mode";
@@ -319,9 +319,9 @@ export default function QuizPage() {
       const axisScores = calcAxisScores(finalAnswers, questions);
       const results = rankDepartments(axisScores, version);
       const top3Categories = getTop3Categories(results);
-      // リング制御点の強度。mixed=36学科の適合度（確定デザイン new9x4r_A 方式）、
-      // humanities/sciences=8カテゴリ強度。キー名は後方互換のため categoryStrengths のまま。
-      const categoryStrengths = calcRingStrengths(results, version);
+      // 結果リングの制御点強度＝学科単位の適合度（VERSION_RING_ORDER 順）。
+      // mixed=36 / 理系=24 / 文系=13。キー名は後方互換のため categoryStrengths のまま。
+      const categoryStrengths = calcResultRingStrengths(results, version);
 
       const resultData = {
         version,

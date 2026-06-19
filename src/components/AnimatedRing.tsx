@@ -91,7 +91,8 @@ export default function AnimatedRing({
       version === "mixed"
         ? CATEGORY_COLORS.map((c, i) => (i === 7 ? mp.pink : i === 4 ? mp.yellow : c))
         : [...VERSION_CATEGORY_COLORS[version]];
-    const render = (arr: number[]) => drawMixRing(ctx, size, arr, mp, palette);
+    const render = (arr: number[]) =>
+      drawMixRing(ctx, size, arr, mp, palette, version === "sciences");
 
     const lo = cfg.ampMin;
     const span = Math.max(0, cfg.ampMax - cfg.ampMin);

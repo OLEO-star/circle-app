@@ -78,28 +78,30 @@ export const HUMANITIES_CATEGORY_COLORS = [
   "#E03767", // ローズレッド - 教育・スポーツ（深紅へつなぐ）
 ] as const;
 
-// ===== sciences 版（理系・寒色） =====
-// 並び: 数理・情報 → 工学 → 物理・地球 → 化学 → 生物 → 生命・医療 → 農・獣医 → 身体運動
+// ===== sciences 版（理系・寒色・8カテゴリ×3学科＝24／2026-06-19 学科単位リング化）=====
+// 並び: 数理・理論 → 情報・データ → 機械・電気 → 物質・化学 → 環境・構造 → 地球・生物 → 生命・薬獣 → 医療・臨床
+// 各カテゴリ3学科。SCI_RING_ORDER の slot 順＝この並び。色は SCIENCES_CATEGORY_COLORS（不変）。
 export const SCIENCES_CATEGORY_NAMES = [
-  "数理・情報",
-  "工学",
-  "物理・地球",
-  "化学",
-  "生物",
-  "生命・医療",
-  "農・獣医",
-  "身体運動",
+  "数理・理論",
+  "情報・データ",
+  "機械・電気",
+  "物質・化学",
+  "環境・構造",
+  "地球・生物",
+  "生命・薬獣",
+  "医療・臨床",
 ] as const;
 
+// 寒色RGBランプ（紫なし）。揺らぎは理系だけ RGB線形補間で描く（mix-ring の useRgb）。
 export const SCIENCES_CATEGORY_COLORS = [
-  "#1E40AF", // コバルトブルー - 数理・情報
-  "#00C9D7", // ブライトアクア - 工学
-  "#1FCB9E", // ターコイズ - 物理・地球
-  "#2EAF6A", // エメラルドグリーン - 化学
-  "#A8D820", // チャートリュース - 生物
-  "#B2A0E5", // ラベンダー - 生命・医療
-  "#6F3EBF", // バイオレット - 農・獣医
-  "#0B1D5C", // ディープネイビー - 身体運動（コバルトへつなぐ）
+  "#102360", // 数理・情報
+  "#1846A0", // 工学
+  "#7ABFEB", // 物理・地球
+  "#29E7FF", // 化学
+  "#16CA9C", // 生物
+  "#76DBA5", // 生命・医療
+  "#2E8C9E", // 農・獣医
+  "#193461", // 身体運動（数理・情報へつなぐ）
 ] as const;
 
 // バージョン → カテゴリ名/色 のルックアップ
@@ -132,14 +134,14 @@ const BOTH: Version[] = ["mixed", "humanities", "sciences"];
 //   6 教育・人文 {education, literature, philosophy, foreign-lang}
 //   7 法・政治・社会 {law, politics, sociology, intl-relations}
 //   8 経済・経営 {economics, business, commerce, mgmt-eng}
-// humSlot/sciSlot（humanities/sciences 版の 8 スロット）は不変更（今回は mixed のみ 9化）。
+// humSlot（文系 8カテゴリ）は不変更。sciSlot は 2026-06-19 に理系 8×3＝24 へ再編（SCI_RING_ORDER 参照）。
 export const departments: Department[] = [
   // cat0 数理・情報（理系）
   { id: "math", name: "数学科", categoryIndex: 0, versions: SCI, sciSlot: 0,
     scores: [1.0, 0.3, 0.1, 0.0, 0.3, 0.0, 0.2, 0.0, 0.0, 0.1, 1.0, 0.1, 0.0, 0.9, 0.0, 0.0, 0.0, 0.0, 0.0, 0.95, 0.05, 0.05] },
-  { id: "info-sci", name: "情報科学科", categoryIndex: 0, versions: SCI, sciSlot: 0,
+  { id: "info-sci", name: "情報科学科", categoryIndex: 0, versions: SCI, sciSlot: 1,
     scores: [0.7, 0.3, 0.2, 0.0, 0.9, 0.3, 0.2, 0.1, 0.2, 0.2, 0.7, 0.4, 0.1, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.65, 0.1, 0.15] },
-  { id: "data-sci", name: "データサイエンス学科", categoryIndex: 0, versions: SCI, sciSlot: 0,
+  { id: "data-sci", name: "データサイエンス学科", categoryIndex: 0, versions: SCI, sciSlot: 1,
     scores: [0.9, 0.2, 0.1, 0.2, 0.8, 0.1, 0.2, 0.1, 0.4, 0.1, 0.6, 0.4, 0.1, 0.4, 0.0, 0.0, 0.0, 0.2, 0.0, 0.45, 0.15, 0.2] },
 
   // cat8 経済・経営（文系：経済/経営/商）
@@ -173,43 +175,43 @@ export const departments: Department[] = [
     scores: [0.2, 0.4, 0.0, 0.5, 0.1, 0.1, 0.2, 0.9, 0.1, 0.2, 0.3, 0.5, 0.7, 0.2, 0.1, 0.0, 0.2, 0.1, 0.3, 0.3, 0.1, 0.05] },
   { id: "psychology", name: "心理学科", categoryIndex: 5, versions: HUM, humSlot: 6,
     scores: [0.6, 0.4, 0.7, 0.2, 0.3, 0.0, 0.2, 0.7, 0.1, 0.1, 0.5, 0.3, 0.6, 0.5, 0.3, 0.0, 0.3, 0.1, 0.2, 0.55, 0.3, 0.05] },
-  { id: "sports-sci", name: "スポーツ科学科", categoryIndex: 5, versions: BOTH, humSlot: 7, sciSlot: 7,
+  { id: "sports-sci", name: "スポーツ科学科", categoryIndex: 5, versions: BOTH, humSlot: 7, sciSlot: 6,
     scores: [0.3, 0.3, 0.4, 0.3, 0.1, 0.0, 0.2, 0.6, 0.3, 0.1, 0.2, 0.6, 0.4, 0.3, 0.1, 0.0, 0.0, 0.0, 1.0, 0.2, 0.4, 0.05] },
 
   // cat4 生命・医療（医/獣医） / cat5 健康・こころ（薬/看護） / cat3 建設・環境（農）
-  { id: "medicine", name: "医学科", categoryIndex: 4, gradExempt: true, versions: SCI, sciSlot: 5,
+  { id: "medicine", name: "医学科", categoryIndex: 4, gradExempt: true, versions: SCI, sciSlot: 7,
     scores: [0.4, 1.0, 0.6, 0.5, 0.1, 0.0, 0.3, 0.8, 0.1, 0.0, 0.4, 0.5, 1.0, 0.0, 1.0, 0.1, 0.0, 0.1, 0.4, 0.25, 0.6, 0.05] },
-  { id: "pharmacy", name: "薬学科", categoryIndex: 5, versions: SCI, sciSlot: 5,
+  { id: "pharmacy", name: "薬学科", categoryIndex: 5, versions: SCI, sciSlot: 6,
     scores: [0.5, 0.8, 0.8, 0.3, 0.1, 0.0, 0.2, 0.4, 0.1, 0.0, 0.4, 0.3, 0.9, 0.3, 0.5, 0.0, 0.0, 0.0, 0.1, 0.4, 0.7, 0.3] },
-  { id: "nursing", name: "看護学科", categoryIndex: 5, versions: SCI, sciSlot: 5,
+  { id: "nursing", name: "看護学科", categoryIndex: 5, versions: SCI, sciSlot: 7,
     scores: [0.2, 0.7, 0.3, 0.8, 0.0, 0.0, 0.2, 1.0, 0.0, 0.0, 0.2, 0.7, 0.9, 0.1, 0.8, 0.0, 0.1, 0.0, 0.3, 0.15, 0.35, 0.05] },
-  { id: "agriculture", name: "農学科", categoryIndex: 3, versions: SCI, sciSlot: 6,
+  { id: "agriculture", name: "農学科", categoryIndex: 3, versions: SCI, sciSlot: 5,
     scores: [0.4, 0.3, 0.7, 0.8, 0.2, 0.1, 0.2, 0.2, 0.1, 0.0, 0.3, 0.3, 0.1, 0.7, 0.3, 0.6, 0.0, 0.0, 0.0, 0.4, 0.7, 0.35] },
   { id: "veterinary", name: "獣医学科", categoryIndex: 4, gradExempt: true, versions: SCI, sciSlot: 6,
     scores: [0.3, 0.9, 0.7, 0.5, 0.1, 0.0, 0.2, 0.7, 0.0, 0.0, 0.3, 0.4, 1.0, 0.0, 0.9, 1.0, 0.0, 0.0, 0.1, 0.25, 0.65, 0.05] },
 
   // cat2 機械・材料（機械/電気電子） / cat3 建設・環境（建築） / cat0 数理・情報（情報工）
-  { id: "mechanical", name: "機械工学科", categoryIndex: 2, versions: SCI, sciSlot: 1,
+  { id: "mechanical", name: "機械工学科", categoryIndex: 2, versions: SCI, sciSlot: 2,
     scores: [0.8, 0.3, 0.5, 0.1, 0.5, 0.9, 0.1, 0.1, 0.1, 0.1, 0.4, 0.4, 0.1, 0.5, 0.0, 0.0, 0.0, 0.0, 0.1, 0.3, 0.05, 0.5] },
-  { id: "electrical", name: "電気電子工学科", categoryIndex: 2, versions: SCI, sciSlot: 1,
+  { id: "electrical", name: "電気電子工学科", categoryIndex: 2, versions: SCI, sciSlot: 2,
     scores: [0.8, 0.3, 0.8, 0.0, 0.6, 0.7, 0.1, 0.1, 0.1, 0.0, 0.5, 0.3, 0.1, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.4, 0.05, 0.45] },
-  { id: "architecture", name: "建築学科", categoryIndex: 3, versions: SCI, sciSlot: 1,
+  { id: "architecture", name: "建築学科", categoryIndex: 3, versions: SCI, sciSlot: 4,
     scores: [0.5, 0.3, 0.2, 0.2, 0.2, 0.9, 0.1, 0.3, 0.2, 0.9, 0.3, 0.4, 0.5, 0.4, 0.0, 0.0, 0.3, 0.0, 0.0, 0.25, 0.05, 0.25] },
-  { id: "info-eng", name: "情報工学科", categoryIndex: 0, versions: SCI, sciSlot: 0,
+  { id: "info-eng", name: "情報工学科", categoryIndex: 0, versions: SCI, sciSlot: 1,
     scores: [0.7, 0.2, 0.2, 0.0, 1.0, 0.4, 0.1, 0.1, 0.2, 0.2, 0.5, 0.5, 0.1, 0.4, 0.0, 0.0, 0.0, 0.0, 0.0, 0.35, 0.1, 0.3] },
 
   // cat1 物理・化学（物理/化学/応用化学/生命化学） / cat3 建設・環境（地球科学） / cat4 生命・医療（生物） / cat2 機械・材料（化学工）
-  { id: "physics", name: "物理学科", categoryIndex: 1, versions: SCI, sciSlot: 2,
+  { id: "physics", name: "物理学科", categoryIndex: 1, versions: SCI, sciSlot: 0,
     scores: [0.9, 0.3, 0.5, 0.0, 0.3, 0.1, 0.2, 0.0, 0.0, 0.0, 1.0, 0.1, 0.0, 0.9, 0.0, 0.0, 0.0, 0.0, 0.0, 0.9, 0.1, 0.1] },
-  { id: "biology", name: "生物学科", categoryIndex: 4, versions: SCI, sciSlot: 4,
+  { id: "biology", name: "生物学科", categoryIndex: 4, versions: SCI, sciSlot: 5,
     scores: [0.3, 0.4, 0.8, 0.7, 0.2, 0.0, 0.2, 0.1, 0.0, 0.0, 0.3, 0.2, 0.0, 0.6, 0.2, 0.5, 0.0, 0.0, 0.1, 0.6, 0.85, 0.1] },
-  { id: "earth-sci", name: "地球科学科", categoryIndex: 3, versions: SCI, sciSlot: 2,
+  { id: "earth-sci", name: "地球科学科", categoryIndex: 3, versions: SCI, sciSlot: 5,
     scores: [0.5, 0.3, 0.4, 0.9, 0.2, 0.1, 0.2, 0.1, 0.0, 0.1, 0.4, 0.3, 0.0, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.65, 0.2, 0.1] },
   { id: "chemistry", name: "化学科", categoryIndex: 1, versions: SCI, sciSlot: 3,
     scores: [0.5, 0.4, 0.9, 0.0, 0.2, 0.1, 0.2, 0.0, 0.0, 0.0, 0.6, 0.2, 0.0, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.85, 0.3, 0.2] },
   { id: "applied-chem", name: "応用化学科", categoryIndex: 1, versions: SCI, sciSlot: 3,
     scores: [0.5, 0.4, 0.9, 0.0, 0.2, 0.2, 0.2, 0.0, 0.1, 0.0, 0.4, 0.3, 0.1, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.55, 0.3, 0.45] },
-  { id: "chem-eng", name: "化学工学科", categoryIndex: 2, versions: SCI, sciSlot: 3,
+  { id: "chem-eng", name: "化学工学科", categoryIndex: 2, versions: SCI, sciSlot: 2,
     scores: [0.7, 0.3, 0.7, 0.1, 0.4, 0.4, 0.1, 0.1, 0.2, 0.0, 0.4, 0.4, 0.1, 0.6, 0.0, 0.0, 0.0, 0.0, 0.0, 0.3, 0.3, 0.75] },
   { id: "life-chem", name: "生命化学科", categoryIndex: 1, versions: SCI, sciSlot: 4,
     scores: [0.4, 0.4, 0.8, 0.0, 0.2, 0.0, 0.2, 0.0, 0.1, 0.0, 0.3, 0.2, 0.0, 0.6, 0.1, 0.0, 0.0, 0.0, 0.0, 0.55, 0.9, 0.3] },
@@ -219,12 +221,12 @@ export const departments: Department[] = [
   //   類推値ではなく実データ。最大の修正＝材料工 PROC 0.65→0.4（単位操作/移動現象は化学工固有で材料工に無い）。
   // categoryIndex は 9×4 確定編成: 歯=cat4 生命・医療 / 材料工=cat2 機械・材料 /
   //   土木=cat3 建設・環境 / 経営工=cat8 経済・経営。
-  //   sciSlot は sciences 版（8スロット）の暫定値のまま（sciences のカテゴリ再編は今回やらない）。
-  { id: "dentistry", name: "歯学科", categoryIndex: 4, gradExempt: true, versions: SCI, sciSlot: 5,
+  //   sciSlot は 2026-06-19 の理系 8×3 再編後の確定スロット（SCI_RING_ORDER と整合）。
+  { id: "dentistry", name: "歯学科", categoryIndex: 4, gradExempt: true, versions: SCI, sciSlot: 7,
     scores: [0.3, 0.9, 0.7, 0.3, 0.1, 0.6, 0.2, 0.8, 0.2, 0.2, 0.3, 0.5, 1.0, 0.0, 0.85, 0.05, 0.0, 0.05, 0.4, 0.2, 0.55, 0.15] },
-  { id: "materials-eng", name: "材料工学科", categoryIndex: 2, versions: SCI, sciSlot: 1,
+  { id: "materials-eng", name: "材料工学科", categoryIndex: 2, versions: SCI, sciSlot: 3,
     scores: [0.7, 0.3, 0.85, 0.0, 0.35, 0.55, 0.1, 0.05, 0.15, 0.1, 0.6, 0.35, 0.1, 0.7, 0.0, 0.0, 0.0, 0.0, 0.05, 0.45, 0.15, 0.4] },
-  { id: "civil-eng", name: "土木・都市環境工学科", categoryIndex: 3, versions: SCI, sciSlot: 1,
+  { id: "civil-eng", name: "土木・都市環境工学科", categoryIndex: 3, versions: SCI, sciSlot: 4,
     scores: [0.6, 0.3, 0.5, 0.7, 0.3, 0.85, 0.1, 0.2, 0.2, 0.3, 0.4, 0.6, 0.55, 0.45, 0.05, 0.0, 0.1, 0.15, 0.2, 0.3, 0.1, 0.6] },
   { id: "mgmt-eng", name: "経営工学科", categoryIndex: 8, versions: SCI, sciSlot: 0,
     scores: [0.8, 0.3, 0.1, 0.15, 0.65, 0.25, 0.15, 0.2, 0.75, 0.1, 0.6, 0.7, 0.35, 0.35, 0.0, 0.0, 0.0, 0.05, 0.0, 0.35, 0.05, 0.6] },
@@ -293,7 +295,83 @@ export const MIXED_RING_CATEGORY_INDEX: readonly number[] = MIXED_RING_ORDER.map
   }
 );
 
-// バージョン別のリング制御点数（mixed=36学科 / humanities=sciences=8カテゴリ）。
+// ===== 理系（sciences）リングの制御点並び（8カテゴリ×3学科＝24）2026-06-19 学科単位化 =====
+// slot 順（SCIENCES_CATEGORY_* と一致）に、各カテゴリ3学科を確定順で並べる。
+export const SCI_RING_ORDER: readonly string[] = [
+  "math", "physics", "mgmt-eng",                  // 0 数理・理論
+  "info-sci", "info-eng", "data-sci",             // 1 情報・データ
+  "electrical", "mechanical", "chem-eng",         // 2 機械・電気
+  "materials-eng", "chemistry", "applied-chem",   // 3 物質・化学
+  "life-chem", "architecture", "civil-eng",       // 4 環境・構造
+  "earth-sci", "biology", "agriculture",          // 5 地球・生物
+  "sports-sci", "pharmacy", "veterinary",         // 6 生命・薬獣
+  "dentistry", "nursing", "medicine",             // 7 医療・臨床
+] as const;
+
+// ===== 文系（humanities）リングの制御点並び（8カテゴリ・13学科）2026-06-19 学科単位化 =====
+// 現状の humSlot 編成のまま学科単位で並べる（カテゴリは1〜2学科の不揃い）。
+export const HUM_RING_ORDER: readonly string[] = [
+  "economics",                       // 0 経済
+  "business", "commerce",            // 1 経営・商
+  "law", "politics",                 // 2 法・政治
+  "sociology", "intl-relations",     // 3 社会・国際
+  "literature", "foreign-lang",      // 4 文学・外国語
+  "philosophy",                      // 5 哲学
+  "psychology",                      // 6 心理
+  "education", "sports-sci",         // 7 教育・スポーツ
+] as const;
+
+// 並びの「学科→所属スロット(=カテゴリ色 index)」。MIXED と同じく getSlot 経由で導出し、
+// インラインの sciSlot/humSlot を唯一の正とする（食い違えば下の整合チェックで起動時に例外）。
+function ringCategoryIndexFor(
+  order: readonly string[],
+  version: Version
+): readonly number[] {
+  return order.map((id) => {
+    const d = departments.find((x) => x.id === id);
+    if (!d) throw new Error(`${version} ring order unknown id: ${id}`);
+    const slot = getSlot(d, version);
+    if (slot === undefined) throw new Error(`${version} ring: ${id} has no slot`);
+    return slot;
+  });
+}
+export const SCI_RING_CATEGORY_INDEX: readonly number[] = ringCategoryIndexFor(
+  SCI_RING_ORDER,
+  "sciences"
+);
+export const HUM_RING_CATEGORY_INDEX: readonly number[] = ringCategoryIndexFor(
+  HUM_RING_ORDER,
+  "humanities"
+);
+
+// 整合チェック（起動時）: SCI は各カテゴリ3学科＝slot は floor(index/3) と一致するはず。
+SCI_RING_CATEGORY_INDEX.forEach((slot, i) => {
+  if (slot !== Math.floor(i / 3)) {
+    throw new Error(
+      `SCI_RING_ORDER[${i}] (${SCI_RING_ORDER[i]}) sciSlot=${slot} ≠ ${Math.floor(i / 3)}`
+    );
+  }
+});
+// HUM はカテゴリ内学科数が不揃い。slot が非減少（0,1,1,2,2,…,7,7）であることだけ確認。
+HUM_RING_CATEGORY_INDEX.reduce((prev, slot, i) => {
+  if (slot < prev) throw new Error(`HUM_RING_ORDER slot 非単調: index ${i} (${HUM_RING_ORDER[i]})`);
+  return slot;
+}, 0);
+
+// バージョン別のリング制御点並び・色 index（結果リング＝学科単位: mixed 36 / 理系 24 / 文系 13）。
+export const VERSION_RING_ORDER: Record<Version, readonly string[]> = {
+  mixed: MIXED_RING_ORDER,
+  sciences: SCI_RING_ORDER,
+  humanities: HUM_RING_ORDER,
+};
+export const VERSION_RING_CATEGORY_INDEX: Record<Version, readonly number[]> = {
+  mixed: MIXED_RING_CATEGORY_INDEX,
+  sciences: SCI_RING_CATEGORY_INDEX,
+  humanities: HUM_RING_CATEGORY_INDEX,
+};
+
+// 揺らぎ(AnimatedRing)・LPプレビュー用の制御点数（従来の集約モデル: mixed=36 / 文理=8カテゴリ）。
+// 結果リング（静止 drawRing）は学科単位なので VERSION_RING_ORDER[version].length を使う（別系統）。
 export function ringStrengthCount(version: Version): number {
   return version === "mixed"
     ? MIXED_RING_ORDER.length

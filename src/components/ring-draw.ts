@@ -1,16 +1,16 @@
-// リング描画の純関数（Ring = 静止 / AnimatedRing = 毎フレーム から共用）。
+// 結果画面リングの純関数（静止 Ring.tsx から呼ぶ描画本体）。
 // canvas のサイズ設定・dpr スケールは呼び出し側で1回だけ行い、ここは clear + 描画のみ。
-// 中身は旧 Ring.tsx の useEffect 本体を忠実に切り出したもの（挙動不変）。
+// 全版「学科単位」: 各学科の適合度を VERSION_RING_ORDER 順に並べた配列を制御点として描く
+//   （mixed 36 / 理系 24 / 文系 13）。山谷は直線補間（尖り）、色は学科ごとに所属カテゴリ色を引く。
+// 揺らぎ（AnimatedRing → mix-ring.ts drawMixRing）とは独立（あちらは集約モデル）。
 import {
   VERSION_CATEGORY_COLORS,
   VERSION_CATEGORY_NAMES,
-  CATEGORY_COLORS,
-  CATEGORY_NAMES,
-  MIXED_RING_CATEGORY_INDEX,
+  VERSION_RING_CATEGORY_INDEX,
 } from "@/lib/departments";
 import type { Version } from "@/lib/questions";
 
-function hexToRgb(hex: string): [number, number, number] {
+export function hexToRgb(hex: string): [number, number, number] {
   return [
     parseInt(hex.slice(1, 3), 16),
     parseInt(hex.slice(3, 5), 16),
@@ -19,7 +19,7 @@ function hexToRgb(hex: string): [number, number, number] {
 }
 
 // RGB 線形補間（理系版で使用）。色相を経由しないので中点の鮮やかな緑/シアンが出ない。
-function lerpRgb(
+export function lerpRgb(
   [r1, g1, b1]: [number, number, number],
   [r2, g2, b2]: [number, number, number],
   t: number
@@ -89,14 +89,19 @@ function lerpHsl(
   return hslToString(h, s, l);
 }
 
-// バージョン別の角度オフセット（8カテゴリ版でのみ使用。mixed は専用パス）。
-const ANGLE_OFFSETS: Record<Version, number> = {
-  mixed: 0,
-  humanities: -45,
-  sciences: -45,
+// バージョン別のリング描画設定（結果画面・学科単位）。
+//   strands: 放射線の本数 / lwRatio: 線幅 = size × この比（820px デモの確定線幅を相対化）。
+//   mixed/理系 = 5.4/820、文系 = 5.0/820。形は全版「尖り＝直線補間」（確定仕様 new9x4r_A）。
+const RING_CFG: Record<Version, { strands: number; lwRatio: number }> = {
+  mixed: { strands: 144, lwRatio: 5.4 / 820 },
+  sciences: { strands: 144, lwRatio: 5.4 / 820 },
+  humanities: { strands: 156, lwRatio: 5.0 / 820 },
 };
 
-// リング本体を描画する。clearRect + 山谷リング + ラベル。
+// リング本体を描画する（clearRect + 山谷リング + カテゴリラベル）。
+// strengths = 各学科の適合度を VERSION_RING_ORDER 順に並べた配列（mixed 36 / 理系 24 / 文系 13）。
+// 色は学科ごとに所属カテゴリ色を引き、隣接学科間を直線補間（尖り）。
+// 理系のみ RGB 線形補間（緑↔濃紺に紫が湧くのを防ぐ）、mixed/文系は HSL。
 export function drawRing(
   ctx: CanvasRenderingContext2D,
   size: number,
@@ -116,148 +121,55 @@ export function drawRing(
   const minStr = Math.min(...strengths);
   const maxStr = Math.max(...strengths);
   const range = maxStr - minStr || 1;
-  const normalizedStrengths = strengths.map(
-    (s) => 0.05 + ((s - minStr) / range) * 0.95
+  const norm = strengths.map((s) => 0.05 + ((s - minStr) / range) * 0.95);
+
+  const NFAC = norm.length; // mixed 36 / 理系 24 / 文系 13
+  const SEG = 360 / NFAC;
+  const cfg = RING_CFG[version];
+  const STRANDS = cfg.strands;
+  const lineWidth = size * cfg.lwRatio;
+  const useRgb = version === "sciences";
+
+  const categoryColors = VERSION_CATEGORY_COLORS[version];
+  const ringCatIndex = VERSION_RING_CATEGORY_INDEX[version];
+  // 制御点(学科)ごとの色 = 所属カテゴリの色。万一 NFAC を超える参照でも ?? 0 で安全に。
+  const facHsls = Array.from({ length: NFAC }, (_, k) =>
+    hexToHsl(categoryColors[ringCatIndex[k] ?? 0])
+  );
+  const facRgbs = Array.from({ length: NFAC }, (_, k) =>
+    hexToRgb(categoryColors[ringCatIndex[k] ?? 0])
   );
 
-  if (version === "mixed") {
-    // ===== mixed: 9×4＝36制御点・144本・コサイン補間（確定デザイン new9x4r_A 方式）=====
-    const NFAC = normalizedStrengths.length; // 36
-    const SEG = 360 / NFAC; // 10°
-    const STRANDS = 144;
-    // 制御点ごとの色。通常 NFAC===36 で MIXED_RING_CATEGORY_INDEX と一致するが、
-    // 万一 strengths が非36長でも添字落ち（undefined→hexToHsl 例外）しないよう NFAC 長で安全に引く。
-    const facHsls = Array.from({ length: NFAC }, (_, k) =>
-      hexToHsl(CATEGORY_COLORS[MIXED_RING_CATEGORY_INDEX[k] ?? 0])
-    );
-
-    const sampleAt = (alpha: number): { v: number; color: string } => {
-      const a = ((alpha % 360) + 360) % 360;
-      const pos = a / SEG;
-      const j0 = Math.floor(pos) % NFAC;
-      const frac = pos - Math.floor(pos);
-      let lo: number, hi: number, t: number;
-      if (frac < 0.5) {
-        lo = (j0 - 1 + NFAC) % NFAC;
-        hi = j0;
-        t = frac + 0.5;
-      } else {
-        lo = j0;
-        hi = (j0 + 1) % NFAC;
-        t = frac - 0.5;
-      }
-      const tt = (1 - Math.cos(t * Math.PI)) / 2;
-      return {
-        v:
-          normalizedStrengths[lo] +
-          (normalizedStrengths[hi] - normalizedStrengths[lo]) * tt,
-        color: lerpHsl(facHsls[lo], facHsls[hi], tt),
-      };
-    };
-
-    for (let i = 0; i < STRANDS; i++) {
-      const alpha = (i / STRANDS) * 360;
-      const angleRad = ((alpha - 90) * Math.PI) / 180;
-      const { v, color } = sampleAt(alpha);
-      const lineLength =
-        minLineLength + v * (maxOuterRadius - innerRadius - minLineLength);
-      const outerR = innerRadius + lineLength;
-
-      ctx.beginPath();
-      ctx.moveTo(
-        cx + innerRadius * Math.cos(angleRad),
-        cy + innerRadius * Math.sin(angleRad)
-      );
-      ctx.lineTo(cx + outerR * Math.cos(angleRad), cy + outerR * Math.sin(angleRad));
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 2;
-      ctx.lineCap = "round";
-      ctx.stroke();
+  // 学科の頂点を中心に、隣接学科へ直線補間（頂点で角が立つ＝尖り）。色も同じ係数で補間。
+  const sampleAt = (alpha: number): { v: number; color: string } => {
+    const a = ((alpha % 360) + 360) % 360;
+    const pos = a / SEG;
+    const j0 = Math.floor(pos) % NFAC;
+    const frac = pos - Math.floor(pos);
+    let lo: number, hi: number, t: number;
+    if (frac < 0.5) {
+      lo = (j0 - 1 + NFAC) % NFAC;
+      hi = j0;
+      t = frac + 0.5;
+    } else {
+      lo = j0;
+      hi = (j0 + 1) % NFAC;
+      t = frac - 0.5;
     }
-
-    if (showLabels) {
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.font = `bold ${size * 0.035}px sans-serif`;
-      ctx.fillStyle = "#888";
-      const N_CAT = CATEGORY_NAMES.length; // 9
-      const catSpan = 4 * SEG; // 各カテゴリ = 4学科分 = 40°（9×40=360）
-      for (let c = 0; c < N_CAT; c++) {
-        const centerAlpha = c * catSpan + catSpan / 2;
-        const angleRad = ((centerAlpha - 90) * Math.PI) / 180;
-        const labelR = maxOuterRadius + size * 0.08;
-        ctx.fillText(
-          CATEGORY_NAMES[c],
-          cx + labelR * Math.cos(angleRad),
-          cy + labelR * Math.sin(angleRad)
-        );
-      }
-    }
-    return;
-  }
-
-  // ===== humanities / sciences: 8カテゴリ集約・120本・線形補間（従来どおり）=====
-  const categoryColors = VERSION_CATEGORY_COLORS[version];
-  const categoryNames = VERSION_CATEGORY_NAMES[version];
-  const LINE_COUNT = 120;
-  const N_CAT = categoryColors.length; // 8
-
-  const categoryHsls = categoryColors.map(hexToHsl);
-  const categoryRgbs = categoryColors.map(hexToRgb);
-  const useRgb = version === "sciences";
-  const blendColor = (i1: number, i2: number, t: number): string =>
-    useRgb
-      ? lerpRgb(categoryRgbs[i1], categoryRgbs[i2], t)
-      : lerpHsl(categoryHsls[i1], categoryHsls[i2], t);
-  const solidColor = (i: number): string => {
-    if (useRgb) {
-      const [r, g, b] = categoryRgbs[i];
-      return `rgb(${r}, ${g}, ${b})`;
-    }
-    return hslToString(...categoryHsls[i]);
+    const tt = t; // 直線補間＝尖り（確定仕様 new9x4r_A）
+    const v = norm[lo] + (norm[hi] - norm[lo]) * tt;
+    const color = useRgb
+      ? lerpRgb(facRgbs[lo], facRgbs[hi], tt)
+      : lerpHsl(facHsls[lo], facHsls[hi], tt);
+    return { v, color };
   };
-  const segmentAngle = 360 / N_CAT;
-  const offset = ANGLE_OFFSETS[version];
 
-  for (let i = 0; i < LINE_COUNT; i++) {
-    const angleDeg = (i / LINE_COUNT) * 360;
-    const angleRad = ((angleDeg - 90 + offset) * Math.PI) / 180;
-
-    const catPosition = angleDeg / segmentAngle;
-    const catIndex = Math.floor(catPosition) % N_CAT;
-    const nextCatIndex = (catIndex + 1) % N_CAT;
-    const catFraction = catPosition - Math.floor(catPosition);
-
-    const blendZone = 0.2;
-    let color: string;
-    if (catFraction < blendZone) {
-      const prevCatIndex = (catIndex - 1 + N_CAT) % N_CAT;
-      const t = 0.5 + (catFraction / blendZone) * 0.5;
-      color = blendColor(prevCatIndex, catIndex, t);
-    } else if (catFraction > 1 - blendZone) {
-      const t = ((catFraction - (1 - blendZone)) / blendZone) * 0.5;
-      color = blendColor(catIndex, nextCatIndex, t);
-    } else {
-      color = solidColor(catIndex);
-    }
-
-    const centerFraction = catFraction;
-    let strength: number;
-    if (centerFraction < 0.5) {
-      const prevCatIndex = (catIndex - 1 + N_CAT) % N_CAT;
-      const t = centerFraction + 0.5;
-      strength =
-        normalizedStrengths[prevCatIndex] +
-        (normalizedStrengths[catIndex] - normalizedStrengths[prevCatIndex]) * t;
-    } else {
-      const t = centerFraction - 0.5;
-      strength =
-        normalizedStrengths[catIndex] +
-        (normalizedStrengths[nextCatIndex] - normalizedStrengths[catIndex]) * t;
-    }
-
+  for (let i = 0; i < STRANDS; i++) {
+    const alpha = (i / STRANDS) * 360;
+    const angleRad = ((alpha - 90) * Math.PI) / 180;
+    const { v, color } = sampleAt(alpha);
     const lineLength =
-      minLineLength + strength * (maxOuterRadius - innerRadius - minLineLength);
+      minLineLength + v * (maxOuterRadius - innerRadius - minLineLength);
     const outerR = innerRadius + lineLength;
 
     ctx.beginPath();
@@ -267,7 +179,7 @@ export function drawRing(
     );
     ctx.lineTo(cx + outerR * Math.cos(angleRad), cy + outerR * Math.sin(angleRad));
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = lineWidth;
     ctx.lineCap = "round";
     ctx.stroke();
   }
@@ -278,13 +190,22 @@ export function drawRing(
     ctx.font = `bold ${size * 0.035}px sans-serif`;
     ctx.fillStyle = "#888";
 
-    for (let i = 0; i < N_CAT; i++) {
-      const angleDeg = i * segmentAngle + segmentAngle / 2;
-      const angleRad = ((angleDeg - 90 + offset) * Math.PI) / 180;
+    const categoryNames = VERSION_CATEGORY_NAMES[version];
+    // カテゴリの占有弧（所属学科数 × SEG）。学科は連続配置なので累積で中央角を出す（不揃いも対応）。
+    const counts = new Array(categoryNames.length).fill(0);
+    for (const ci of ringCatIndex) counts[ci]++;
+    let acc = 0;
+    for (let c = 0; c < categoryNames.length; c++) {
+      const span = counts[c] * SEG;
+      const centerAlpha = acc + span / 2;
+      acc += span;
+      const angleRad = ((centerAlpha - 90) * Math.PI) / 180;
       const labelR = maxOuterRadius + size * 0.08;
-      const lx = cx + labelR * Math.cos(angleRad);
-      const ly = cy + labelR * Math.sin(angleRad);
-      ctx.fillText(categoryNames[i], lx, ly);
+      ctx.fillText(
+        categoryNames[c],
+        cx + labelR * Math.cos(angleRad),
+        cy + labelR * Math.sin(angleRad)
+      );
     }
   }
 }

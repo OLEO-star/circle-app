@@ -3,6 +3,7 @@
 // ここの定数・描画を変えても mix のアニメプレビューにしか影響しない。
 // HSL ヘルパも自前で持つ（ring-draw に手を入れずに色も自由にいじれるように）。
 import { CATEGORY_COLORS } from "@/lib/departments";
+import { hexToRgb, lerpRgb } from "./ring-draw";
 
 // ---- 見た目パラメータ（/ring-lab のスライダー対象）----
 export type MixRingParams = {
@@ -113,7 +114,10 @@ export function drawMixRing(
   params: MixRingParams = DEFAULT_MIX_PARAMS,
   colors: readonly string[] = CATEGORY_COLORS.map((c, i) =>
     i === 7 ? params.pink : i === 4 ? params.yellow : c
-  )
+  ),
+  // 理系のみ true。色相を経由しない RGB線形補間にして、緑↔濃紺の間に紫が湧くのを防ぐ。
+  // HSL専用の境界彩度/明度/色相調整(bp)は RGBパスでは無効。にじみ幅(blendZone)は流用。
+  useRgb: boolean = false
 ): void {
   ctx.clearRect(0, 0, size, size);
 
@@ -165,11 +169,32 @@ export function drawMixRing(
   //   blendZone 小 → 各カテゴリ弧の中央は単色・境界だけ細く変化（鋭い）。
   //   blendZone=0.5 → 単色域が消え、中央まで隣色へ溶ける＝ほぼ連続な虹（最大の滲み）。
   const catHslsArr = colors.map(hexToHsl); // mix=9 / 文系・理系=8
+  const catRgbsArr = colors.map(hexToRgb); // 理系(useRgb)で使用
   const N_CAT = colors.length;
   const CAT_SPAN = 360 / N_CAT;
   const blendZone = Math.min(0.5, Math.max(0.01, params.boundaryWidth * 0.1));
 
-  const colorAt = (alpha: number): string => {
+  // RGB線形補間パス（理系のみ）。にじみ幅(blendZone)は HSL版と同条件で流用。
+  // HSL専用の境界彩度/明度/色相(bp)と全体satMul/lightMulは色相を狂わせるため無効化。
+  const colorAtRgb = (alpha: number): string => {
+    const a = ((alpha % 360) + 360) % 360;
+    const pos = a / CAT_SPAN;
+    const c0 = Math.floor(pos) % N_CAT;
+    const frac = pos - Math.floor(pos);
+    if (frac < blendZone) {
+      const lo = (c0 - 1 + N_CAT) % N_CAT;
+      const t = 0.5 + (frac / blendZone) * 0.5; // 境界中央(0.5)→単色(1)
+      return lerpRgb(catRgbsArr[lo], catRgbsArr[c0], t);
+    } else if (frac > 1 - blendZone) {
+      const hi = (c0 + 1) % N_CAT;
+      const t = ((frac - (1 - blendZone)) / blendZone) * 0.5; // 単色(0)→境界中央(0.5)
+      return lerpRgb(catRgbsArr[c0], catRgbsArr[hi], t);
+    }
+    const [r, g, b] = catRgbsArr[c0]; // 単色域
+    return `rgb(${r}, ${g}, ${b})`;
+  };
+
+  const colorAtHsl = (alpha: number): string => {
     const a = ((alpha % 360) + 360) % 360;
     const pos = a / CAT_SPAN;
     const c0 = Math.floor(pos) % N_CAT;
@@ -189,6 +214,8 @@ export function drawMixRing(
     // 全体の彩度・明度倍率を適用。
     return hslToString(h, clamp01(s * params.satMul), clamp01(l * params.lightMul));
   };
+
+  const colorAt = useRgb ? colorAtRgb : colorAtHsl;
 
   for (let i = 0; i < STRANDS; i++) {
     const alpha = (i / STRANDS) * 360;

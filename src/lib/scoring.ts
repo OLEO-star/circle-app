@@ -4,6 +4,7 @@ import {
   getSlot,
   VERSION_CATEGORY_NAMES,
   MIXED_RING_ORDER,
+  VERSION_RING_ORDER,
   type Department,
 } from "./departments";
 import { type Question, type Version } from "./questions";
@@ -248,13 +249,26 @@ export function calcMixedRingStrengths(results: DeptResult[]): number[] {
   return MIXED_RING_ORDER.map((id) => byId.get(id) ?? 0);
 }
 
-// バージョンに応じたリング制御点配列を返す統一エントリ。
+// バージョンに応じたリング制御点配列を返す統一エントリ（揺らぎ AnimatedRing・LP プレビュー用）。
 //   mixed: 36学科の similarity（MIXED_RING_ORDER 順）
-//   humanities/sciences: 8カテゴリ強度（従来どおり）
+//   humanities/sciences: 8カテゴリ強度（従来の集約モデル）
+// ※ 結果画面の静止リングは学科単位の calcResultRingStrengths を使う（別系統）。
 export function calcRingStrengths(
   results: DeptResult[],
   version: Version = "mixed"
 ): number[] {
   if (version === "mixed") return calcMixedRingStrengths(results);
   return calcCategoryStrengths(results, version);
+}
+
+// 結果画面リング（静止 drawRing・学科単位）の制御点。全版とも「各学科の similarity を
+// 版別の確定並び順 VERSION_RING_ORDER に並べる」。mixed=36 / 理系=24 / 文系=13。
+// 色は版別カテゴリ色（VERSION_RING_CATEGORY_INDEX）で学科ごとに引く。
+// 2026-06-19 本番反映：理系/文系を 8カテゴリ集約から学科単位へ（揺らぎは calcRingStrengths のまま）。
+export function calcResultRingStrengths(
+  results: DeptResult[],
+  version: Version = "mixed"
+): number[] {
+  const byId = new Map(results.map((r) => [r.department.id, r.similarity]));
+  return VERSION_RING_ORDER[version].map((id) => byId.get(id) ?? 0);
 }
