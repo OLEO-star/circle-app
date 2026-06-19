@@ -104,11 +104,16 @@ const clamp01 = (x: number) => Math.min(1, Math.max(0, x));
 
 // mix リング描画（clearRect + 36制御点をコサイン補間で strands 本に展開）。
 // strengths は長さ36（各学科の強度）。アニメ側がフレーム毎に渡す。
+// colors=描画パレット。mix は 9色（pink/yellow 差し替え反映）、文系/理系は各版の 8色。
+// strengths.length=長さの制御点数（mix36 / 文理8）、colors.length=色カテゴリ数（mix9 / 文理8）。
 export function drawMixRing(
   ctx: CanvasRenderingContext2D,
   size: number,
   strengths: number[],
-  params: MixRingParams = DEFAULT_MIX_PARAMS
+  params: MixRingParams = DEFAULT_MIX_PARAMS,
+  colors: readonly string[] = CATEGORY_COLORS.map((c, i) =>
+    i === 7 ? params.pink : i === 4 ? params.yellow : c
+  )
 ): void {
   ctx.clearRect(0, 0, size, size);
 
@@ -159,13 +164,9 @@ export function drawMixRing(
   // ===== 色＝9カテゴリ。boundaryWidth → 色が変わる角度幅 blendZone =====
   //   blendZone 小 → 各カテゴリ弧の中央は単色・境界だけ細く変化（鋭い）。
   //   blendZone=0.5 → 単色域が消え、中央まで隣色へ溶ける＝ほぼ連続な虹（最大の滲み）。
-  // cat7(ピンク)/cat4(黄)を params で差し替え可能（本番焼き込み前の比較用）。
-  const cols = CATEGORY_COLORS.map((c, i) =>
-    i === 7 ? params.pink : i === 4 ? params.yellow : c
-  );
-  const catHslsArr = cols.map(hexToHsl); // 9
-  const N_CAT = CATEGORY_COLORS.length; // 9
-  const CAT_SPAN = 360 / N_CAT; // 40°
+  const catHslsArr = colors.map(hexToHsl); // mix=9 / 文系・理系=8
+  const N_CAT = colors.length;
+  const CAT_SPAN = 360 / N_CAT;
   const blendZone = Math.min(0.5, Math.max(0.01, params.boundaryWidth * 0.1));
 
   const colorAt = (alpha: number): string => {

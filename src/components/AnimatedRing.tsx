@@ -1,19 +1,24 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { drawRing } from "./ring-draw";
 import {
   drawMixRing,
   DEFAULT_MIX_PARAMS,
   type MixRingParams,
 } from "./mix-ring";
-import { ringStrengthCount, AXIS_COUNT } from "@/lib/departments";
+import {
+  ringStrengthCount,
+  AXIS_COUNT,
+  CATEGORY_COLORS,
+  VERSION_CATEGORY_COLORS,
+} from "@/lib/departments";
 import { rankDepartments, calcRingStrengths } from "@/lib/scoring";
 import type { Version } from "@/lib/questions";
 
 // 「生きた」リング。診断前プレビュー用。各制御点の強度を動かし続け、山谷の長さが常に変化する。
-// mix は専用の drawMixRing（src/components/mix-ring.ts）で描く＝結果リングと独立に「いじりまくれる」。
-// 文系/理系は従来どおり共用 drawRing。
+// 全版とも drawMixRing（mix-ring.ts）で描画＝同じレンダラ/動き。
+// mix は 9色（pink/yellow 差し替え反映）、文系/理系は各版の 8色パレットを渡す。
+// 結果リング（静止・Ring.tsx/drawRing）とは独立。
 
 // ---- アニメ（動き）パラメータ（/ring-lab のスライダー対象）----
 export type EaseMode = "cosine" | "linear" | "in" | "out" | "inout";
@@ -58,7 +63,6 @@ type AnimatedRingProps = {
 export default function AnimatedRing({
   size = 300,
   version = "mixed",
-  showLabels = false,
   anim,
   mixParams,
   className,
@@ -82,11 +86,12 @@ export default function AnimatedRing({
     ctx.scale(dpr, dpr);
 
     const n = ringStrengthCount(version);
-    const isMix = version === "mixed";
-    const render = (arr: number[]) => {
-      if (isMix) drawMixRing(ctx, size, arr, mp);
-      else drawRing(ctx, size, arr, showLabels, version);
-    };
+    // 版ごとのパレット。mix はピンク/黄の差し替えを反映、文系/理系は各版の色（8色）。
+    const palette =
+      version === "mixed"
+        ? CATEGORY_COLORS.map((c, i) => (i === 7 ? mp.pink : i === 4 ? mp.yellow : c))
+        : [...VERSION_CATEGORY_COLORS[version]];
+    const render = (arr: number[]) => drawMixRing(ctx, size, arr, mp, palette);
 
     const lo = cfg.ampMin;
     const span = Math.max(0, cfg.ampMax - cfg.ampMin);
@@ -179,7 +184,7 @@ export default function AnimatedRing({
     return () => cancelAnimationFrame(raf);
     // cfgKey / mpKey で設定変更時に再起動（/ring-lab のライブ反映用）。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, version, showLabels, cfgKey, mpKey]);
+  }, [size, version, cfgKey, mpKey]);
 
   return (
     <canvas
