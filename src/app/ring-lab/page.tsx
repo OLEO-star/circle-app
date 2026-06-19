@@ -40,14 +40,23 @@ function Slider({ row }: { row: Row }) {
 
 export default function RingLabPage() {
   const [size, setSize] = useState(300);
-  // 調整対象は「色の境界のグラデ」。初期は鮮やか提案(boundarySat1/Light0)で開く。
+  // 調整対象は「色の境界のグラデ」。初期は鮮やか提案(boundarySat1/Light0)＋案B のピンクで開く。
   const [mp, setMp] = useState<MixRingParams>({
     ...DEFAULT_MIX_PARAMS,
     boundarySat: 1,
     boundaryLight: 0,
+    pink: "#E05ADD", // 案B（本番は未確定・ここで確認用）
   });
   const p = (k: keyof MixRingParams, v: number) =>
     setMp((s) => ({ ...s, [k]: v }));
+  const setPink = (hex: string) => setMp((s) => ({ ...s, pink: hex }));
+  const PINKS: [string, string][] = [
+    ["ベース", "#E05A9F"],
+    ["案A", "#E05AC0"],
+    ["案B★", "#E05ADD"],
+    ["案C", "#C75AE0"],
+    ["案D", "#AC5AE0"],
+  ];
 
   // 動き系は確定値で固定（スライダー撤去）。
   const anim = DEFAULT_MIX_ANIM;
@@ -62,7 +71,7 @@ export default function RingLabPage() {
 
   const json = JSON.stringify({ anim, mixParams: mp }, null, 2);
   const reset = () => {
-    setMp({ ...DEFAULT_MIX_PARAMS, boundarySat: 1, boundaryLight: 0 });
+    setMp({ ...DEFAULT_MIX_PARAMS, boundarySat: 1, boundaryLight: 0, pink: "#E05ADD" });
     setSize(300);
   };
 
@@ -88,6 +97,22 @@ export default function RingLabPage() {
         >
           リセット
         </button>
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
+          <span className="text-gray-600">ピンク(法政社):</span>
+          {PINKS.map(([lab, hex]) => (
+            <button
+              key={hex}
+              onClick={() => setPink(hex)}
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 ${mp.pink === hex ? "border-gray-900 font-bold" : "border-gray-300 text-gray-700"}`}
+            >
+              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: hex }} />
+              {lab}
+            </button>
+          ))}
+        </div>
+        <p className="mt-1 text-[11px] text-gray-400">
+          ピンク(cat7)はラボ確認用の差し替え。本番（家/結果/ファビコン/共有カード）は現行ピンクのまま。
+        </p>
       </div>
 
       <div className="mx-auto mt-8 max-w-md space-y-4">
