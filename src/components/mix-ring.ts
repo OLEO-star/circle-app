@@ -13,11 +13,14 @@ export type MixRingParams = {
   lineWidth: number; // 線の太さ(px)
   rotationDeg: number; // リング全体の回転（度・時計回り）
   lineCap: "round" | "butt" | "square"; // 線の先端形
-  satMul: number; // 彩度倍率（1=元の鮮やかさ・<1で淡く・>1で鮮やかに）
-  lightMul: number; // 明度倍率（1=元・<1で暗く・>1で明るく）
-  // 隣接色の境界の鮮やかさ。0=現行（中間を淡色U字でくすませる）/ 1=鮮やか（脱彩度なし）。
-  // 紫⇄ピンク等の境界のくすみを解消するレバー（色そのものは変えない）。
-  midVivid: number;
+  satMul: number; // 【全体】彩度倍率（1=元・全リング一律）
+  lightMul: number; // 【全体】明度倍率（1=元・全リング一律）
+  // ===== 色の境界（色が変わる所）だけに効くグラデ調整。同色の面には効かない =====
+  // 効きは「色相差×中央寄りの重み」で決まる＝カテゴリ内(同色)では0、境界でのみ作用。
+  boundarySat: number; // 境界の彩度（中央）。1=変化なし(鮮やか) / <1でくすむ / >1で濃く
+  boundaryLight: number; // 境界の明度オフセット（中央）。0=変化なし / +で明るく / −で暗く
+  boundaryWidth: number; // 境界の幅(にじみ)。1=標準 / 大きいほど広く滲む / 小さいほど鋭い
+  boundaryHueBias: number; // 境界の色相シフト(度)。中央の色味を±にずらす（0=変化なし）
 };
 
 // デフォルト＝現行本番と同一（変更すると mix プレビューの初期見た目が変わる）。
@@ -31,7 +34,13 @@ export const DEFAULT_MIX_PARAMS: MixRingParams = {
   lineCap: "round",
   satMul: 1,
   lightMul: 1,
-  midVivid: 0, // 既定＝従来（くすみ）。鮮やか版(1)はオーナーが /ring-lab で確認・OK後に bake する。
+  // 既定＝従来の見た目（境界をくすませる旧U字 desat0.6/light+0.22 相当）。
+  // boundarySat 0.4・boundaryLight 0.22 が旧「くすみ」と同等。鮮やか版(boundarySat1/light0)は
+  // オーナーが /ring-lab で確認・OK後に bake する。
+  boundarySat: 0.4,
+  boundaryLight: 0.22,
+  boundaryWidth: 1,
+  boundaryHueBias: 0,
 };
 
 function hexToHsl(hex: string): [number, number, number] {
@@ -56,11 +65,19 @@ function hslToString(h: number, s: number, l: number): string {
 }
 
 // 隣接カテゴリ色を淡色経由で補間し [h,s,l] を返す（drawRing の lerpHsl と同系）。
+type BoundaryParams = {
+  bSat: number; // 境界中央の彩度倍率（1=変化なし）
+  bLight: number; // 境界中央の明度オフセット（0=変化なし）
+  bWidth: number; // 境界の幅(にじみ)（1=標準）
+  bHue: number; // 境界中央の色相シフト(度)（0=変化なし）
+};
+// 隣接色の補間 [h,s,l]。境界（色が変わる所）だけに彩度/明度/色相シフトを効かせる。
+// 効きの重み w = 色相差(hueDistance) × 中央寄りカーブ(u)。同色(hueDistance=0)では w=0＝無効果。
 function lerpHslTuple(
   [h1, s1, l1]: [number, number, number],
   [h2, s2, l2]: [number, number, number],
   t: number,
-  desatScale = 1 // 中間の脱彩度の強さ。0=脱彩度なし＝鮮やか / 1=従来のくすみ。
+  bp: BoundaryParams
 ): [number, number, number] {
   let dh = h2 - h1;
   if (dh > 180) dh -= 360;
@@ -69,13 +86,18 @@ function lerpHslTuple(
     const midShort = ((h1 + dh / 2) % 360 + 360) % 360;
     if (midShort > 90 && midShort < 270) dh = dh > 0 ? dh - 360 : dh + 360;
   }
-  const h = ((h1 + dh * t) % 360 + 360) % 360;
   const hueDistance = Math.min(1, Math.abs(dh) / 180);
-  const peakDesat = 0.6 * hueDistance * desatScale;
-  const peakLight = 0.22 * hueDistance * desatScale;
-  const u = 4 * t * (1 - t);
-  const s = Math.max(0, (s1 + (s2 - s1) * t) * (1 - peakDesat * u));
-  const l = Math.min(1, (l1 + (l2 - l1) * t) + peakLight * u);
+  // 中央寄りカーブ。bWidth が大きいほど広く（滲む）、小さいほど鋭く中央集中。
+  const base = 4 * t * (1 - t); // 端0→中央1→端0
+  const u = Math.pow(Math.max(0, base), 1 / Math.max(0.2, bp.bWidth));
+  const w = hueDistance * u; // 境界のみ・中央ほど強い重み
+
+  const hBase = ((h1 + dh * t) % 360 + 360) % 360;
+  const h = ((hBase + bp.bHue * w) % 360 + 360) % 360;
+  const sBase = s1 + (s2 - s1) * t;
+  const lBase = l1 + (l2 - l1) * t;
+  const s = Math.min(1, Math.max(0, sBase * (1 + (bp.bSat - 1) * w)));
+  const l = Math.min(1, Math.max(0, lBase + bp.bLight * w));
   return [h, s, l];
 }
 
@@ -112,8 +134,12 @@ export function drawMixRing(
   const facHsls = Array.from({ length: NFAC }, (_, k) =>
     hexToHsl(CATEGORY_COLORS[MIXED_RING_CATEGORY_INDEX[k] ?? 0])
   );
-  // midVivid 1 → desatScale 0（脱彩度なし＝鮮やか）/ midVivid 0 → desatScale 1（従来のくすみ）。
-  const desatScale = Math.max(0, 1 - params.midVivid);
+  const bp = {
+    bSat: params.boundarySat,
+    bLight: params.boundaryLight,
+    bWidth: params.boundaryWidth,
+    bHue: params.boundaryHueBias,
+  };
 
   const sampleAt = (alpha: number): { v: number; color: string } => {
     const a = ((alpha % 360) + 360) % 360;
@@ -131,7 +157,7 @@ export function drawMixRing(
       t = frac - 0.5;
     }
     const tt = (1 - Math.cos(t * Math.PI)) / 2;
-    const [h, s, l] = lerpHslTuple(facHsls[lo], facHsls[hi], tt, desatScale);
+    const [h, s, l] = lerpHslTuple(facHsls[lo], facHsls[hi], tt, bp);
     return {
       v: norm[lo] + (norm[hi] - norm[lo]) * tt,
       // 彩度・明度倍率を適用（淡く/鮮やかに・暗く/明るく）。

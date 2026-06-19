@@ -40,10 +40,11 @@ function Slider({ row }: { row: Row }) {
 
 export default function RingLabPage() {
   const [size, setSize] = useState(300);
-  // 調整対象は色境界の3つのみ。初期は鮮やか提案(midVivid=1)で確認しやすく。
+  // 調整対象は「色の境界のグラデ」。初期は鮮やか提案(boundarySat1/Light0)で開く。
   const [mp, setMp] = useState<MixRingParams>({
     ...DEFAULT_MIX_PARAMS,
-    midVivid: 1,
+    boundarySat: 1,
+    boundaryLight: 0,
   });
   const p = (k: keyof MixRingParams, v: number) =>
     setMp((s) => ({ ...s, [k]: v }));
@@ -52,14 +53,16 @@ export default function RingLabPage() {
   const anim = DEFAULT_MIX_ANIM;
 
   const rows: Row[] = [
-    { key: "satMul", label: "彩度倍率 satMul（淡⇄鮮）", min: 0, max: 1.6, step: 0.05, get: () => mp.satMul, set: (v) => p("satMul", v) },
-    { key: "lightMul", label: "明度倍率 lightMul（暗⇄明）", min: 0.6, max: 1.4, step: 0.05, get: () => mp.lightMul, set: (v) => p("lightMul", v) },
-    { key: "midVivid", label: "境界の鮮やかさ midVivid（0=くすむ→1=鮮やか／紫⇄ピンク対策）", min: 0, max: 1, step: 0.05, get: () => mp.midVivid, set: (v) => p("midVivid", v) },
+    { key: "strands", label: "本数 strands（グラデの密度）", min: 36, max: 720, step: 4, get: () => mp.strands, set: (v) => p("strands", v) },
+    { key: "boundarySat", label: "境界の彩度 boundarySat（<1くすむ／1元／>1濃く）", min: 0, max: 1.6, step: 0.05, get: () => mp.boundarySat, set: (v) => p("boundarySat", v) },
+    { key: "boundaryLight", label: "境界の明度 boundaryLight（−暗⇄＋明・0=変化なし）", min: -0.4, max: 0.4, step: 0.02, get: () => mp.boundaryLight, set: (v) => p("boundaryLight", v) },
+    { key: "boundaryWidth", label: "境界の幅 boundaryWidth（小=鋭い⇄大=滲む）", min: 0.3, max: 3, step: 0.1, get: () => mp.boundaryWidth, set: (v) => p("boundaryWidth", v) },
+    { key: "boundaryHueBias", label: "境界の色相シフト boundaryHueBias（度・±で色味調整）", min: -60, max: 60, step: 2, get: () => mp.boundaryHueBias, set: (v) => p("boundaryHueBias", v) },
   ];
 
   const json = JSON.stringify({ anim, mixParams: mp }, null, 2);
   const reset = () => {
-    setMp({ ...DEFAULT_MIX_PARAMS, midVivid: 1 });
+    setMp({ ...DEFAULT_MIX_PARAMS, boundarySat: 1, boundaryLight: 0 });
     setSize(300);
   };
 
@@ -67,8 +70,9 @@ export default function RingLabPage() {
     <div className="mx-auto min-h-dvh max-w-3xl px-6 py-10">
       <h1 className="text-xl font-bold">ring-lab — mix 色境界の調整（開発用）</h1>
       <p className="mt-1 text-xs text-gray-500">
-        動き・形状・本数・線幅・内外径・回転・先端は確定済み（焼き込み済み）。ここでは
-        「色境界」の3つだけ調整します。気に入った値の JSON を伝えてください。結果リング・文系/理系には影響しません。
+        動き・形状・線幅・内外径・回転・先端は確定済み。彩度倍率/明度倍率（全体）は1で固定。
+        ここでは「色の境界のグラデ」＝本数・境界の彩度・境界の明度・境界の幅・色相シフトを調整します
+        （同色の面には効かず、色が変わる境界だけに作用）。気に入った値の JSON を伝えてください。結果リング・文系/理系には影響しません。
       </p>
 
       <div className="mt-6 flex flex-col items-center">
