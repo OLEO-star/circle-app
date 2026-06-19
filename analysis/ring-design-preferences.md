@@ -204,3 +204,10 @@
 - **mix 描画を `src/components/mix-ring.ts` に隔離**（`drawMixRing` + `MixRingParams` + `DEFAULT_MIX_PARAMS`）。結果リング(`ring-draw.ts`)・文系/理系とは独立＝**ここをいじっても mix プレビューにしか効かない**。色HSLヘルパも自前で持つ。
 - アニメ設定 `MixAnimConfig`（`AnimatedRing.tsx`）＝`mode: sync(脈打つ)|wave(各点独立にゆらぐ)`・`periodMs`・`ampMin/ampMax`・`waveSpread`。**既定値＝現行本番と同一**（home/s/s-info の見た目は焼き込むまで不変）。
 - 焼き込み手順：オーナーが伝えた JSON の `anim` を `DEFAULT_MIX_ANIM`（AnimatedRing.tsx）、`mixParams` を `DEFAULT_MIX_PARAMS`（mix-ring.ts）に反映してコミット。
+- 追加パラメータ（2026-06-18・212d48d）：見た目に rotationDeg/lineCap/satMul/lightMul、minLenRatio 上限0.35（帯幅クランプ）。動きに easeMode(cosine/linear/in/out/inout)+easePower。
+
+## 2026-06-18 ゆらぎリングの形状ソース＝「本番判定式の実出力」を既定に（commit 465c61c）
+- **原則**：診断前のゆらぎリングは、独立ランダムではなく**ランダムな22軸プロフィールを本番判定式（`rankDepartments`→`calcRingStrengths`）に通した「実際に起こりうる学科適合度」をキーフレームにする**。理由＝独立ランダムだと「理系も文系も同時に高い」等の現実に起こりえない形が出て実結果と別物になる（オーナー指摘）。real なら理系↑のとき文系↓の相関が自然に出る。
+- 実装＝`MixAnimConfig.shape: "real"|"random"`（既定 real）。real は sync の目標値生成にのみ効く（wave は各点独立の装飾なので相関なし）。**判定式v2は一切変更せず結果画面と同じ関数を流用**。
+- /ring-lab に「形状ソース リアル22軸/ランダム」トグル。`ampMin/ampMax` は random 時のみ有効（real は判定式の出力スプレッド＋Ring内 min-max 正規化に従う）。
+- 今後の調整余地：real 形状の「尖り」は `randomAxisVector`（3〜6軸を強める擬似ペルソナ）で作っている。もっと尖らせる/穏やかにするのはここのレバー。
