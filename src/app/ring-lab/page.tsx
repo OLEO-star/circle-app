@@ -7,6 +7,21 @@
 import { useState } from "react";
 import AnimatedRing, { DEFAULT_MIX_ANIM } from "@/components/AnimatedRing";
 import { DEFAULT_MIX_PARAMS, type MixRingParams } from "@/components/mix-ring";
+import { SCIENCES_CATEGORY_COLORS } from "@/lib/departments";
+
+// 濃淡候補。機械・電気(slot2)/生命・薬獣(slot6)が薄いので濃い案を用意（色相は維持）。
+const MECH_OPTS: [string, string][] = [
+  ["元", "#7ABFEB"],
+  ["案A", "#5AA8E0"],
+  ["案B", "#3D8AD0"],
+  ["案C★", "#2A6FB8"],
+];
+const BIO_OPTS: [string, string][] = [
+  ["元", "#2E8C9E"],
+  ["案A", "#24788A"],
+  ["案B", "#1B6374"],
+  ["案C★", "#124E5C"],
+];
 
 type Row = {
   key: string;
@@ -49,6 +64,14 @@ export default function RingLabPage() {
   const p = (k: keyof MixRingParams, v: number) =>
     setMp((s) => ({ ...s, [k]: v }));
 
+  // 機械・電気(slot2)/生命・薬獣(slot6) の色を差し替えて濃淡を比較。
+  const [mech, setMech] = useState<string>(SCIENCES_CATEGORY_COLORS[2]); // #7ABFEB
+  const [bio, setBio] = useState<string>(SCIENCES_CATEGORY_COLORS[6]); // #2E8C9E
+  // 理系パレット（slot2=機械電気 / slot6=生命薬獣 を差し替え）。
+  const sciPalette = SCIENCES_CATEGORY_COLORS.map((c, i) =>
+    i === 2 ? mech : i === 6 ? bio : c,
+  );
+
   // 動き系は確定値で固定（スライダー撤去）。
   const anim = DEFAULT_MIX_ANIM;
 
@@ -60,9 +83,19 @@ export default function RingLabPage() {
     { key: "boundaryHueBias", label: "境界の色相シフト boundaryHueBias（度・±で色味）", min: -60, max: 60, step: 2, get: () => mp.boundaryHueBias, set: (v) => p("boundaryHueBias", v) },
   ];
 
-  const json = JSON.stringify({ anim, mixParams: mp }, null, 2);
+  const json = JSON.stringify(
+    {
+      anim,
+      mixParams: mp,
+      sciencesColors: { "機械・電気(slot2)": mech, "生命・薬獣(slot6)": bio },
+    },
+    null,
+    2,
+  );
   const reset = () => {
     setMp({ ...DEFAULT_MIX_PARAMS, boundarySat: 1, boundaryLight: 0 });
+    setMech(SCIENCES_CATEGORY_COLORS[2]);
+    setBio(SCIENCES_CATEGORY_COLORS[6]);
     setSize(300);
   };
 
@@ -81,11 +114,47 @@ export default function RingLabPage() {
 
       <div className="mt-6 flex flex-col items-center">
         <div className="rounded-2xl border border-gray-100 bg-white p-4">
-          <AnimatedRing size={size} version="sciences" anim={anim} mixParams={mp} showLabels={false} />
+          <AnimatedRing
+            size={size}
+            version="sciences"
+            anim={anim}
+            mixParams={mp}
+            paletteOverride={sciPalette}
+            showLabels={false}
+          />
         </div>
         <div className="mt-4 w-full max-w-xs">
           <Slider row={{ key: "size", label: "プレビューサイズ size", min: 120, max: 420, step: 10, get: () => size, set: setSize }} />
         </div>
+
+        {/* 濃淡プリセット：機械・電気 / 生命・薬獣（薄い2色を濃く） */}
+        <div className="mt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
+          <span className="text-gray-600">機械・電気:</span>
+          {MECH_OPTS.map(([lab, hex]) => (
+            <button
+              key={hex}
+              onClick={() => setMech(hex)}
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 ${mech === hex ? "border-gray-900 font-bold" : "border-gray-300 text-gray-700"}`}
+            >
+              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: hex }} />
+              {lab}
+            </button>
+          ))}
+        </div>
+        <div className="mt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
+          <span className="text-gray-600">生命・薬獣:</span>
+          {BIO_OPTS.map(([lab, hex]) => (
+            <button
+              key={hex}
+              onClick={() => setBio(hex)}
+              className={`flex items-center gap-1 rounded-full border px-2.5 py-1 ${bio === hex ? "border-gray-900 font-bold" : "border-gray-300 text-gray-700"}`}
+            >
+              <span className="inline-block h-3 w-3 rounded-full" style={{ backgroundColor: hex }} />
+              {lab}
+            </button>
+          ))}
+        </div>
+
         <button
           onClick={reset}
           className="mt-3 rounded-full border border-gray-300 px-4 py-1.5 text-sm text-gray-700"

@@ -62,6 +62,9 @@ type AnimatedRingProps = {
   showLabels?: boolean;
   anim?: Partial<MixAnimConfig>; // 省略時はデフォルト
   mixParams?: Partial<MixRingParams>; // mix の見た目（省略時はデフォルト）
+  // 非mix版のカテゴリ色を差し替えるプレビュー用（ring-lab の色比較）。
+  // 省略時は版の確定パレット（VERSION_CATEGORY_COLORS）を使う。
+  paletteOverride?: readonly string[];
   className?: string;
 };
 
@@ -70,12 +73,14 @@ export default function AnimatedRing({
   version = "mixed",
   anim,
   mixParams,
+  paletteOverride,
   className,
 }: AnimatedRingProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const cfg: MixAnimConfig = { ...DEFAULT_MIX_ANIM, ...anim };
   const mp: MixRingParams = { ...DEFAULT_MIX_PARAMS, ...mixParams };
+  const paletteKey = paletteOverride ? paletteOverride.join(",") : "";
   // 依存配列用にプリミティブ化（オブジェクト参照差での無駄な再起動を避ける）。
   const cfgKey = JSON.stringify(cfg);
   const mpKey = JSON.stringify(mp);
@@ -97,10 +102,13 @@ export default function AnimatedRing({
       version === "mixed" ? null : VERSION_RING_CATEGORY_INDEX[version];
     const n = catIdx ? catIdx.length : ringStrengthCount(version);
     // 版ごとのパレット。mix はピンク/黄の差し替えを反映、文系/理系は各版の色（8色）。
+    // paletteOverride 指定時（ring-lab の色比較）は非mix版でそれを使う。
     const palette =
       version === "mixed"
         ? CATEGORY_COLORS.map((c, i) => (i === 7 ? mp.pink : i === 4 ? mp.yellow : c))
-        : [...VERSION_CATEGORY_COLORS[version]];
+        : paletteOverride && paletteOverride.length === VERSION_CATEGORY_COLORS[version].length
+          ? [...paletteOverride]
+          : [...VERSION_CATEGORY_COLORS[version]];
     // 全版とも HSL 境界補間（mix と同じ仕組み）。これで境界の彩度/明度/色相の
     // 調整が文系・理系にも効く。理系の寒色ランプは隣接色相差が小さく緑↔濃紺間に
     // 紫は湧かない並びなので RGB 専用パスは使わない（useRgb=false）。
@@ -204,7 +212,7 @@ export default function AnimatedRing({
     return () => cancelAnimationFrame(raf);
     // cfgKey / mpKey で設定変更時に再起動（/ring-lab のライブ反映用）。
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [size, version, cfgKey, mpKey]);
+  }, [size, version, cfgKey, mpKey, paletteKey]);
 
   return (
     <canvas
