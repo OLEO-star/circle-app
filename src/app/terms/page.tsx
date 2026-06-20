@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "利用規約 | 学部診断",
@@ -67,10 +68,10 @@ export default function TermsPage() {
       <p className="mb-4">
         本規約に関するお問い合わせは{" "}
         <a
-          href="mailto:ichikipingjing8@gmail.com"
-          className="text-blue-600 underline"
+          href={`mailto:${CONTACT_EMAIL}`}
+          className="text-emerald-800 underline hover:text-emerald-900"
         >
-          ichikipingjing8@gmail.com
+          {CONTACT_EMAIL}
         </a>{" "}
         までお願いいたします。
       </p>
@@ -80,7 +81,7 @@ export default function TermsPage() {
 
       <Link
         href="/"
-        className="mt-8 inline-block text-xs text-gray-500 underline"
+        className="mt-8 inline-block text-xs text-gray-500 underline underline-offset-2 hover:text-gray-900"
       >
         ← トップに戻る
       </Link>

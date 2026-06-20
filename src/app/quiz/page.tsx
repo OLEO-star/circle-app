@@ -401,21 +401,21 @@ export default function QuizPage() {
     if (currentSet <= 0) return null;
     if (isLastSet) {
       return (
-        <div className="mb-5 rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 to-amber-50 px-4 py-4 text-center leading-relaxed">
-          <p className="text-sm font-semibold text-rose-700">
+        <div className="mb-5 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-4 text-center leading-relaxed">
+          <p className="text-sm font-semibold text-emerald-700">
             🎯 最後のセット！
           </p>
           <p className="mt-1 text-xs text-gray-700">
-            あと <strong className="text-rose-700">{visibleCurrent.length}</strong> 問で、あなたに合う学部が見えます
+            あと <strong className="text-emerald-700">{visibleCurrent.length}</strong> 問で、あなたに合う学部が見えます
           </p>
         </div>
       );
     }
     if (isHalfwayPoint) {
       return (
-        <div className="mb-5 rounded-xl bg-amber-50 px-4 py-3 text-center text-xs leading-relaxed text-amber-800">
+        <div className="mb-5 rounded-xl bg-emerald-50 px-4 py-3 text-center text-xs leading-relaxed text-emerald-800">
           <span className="font-semibold">🚩 折り返し地点！</span>
-          <span className="ml-2 text-amber-700">
+          <span className="ml-2 text-emerald-700">
             ここから後半。残り {remainingSets + 1} セットです
           </span>
         </div>
@@ -435,7 +435,7 @@ export default function QuizPage() {
     currentSetAnswered > 0 &&
     remainingInLastSet > 0 &&
     remainingInLastSet <= 5 ? (
-      <div className="mb-4 text-center text-xs font-semibold text-rose-700">
+      <div className="mb-4 text-center text-xs font-semibold text-emerald-700">
         あと {remainingInLastSet} 問！
       </div>
     ) : null;

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { CONTACT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
   title: "プライバシーポリシー | 学部診断",
@@ -86,7 +87,7 @@ export default function PrivacyPage() {
           href="https://vercel.com/legal/privacy-policy"
           target="_blank"
           rel="noopener noreferrer"
-          className="text-blue-600 underline"
+          className="text-gray-600 underline underline-offset-2 hover:text-gray-900"
         >
           Vercel のプライバシーポリシー
         </a>
@@ -113,10 +114,10 @@ export default function PrivacyPage() {
       <p className="mb-4">
         本ポリシーに関するお問い合わせ・データ削除依頼は{" "}
         <a
-          href="mailto:ichikipingjing8@gmail.com"
-          className="text-blue-600 underline"
+          href={`mailto:${CONTACT_EMAIL}`}
+          className="text-emerald-800 underline hover:text-emerald-900"
         >
-          ichikipingjing8@gmail.com
+          {CONTACT_EMAIL}
         </a>{" "}
         までお願いいたします。
       </p>
@@ -126,7 +127,7 @@ export default function PrivacyPage() {
 
       <Link
         href="/"
-        className="mt-8 inline-block text-xs text-gray-500 underline"
+        className="mt-8 inline-block text-xs text-gray-500 underline underline-offset-2 hover:text-gray-900"
       >
         ← トップに戻る
       </Link>

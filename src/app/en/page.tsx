@@ -4,12 +4,12 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "ring-map – Career Path Diagnosis for Japanese Universities",
   description:
-    "A free career path diagnosis tool for high school students considering Japanese universities. Designed for international school counselors supporting students with diverse pathways. 36 fields × 19 axes, based on Holland Code and Big Five.",
+    "A free career path diagnosis tool for high school students considering Japanese universities. Designed for international school counselors supporting students with diverse pathways. 36 fields × 22 axes, based on Holland Code and Big Five.",
   alternates: { canonical: "https://ring-map.com/en" },
   openGraph: {
     title: "ring-map – Career Path Diagnosis for Japanese Universities",
     description:
-      "A free diagnostic tool for international school counselors supporting students considering Japanese universities. 36 fields × 19 axes.",
+      "A free diagnostic tool for international school counselors supporting students considering Japanese universities. 36 fields × 22 axes.",
     url: "https://ring-map.com/en",
     type: "website",
     locale: "en_US",
@@ -21,7 +21,7 @@ export default function EnglishPage() {
     <article className="mx-auto max-w-2xl px-6 py-10 text-sm leading-relaxed text-gray-700">
       {/* Hero */}
       <header className="mb-10 border-b border-gray-200 pb-8">
-        <p className="mb-2 text-xs font-semibold tracking-widest text-rose-700">
+        <p className="mb-2 text-xs font-semibold tracking-widest text-emerald-800">
           FOR COUNSELORS
         </p>
         <h1 className="mb-4 text-2xl font-bold text-gray-900">
@@ -42,21 +42,21 @@ export default function EnglishPage() {
           </p>
           <ul className="space-y-2 text-xs leading-relaxed text-gray-700">
             <li className="flex gap-2">
-              <span className="text-rose-600">●</span>
+              <span className="text-emerald-600" aria-hidden>●</span>
               <span>
                 A free online diagnostic with about 45–66 questions (depending on the track chosen), mapping students against{" "}
-                <strong>36 Japanese university departments using 19 axes</strong>
+                <strong>36 Japanese university departments using 22 axes</strong>
               </span>
             </li>
             <li className="flex gap-2">
-              <span className="text-rose-600">●</span>
+              <span className="text-emerald-600" aria-hidden>●</span>
               <span>
                 All student response data is delivered to your school as a{" "}
                 <strong>Google Spreadsheet owned by your school</strong>
               </span>
             </li>
             <li className="flex gap-2">
-              <span className="text-rose-600">●</span>
+              <span className="text-emerald-600" aria-hidden>●</span>
               <span>
                 Independently built and maintained by a current university student.{" "}
                 <strong>Core diagnostic is permanently free</strong>
@@ -102,7 +102,7 @@ export default function EnglishPage() {
             <span className="font-semibold text-gray-900">Contact:</span>{" "}
             <a
               href="mailto:info@ring-map.com"
-              className="text-rose-700 underline"
+              className="text-emerald-800 underline hover:text-emerald-900"
             >
               info@ring-map.com
             </a>
@@ -111,8 +111,8 @@ export default function EnglishPage() {
       </header>
 
       {/* Note about language */}
-      <section className="mb-10 rounded border border-amber-200 bg-amber-50 p-5">
-        <p className="mb-2 text-xs font-semibold text-amber-900">
+      <section className="mb-10 rounded border border-slate-200 bg-slate-50 p-5">
+        <p className="mb-2 text-xs font-semibold text-slate-700">
           Note on language
         </p>
         <p className="text-xs text-gray-700">
@@ -122,7 +122,7 @@ export default function EnglishPage() {
 
       {/* Why this matters */}
       <section className="mb-12">
-        <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">
+        <h2 className="mb-4 border-l-4 border-gray-900 pl-3 text-lg font-bold text-slate-900">
           Why this matters for international school students
         </h2>
         <p className="mb-4">
@@ -141,19 +141,19 @@ export default function EnglishPage() {
           Each leads to different careers, requires different entrance exam strategies, and has different academic cultures. Existing Japanese career-guidance services rarely explain these distinctions in a way that international school students (or their counselors, parents) can navigate.
         </p>
         <p className="mb-4">
-          ring-map fills this gap by mapping 36 representative departments across 19 axes of interest and aptitude, helping students and counselors have informed conversations about which Japanese departments fit a student&apos;s profile.
+          ring-map fills this gap by mapping 36 representative departments across 22 axes of interest and aptitude, helping students and counselors have informed conversations about which Japanese departments fit a student&apos;s profile.
         </p>
       </section>
 
       {/* How it works */}
       <section className="mb-12">
-        <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">How it works</h2>
+        <h2 className="mb-4 border-l-4 border-gray-900 pl-3 text-lg font-bold text-slate-900">How it works</h2>
         <ol className="mb-4 ml-6 list-decimal space-y-2">
           <li>
             Students answer ~45–66 questions (10–15 minutes, depending on the track chosen) covering interests, thinking style, and tolerance for various academic environments.
           </li>
           <li>
-            Their responses are scored across 19 axes (derived from Holland Code RIASEC and Big Five personality traits, adapted for the Japanese university context).
+            Their responses are scored across 22 axes (derived from Holland Code RIASEC and Big Five personality traits, adapted for the Japanese university context).
           </li>
           <li>
             A variance-weighted distance (with an essential-axis gate) is calculated against 36 representative Japanese university departments.
@@ -169,14 +169,14 @@ export default function EnglishPage() {
 
       {/* Methodology */}
       <section className="mb-12">
-        <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">Methodology</h2>
+        <h2 className="mb-4 border-l-4 border-gray-900 pl-3 text-lg font-bold text-slate-900">Methodology</h2>
         <ul className="mb-4 ml-6 list-disc space-y-2">
           <li>
             <strong className="text-gray-900">Psychological foundation:</strong>{" "}
             Holland Code (RIASEC) for interest type, Big Five (OCEAN) for working-style fit. ring-map was independently designed for the Japanese department-selection context. Truity&apos;s career assessment is a comparable English-language service using the same two models, but it focuses on US occupations and the US college system.
           </li>
           <li>
-            <strong className="text-gray-900">19 axes:</strong> Built from 16 core axes (math, memorization, lab, fieldwork, code, making, language, care, business, art, abstract thought, team, certification, graduate-school intent, life-relevance, animal-relevance), plus 3 added after bias audit (narrative, justice, body).
+            <strong className="text-gray-900">22 axes:</strong> Built from 16 core axes (math, memorization, lab, fieldwork, code, making, language, care, business, art, abstract thought, team, certification, graduate-school intent, life-relevance, animal-relevance), plus 3 added after bias audit (narrative, justice, body) for 19, plus 3 more to separate chemistry and information-science tracks (pure-vs-applied orientation, biological phenomena, mass-production/process design) for a total of 22.
           </li>
           <li>
             <strong className="text-gray-900">Department scoring:</strong> Each of 36 departments was scored 0.0–1.0 on each axis by cross-referencing syllabi from 6 tiers of Japanese universities (national flagships through teaching-focused institutions), capturing a representative cross-section rather than a single tier.
@@ -192,7 +192,7 @@ export default function EnglishPage() {
 
       {/* Data ownership */}
       <section className="mb-12">
-        <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">
+        <h2 className="mb-4 border-l-4 border-gray-900 pl-3 text-lg font-bold text-slate-900">
           Data ownership and privacy
         </h2>
         <p className="mb-4 font-semibold text-gray-900">
@@ -216,7 +216,7 @@ export default function EnglishPage() {
 
       {/* Pricing */}
       <section className="mb-12">
-        <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">Pricing</h2>
+        <h2 className="mb-4 border-l-4 border-gray-900 pl-3 text-lg font-bold text-slate-900">Pricing</h2>
         <p className="mb-4 font-semibold text-gray-900">
           The core diagnostic and raw-data spreadsheet are free, permanently.
         </p>
@@ -241,7 +241,7 @@ export default function EnglishPage() {
 
       {/* Timeline for international schools */}
       <section className="mb-12">
-        <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">
+        <h2 className="mb-4 border-l-4 border-gray-900 pl-3 text-lg font-bold text-slate-900">
           Timeline for August 2026 academic year
         </h2>
         <p className="mb-4">
@@ -268,7 +268,7 @@ export default function EnglishPage() {
 
       {/* Developer */}
       <section className="mb-12">
-        <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">About the developer</h2>
+        <h2 className="mb-4 border-l-4 border-gray-900 pl-3 text-lg font-bold text-slate-900">About the developer</h2>
         <p className="mb-3">
           <strong className="text-gray-900">Kazuki Hirai</strong>
         </p>
@@ -302,22 +302,22 @@ export default function EnglishPage() {
         </p>
         <p className="mb-3">
           ring-map exists to make these encounters{" "}
-          <strong>intentional rather than accidental</strong>, and to give students a realistic preview of department life before they commit. Each design choice (36 departments mapped, 19 axes scored, weekly schedule descriptions intentionally tilted toward the higher-rigor end, occupation data based on official Japan and US labor classifications) is a direct response to a specific gap I personally felt.
+          <strong>intentional rather than accidental</strong>, and to give students a realistic preview of department life before they commit. Each design choice (36 departments mapped, 22 axes scored, weekly schedule descriptions intentionally tilted toward the higher-rigor end, occupation data based on official Japan and US labor classifications) is a direct response to a specific gap I personally felt.
         </p>
       </section>
 
       {/* Contact */}
       <section className="mb-12">
-        <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">Contact</h2>
+        <h2 className="mb-4 border-l-4 border-gray-900 pl-3 text-lg font-bold text-slate-900">Contact</h2>
         <p className="mb-4">
           For inquiries, demos, or to begin a pilot for the 2026–2027 academic year, please reach out by email. Replies typically within one business day.
         </p>
-        <div className="mb-6 rounded border border-rose-100 bg-rose-50/50 p-5">
+        <div className="mb-6 rounded border border-slate-200 bg-slate-50 p-5">
           <p className="text-xs text-gray-600">
             <span className="font-semibold text-gray-900">Email:</span>{" "}
             <a
               href="mailto:info@ring-map.com"
-              className="text-rose-700 underline"
+              className="text-emerald-800 underline hover:text-emerald-900"
             >
               info@ring-map.com
             </a>
@@ -325,7 +325,7 @@ export default function EnglishPage() {
         </div>
         <a
           href="mailto:info@ring-map.com?subject=ring-map%20inquiry%20from%20international%20school"
-          className="inline-block rounded bg-rose-700 px-5 py-2.5 text-xs font-semibold text-white hover:bg-rose-800"
+          className="inline-block rounded bg-gray-900 px-5 py-2.5 text-xs font-semibold text-white hover:bg-gray-700"
         >
           Contact us
         </a>
@@ -337,12 +337,12 @@ export default function EnglishPage() {
         </p>
         <ul className="ml-6 list-disc">
           <li className="mb-1">
-            <Link href="/" className="text-rose-700 underline">
+            <Link href="/" className="text-gray-600 hover:text-gray-900 underline underline-offset-2">
               Main site (for students)
             </Link>
           </li>
           <li className="mb-1">
-            <Link href="/teachers" className="text-rose-700 underline">
+            <Link href="/teachers" className="text-gray-600 hover:text-gray-900 underline underline-offset-2">
               For teachers (Japanese teacher Q&amp;A)
             </Link>
           </li>
