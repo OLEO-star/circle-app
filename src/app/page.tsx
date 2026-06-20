@@ -87,8 +87,9 @@ export default function Landing() {
               御校がそのままお使いいただけます。
             </p>
 
-            {/* 信頼バッジ3（文字を読める大きさに） */}
-            <div className="mt-7 grid w-full max-w-xl grid-cols-3 gap-2.5">
+            {/* 信頼バッジ3。スマホは1列（横長＝見出しと補足が変な位置で折れない）、
+                sm 以上は3カラム。各バッジは見出し＋補足を横並びにして1〜2行に収める。 */}
+            <div className="mt-7 grid w-full max-w-xl grid-cols-1 gap-2.5 sm:grid-cols-3">
               {[
                 { t: "永続無料", s: "導入費・運用費 0円" },
                 { t: "データは御校所有", s: "削除依頼で即時対応" },
@@ -96,10 +97,12 @@ export default function Landing() {
               ].map((b) => (
                 <div
                   key={b.t}
-                  className="rounded-xl border border-emerald-200 bg-emerald-50 px-2.5 py-3 text-center"
+                  className="flex items-center justify-center gap-x-2 rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-3 text-center sm:flex-col sm:gap-x-0"
                 >
-                  <p className="text-xs font-semibold text-emerald-800">{b.t}</p>
-                  <p className="mt-0.5 text-[10px] leading-tight text-emerald-700">
+                  <p className="whitespace-nowrap text-sm font-semibold text-emerald-800 sm:text-xs">
+                    {b.t}
+                  </p>
+                  <p className="whitespace-nowrap text-xs leading-tight text-emerald-700 sm:mt-0.5 sm:text-[10px]">
                     {b.s}
                   </p>
                 </div>
@@ -224,7 +227,7 @@ export default function Landing() {
           ?demo=mixed なのでデータ送信なし。iframe 内の matchMedia は iframe 自身の幅で
           評価されるので、広い枠＝PC版・狭い枠＝スマホ版の結果がそのまま描画される。
           ScaledFrame で実幅に合わせて縮小（スクロール・タップは生きたまま）。 */}
-      <section id="demo" className="mx-auto max-w-5xl px-8 py-16 sm:px-12">
+      <section id="demo" className="mx-auto max-w-6xl px-8 py-16 sm:px-12">
         <h2 className="text-center text-xl font-bold text-gray-900 sm:text-2xl">
           診断結果のデモ
         </h2>
@@ -233,12 +236,12 @@ export default function Landing() {
           スクロールしたり、気になる学科をタップして詳しく見られます。
         </p>
 
-        {/* デモ枠は小さめ＆中央寄せにし、画面いっぱいにはしない。左右に白の余白を広く残し、
-            その白い部分でページをスクロールできるようにする（iframe 上はスクロールが
-            iframe 内に吸われるため）。PC枠は flex-1 で広げず固定上限幅にする。 */}
+        {/* デモ枠は中央寄せ＋左右に白の余白を広く残す（その白でページをスクロールできる。
+            iframe 上はスクロールが iframe 内に吸われるため）。PC枠は はっきり横長
+            （約760×420＝1.8:1）にし、PCらしい2カラム結果が広く見えるようにする。 */}
         <div className="mt-10 flex flex-col items-center justify-center gap-10 lg:flex-row lg:items-start">
-          {/* PC版（結果が PC レイアウトで描画。上限616pxの小さめプレビュー＝+10%） */}
-          <div className="w-full max-w-[616px]">
+          {/* PC版（結果が PC レイアウトで描画。横長プレビュー） */}
+          <div className="w-full max-w-[760px]">
             <p className="mb-2 text-center text-xs font-medium text-gray-500">
               PC版
             </p>
@@ -246,14 +249,14 @@ export default function Landing() {
               <ScaledFrame
                 src="/result?demo=mixed"
                 w={1180}
-                displayHeight={440}
+                displayHeight={420}
                 title="診断結果デモ（PC版）"
               />
             </div>
           </div>
 
-          {/* スマホ版（結果が スマホ レイアウトで描画） */}
-          <div className="w-[220px] shrink-0">
+          {/* スマホ版（結果が スマホ レイアウトで描画）。PC枠と縦を揃える。 */}
+          <div className="w-[230px] shrink-0">
             <p className="mb-2 text-center text-xs font-medium text-gray-500">
               スマホ版
             </p>
@@ -261,7 +264,7 @@ export default function Landing() {
               <ScaledFrame
                 src="/result?demo=mixed"
                 w={390}
-                displayHeight={440}
+                displayHeight={420}
                 title="診断結果デモ（スマホ版）"
               />
             </div>
