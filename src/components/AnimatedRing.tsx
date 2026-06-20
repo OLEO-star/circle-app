@@ -11,8 +11,13 @@ import {
   AXIS_COUNT,
   CATEGORY_COLORS,
   VERSION_CATEGORY_COLORS,
+  VERSION_RING_CATEGORY_INDEX,
 } from "@/lib/departments";
-import { rankDepartments, calcRingStrengths } from "@/lib/scoring";
+import {
+  rankDepartments,
+  calcRingStrengths,
+  calcResultRingStrengths,
+} from "@/lib/scoring";
 import type { Version } from "@/lib/questions";
 
 // 「生きた」リング。診断前プレビュー用。各制御点の強度を動かし続け、山谷の長さが常に変化する。
@@ -85,14 +90,27 @@ export default function AnimatedRing({
     if (!ctx) return;
     ctx.scale(dpr, dpr);
 
-    const n = ringStrengthCount(version);
+    // 文系/理系も「学科単位」で揺らがせる（mix と同じ細かさ＝理系24/文系13）。
+    // 文系13はカテゴリあたり学科数が不揃いなので、色は等角分割でなく学科ごとのカテゴリ
+    // index(catIdx)で引く。mix は従来どおり 36制御点＋等角9色（catIdx=null）。
+    const catIdx =
+      version === "mixed" ? null : VERSION_RING_CATEGORY_INDEX[version];
+    const n = catIdx ? catIdx.length : ringStrengthCount(version);
     // 版ごとのパレット。mix はピンク/黄の差し替えを反映、文系/理系は各版の色（8色）。
     const palette =
       version === "mixed"
         ? CATEGORY_COLORS.map((c, i) => (i === 7 ? mp.pink : i === 4 ? mp.yellow : c))
         : [...VERSION_CATEGORY_COLORS[version]];
     const render = (arr: number[]) =>
-      drawMixRing(ctx, size, arr, mp, palette, version === "sciences");
+      drawMixRing(
+        ctx,
+        size,
+        arr,
+        mp,
+        palette,
+        version === "sciences",
+        catIdx ?? undefined
+      );
 
     const lo = cfg.ampMin;
     const span = Math.max(0, cfg.ampMax - cfg.ampMin);
@@ -108,8 +126,14 @@ export default function AnimatedRing({
       }
       return v;
     };
-    const realArr = () =>
-      calcRingStrengths(rankDepartments(randomAxisVector(), version), version);
+    // 実データの形。mix は 36学科、文系/理系は学科単位(24/13)の適合度を使う
+    // （calcResultRingStrengths＝結果リングと同じ並び VERSION_RING_ORDER）。
+    const realArr = () => {
+      const ranked = rankDepartments(randomAxisVector(), version);
+      return version === "mixed"
+        ? calcRingStrengths(ranked, version)
+        : calcResultRingStrengths(ranked, version);
+    };
     // sync の目標値。real=本番判定式の出力 / random=独立ランダム。
     const nextTarget = () => (cfg.shape === "real" ? realArr() : randArr());
 

@@ -117,7 +117,11 @@ export function drawMixRing(
   ),
   // 理系のみ true。色相を経由しない RGB線形補間にして、緑↔濃紺の間に紫が湧くのを防ぐ。
   // HSL専用の境界彩度/明度/色相調整(bp)は RGBパスでは無効。にじみ幅(blendZone)は流用。
-  useRgb: boolean = false
+  useRgb: boolean = false,
+  // 学科単位の色付け（文系13/理系24＝カテゴリあたり学科数が不揃い対応）。各制御点(学科)の
+  // カテゴリindexを渡すと、等角分割でなく「制御点ごとに色を引き、隣の学科とカテゴリが
+  // 変わる境界だけブレンド」する。省略時(mix)は従来の等角分割(N_CAT等分)のまま。
+  catIndexPerPoint?: readonly number[]
 ): void {
   ctx.clearRect(0, 0, size, size);
 
@@ -215,7 +219,56 @@ export function drawMixRing(
     return hslToString(h, clamp01(s * params.satMul), clamp01(l * params.lightMul));
   };
 
-  const colorAt = useRgb ? colorAtRgb : colorAtHsl;
+  // 学科単位の色付け（catIndexPerPoint 指定時）。制御点(学科)の並びそのままに色を引き、
+  // 隣り合う学科のカテゴリが異なる境界だけ blendZone でブレンド（同カテゴリ連続は単色）。
+  // SEG（=360/NFAC＝長さの制御点と同じ角度割り）を使うので、長さと色がズレない。
+  const colorAtPerPoint = (alpha: number): string => {
+    const a = ((alpha % 360) + 360) % 360;
+    const pos = a / SEG;
+    const j0 = Math.floor(pos) % NFAC;
+    const frac = pos - Math.floor(pos);
+    const idx = (i: number) =>
+      ((catIndexPerPoint![((i % NFAC) + NFAC) % NFAC] % N_CAT) + N_CAT) % N_CAT;
+    const cThis = idx(j0);
+    let cA = cThis,
+      cB = cThis,
+      t = -1; // t<0 → 単色
+    if (frac < blendZone) {
+      const prev = idx(j0 - 1);
+      if (prev !== cThis) {
+        cA = prev;
+        cB = cThis;
+        t = 0.5 + (frac / blendZone) * 0.5; // 境界中央(0.5)→単色this(1)
+      }
+    } else if (frac > 1 - blendZone) {
+      const next = idx(j0 + 1);
+      if (next !== cThis) {
+        cA = cThis;
+        cB = next;
+        t = ((frac - (1 - blendZone)) / blendZone) * 0.5; // 単色this(0)→境界中央(0.5)
+      }
+    }
+    if (useRgb) {
+      if (t < 0) {
+        const [r, g, b] = catRgbsArr[cThis];
+        return `rgb(${r}, ${g}, ${b})`;
+      }
+      return lerpRgb(catRgbsArr[cA], catRgbsArr[cB], t);
+    }
+    let h: number, s: number, l: number;
+    if (t < 0) {
+      [h, s, l] = catHslsArr[cThis];
+    } else {
+      [h, s, l] = lerpHslTuple(catHslsArr[cA], catHslsArr[cB], t, bp);
+    }
+    return hslToString(h, clamp01(s * params.satMul), clamp01(l * params.lightMul));
+  };
+
+  const colorAt = catIndexPerPoint
+    ? colorAtPerPoint
+    : useRgb
+      ? colorAtRgb
+      : colorAtHsl;
 
   for (let i = 0; i < STRANDS; i++) {
     const alpha = (i / STRANDS) * 360;
