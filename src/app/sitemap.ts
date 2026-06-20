@@ -15,9 +15,12 @@ export default function sitemap(): MetadataRoute.Sitemap {
     changeFrequency: "yearly" | "monthly" | "weekly";
     priority: number;
   }> = [
+    // / は先生向け玄関（2026-06 刷新）。/start＝個人診断の入口（旧トップの中身を移設）。
+    // 生徒の学校配布入口は /s。学生向け「学部診断」の実体ページは /start と /s。
     { path: "", changeFrequency: "monthly", priority: 1 },
+    { path: "/start", changeFrequency: "monthly", priority: 0.9 },
     { path: "/s", changeFrequency: "monthly", priority: 0.9 },
-    { path: "/quiz", changeFrequency: "monthly", priority: 0.8 },
+    { path: "/quiz", changeFrequency: "monthly", priority: 0.7 },
     { path: "/teachers", changeFrequency: "monthly", priority: 0.7 },
     { path: "/en", changeFrequency: "yearly", priority: 0.5 },
     { path: "/privacy", changeFrequency: "yearly", priority: 0.3 },
