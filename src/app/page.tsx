@@ -30,6 +30,32 @@ import RingIcon from "@/components/RingIcon";
 
 const CONTACT_MAIL = "info@ring-map.com";
 
+// 「先生向けの出力」＝御校専用 Google スプレッドシートの例（生徒が見る結果デモとは別物）。
+// 列は学校配布モードで実際に集まるデータに忠実（学年/クラス/出席番号・Top3学科＋適合度・
+// 所要時間・納得感）。22軸スコア等はさらに右へ続く想定（表は説明用サンプル）。
+const SHEET_COLS = [
+  "学年",
+  "クラス",
+  "出席番号",
+  "Top1 学科",
+  "適合度",
+  "Top2 学科",
+  "適合度",
+  "Top3 学科",
+  "適合度",
+  "所要時間",
+  "納得感",
+];
+// 学年 → クラス → 出席番号順（実際の並びと同じ）。サンプルの匿名データ。
+const SHEET_ROWS: string[][] = [
+  ["高2", "1", "3", "データサイエンス学科", "89", "情報科学科", "87", "経済学科", "85", "9分20秒", "ピッタリ"],
+  ["高2", "1", "7", "心理学科", "84", "教育学科", "80", "社会学科", "78", "11分02秒", "微妙"],
+  ["高2", "1", "12", "機械工学科", "82", "電気電子工学科", "79", "物理学科", "75", "8分45秒", "ピッタリ"],
+  ["高2", "2", "4", "文学科", "86", "外国語学科", "83", "哲学科", "77", "10分10秒", "ピッタリ"],
+  ["高2", "2", "9", "法学科", "88", "政治学科", "81", "国際関係学科", "79", "9分50秒", "微妙"],
+  ["高2", "2", "15", "看護学科", "90", "薬学科", "84", "医学科", "80", "12分30秒", "ピッタリ"],
+];
+
 export default function Landing() {
   const router = useRouter();
   // PC版（≥1024px / lg）かどうか。canvas 二重生成を避けるため AnimatedRing は 1 つだけ置き、
@@ -49,6 +75,10 @@ export default function Landing() {
 
   const scrollToDemo = () => {
     document.getElementById("demo")?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const scrollToSheet = () => {
+    document.getElementById("sheet")?.scrollIntoView({ behavior: "smooth" });
   };
 
   return (
@@ -213,13 +243,73 @@ export default function Landing() {
             </a>
             （削除依頼・相談に直接対応）
           </p>
-          <button
-            onClick={scrollToDemo}
-            className="mt-4 rounded-full bg-gray-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-700 active:bg-gray-700"
-          >
-            先生向けの出力を見てみる
-          </button>
+          {/* 2ボタン：先生が受け取る「スプレッドシートの出力例」と、生徒が見る「結果デモ」は別物。
+              先生向けの出力＝御校のスプレッドシート例(#sheet)／結果デモ＝生徒の結果画面(#demo)。 */}
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+            <button
+              onClick={scrollToSheet}
+              className="rounded-full bg-gray-900 px-5 py-3 text-sm font-medium text-white transition-colors hover:bg-gray-700 active:bg-gray-700"
+            >
+              先生向けの出力（スプレッドシート例）を見る
+            </button>
+            <button
+              onClick={scrollToDemo}
+              className="rounded-full border border-gray-300 bg-white px-5 py-3 text-sm font-medium text-gray-800 transition-colors hover:bg-gray-50 active:bg-gray-50"
+            >
+              診断結果のデモを見る
+            </button>
+          </div>
         </div>
+      </section>
+
+      {/* 先生向けの出力＝御校専用 Google スプレッドシートの例（生徒が見る結果デモとは別物）。
+          実際に集まる列（学校配布モードの収集データ：学年/クラス/出席番号・Top3学科＋適合度・
+          所要時間・納得感…＋22軸スコア）を忠実に再現したサンプル表。学年→クラス→出席番号順。
+          ブランド規約：box-shadow/疑似要素は使わず、hairline border のテーブルで表現。 */}
+      <section id="sheet" className="mx-auto max-w-6xl px-8 py-16 sm:px-12">
+        <h2 className="text-center text-xl font-bold text-gray-900 sm:text-2xl">
+          先生向けの出力（御校のスプレッドシート例）
+        </h2>
+        <p className="mx-auto mt-2 max-w-2xl text-center text-sm leading-relaxed text-gray-600">
+          生徒が答えると、御校専用の Google スプレッドシートに
+          <strong className="font-semibold text-gray-900">学年 → クラス → 出席番号順</strong>
+          で自動的に行が増えていきます。加工レポートではなく生データなので、
+          そのまま面談資料や進路会議の名簿に使えます（下は表示用のサンプルです）。
+        </p>
+
+        <div className="mt-8 overflow-x-auto rounded-xl border border-gray-200">
+          <table className="w-full min-w-[920px] border-collapse text-left text-xs">
+            <thead>
+              <tr className="bg-gray-100 text-gray-600">
+                {SHEET_COLS.map((c, ci) => (
+                  <th
+                    key={ci}
+                    className="whitespace-nowrap border border-gray-200 px-3 py-2 font-semibold"
+                  >
+                    {c}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {SHEET_ROWS.map((row, i) => (
+                <tr key={i} className={i % 2 === 1 ? "bg-gray-50/60" : "bg-white"}>
+                  {row.map((cell, j) => (
+                    <td
+                      key={j}
+                      className="whitespace-nowrap border border-gray-200 px-3 py-2 text-gray-700"
+                    >
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="mt-3 text-center text-[11px] text-gray-400">
+          ※ 表は説明用のサンプルです。実際は 22 軸スコア・36 学科ランキング・回答変更ログ・気になる学部なども列に含まれます。個人を特定する情報は学校所有シートにのみ記録され、運営側のマスタには残しません。
+        </p>
       </section>
 
       {/* 診断結果のデモ（玄関の下部にインラインで“触れる”形）。同一オリジンの結果ページを
