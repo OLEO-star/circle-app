@@ -55,7 +55,7 @@ import {
 /** 章見出し（border-l-4 の色帯は実 div ではなく border で表現） */
 function SectionHeading({ children }: { children: ReactNode }) {
   return (
-    <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">
+    <h2 className="mb-4 border-l-4 border-gray-900 pl-3 text-lg font-bold text-slate-900">
       {children}
     </h2>
   );
@@ -74,7 +74,7 @@ function H3({ children }: { children: ReactNode }) {
 function Para({ p }: { p: Paragraph }) {
   if (p.variant === "emphasis") {
     return (
-      <p className="mb-4 whitespace-pre-line rounded border border-rose-100 bg-rose-50/60 p-4 text-gray-800 [&_code]:rounded [&_code]:bg-rose-100/70 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[0.8em] [&_strong]:font-semibold [&_strong]:text-gray-900">
+      <p className="mb-4 whitespace-pre-line rounded border border-slate-100 border-l-2 border-l-emerald-300 bg-slate-50 p-4 text-gray-800 [&_code]:rounded [&_code]:bg-slate-100 [&_code]:text-gray-800 [&_code]:px-1 [&_code]:py-0.5 [&_code]:text-[0.8em] [&_strong]:font-semibold [&_strong]:text-gray-900">
         {p.body}
       </p>
     );
@@ -137,10 +137,10 @@ const FAQ_DOT: Record<FaqGroup["tone"], string> = {
 /** FAQ アコーディオン 1 件（details/summary でタップ開閉） */
 function FaqAccordion({ item }: { item: FaqItem }) {
   return (
-    <details className="group mb-3 rounded border border-gray-200 bg-white open:border-rose-200 open:bg-rose-50/30">
+    <details className="group mb-3 rounded border border-gray-200 bg-white open:border-slate-300 open:bg-slate-50/40">
       <summary className="cursor-pointer list-none p-4 [&::-webkit-details-marker]:hidden">
         <div className="flex items-start gap-3">
-          <span className="mt-0.5 inline-block text-xs font-bold text-rose-700 transition-transform group-open:rotate-90">
+          <span className="mt-0.5 inline-block text-xs font-bold text-gray-900 transition-transform group-open:rotate-90">
             ▶
           </span>
           <div className="flex-1">
@@ -149,7 +149,7 @@ function FaqAccordion({ item }: { item: FaqItem }) {
           </div>
         </div>
       </summary>
-      <div className="border-t border-gray-200 px-4 py-3 text-gray-700 [&_a]:text-rose-700 [&_a]:underline">
+      <div className="border-t border-gray-200 px-4 py-3 text-gray-700 [&_a]:text-gray-600 [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-gray-900">
         {item.a}
       </div>
     </details>
@@ -164,7 +164,7 @@ export default function TeachersMobile() {
     <article className="mx-auto max-w-md px-4 py-8 text-sm leading-relaxed text-gray-700">
       {/* ヒーロー */}
       <header className="mb-8 border-b border-gray-200 pb-6">
-        <p className="mb-2 text-xs font-semibold tracking-widest text-rose-700">
+        <p className="mb-2 text-xs font-semibold tracking-widest text-emerald-800">
           {HERO.eyebrow}
         </p>
         <h1 className="mb-3 text-2xl font-bold text-gray-900">{HERO.title}</h1>
@@ -178,7 +178,7 @@ export default function TeachersMobile() {
           <ul className="space-y-2 text-sm leading-relaxed text-gray-700 [&_strong]:font-semibold [&_strong]:text-gray-900">
             {SUMMARY_POINTS.map((pt, i) => (
               <li key={i} className="flex gap-2">
-                <span aria-hidden className="text-rose-600">
+                <span aria-hidden className="text-emerald-600">
                   ●
                 </span>
                 <span>{pt.body}</span>
@@ -212,7 +212,7 @@ export default function TeachersMobile() {
             <span className="font-semibold text-gray-900">
               {DEVELOPER.labelContact}
             </span>
-            <MailLink className="text-rose-700 underline" />
+            <MailLink className="text-emerald-800 underline hover:text-emerald-900" />
           </p>
         </div>
       </header>
@@ -230,7 +230,7 @@ export default function TeachersMobile() {
         <ol className="space-y-2 border-t border-gray-200 p-4 text-sm">
           {SECTIONS.map((s) => (
             <li key={s.id}>
-              <a href={`#${s.id}`} className="text-rose-700 hover:underline">
+              <a href={`#${s.id}`} className="text-gray-600 hover:text-gray-900">
                 {s.label}
               </a>
             </li>
@@ -370,7 +370,7 @@ export default function TeachersMobile() {
 
         <H3>{DATA.masterHeading}</H3>
         <p className="mb-4">{DATA.masterBody}</p>
-        <p className="mb-4 [&_a]:text-rose-700 [&_a]:underline">{DATA.privacyLink}</p>
+        <p className="mb-4 [&_a]:text-gray-600 [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-gray-900">{DATA.privacyLink}</p>
       </section>
 
       {/* 5. 既存サービスとの違い（スマホはカード化） */}
@@ -389,8 +389,8 @@ export default function TeachersMobile() {
                   </p>
                   <p className="text-gray-700">{r.existing}</p>
                 </div>
-                <div className="rounded border border-rose-100 bg-rose-50/60 p-2">
-                  <p className="mb-0.5 text-[10px] font-semibold text-rose-700">
+                <div className="rounded border border-slate-200 bg-slate-50 p-2">
+                  <p className="mb-0.5 text-[10px] font-semibold text-emerald-800">
                     {COMPARE.header.ringmap}
                   </p>
                   <p className="text-gray-800">{r.ringmap}</p>
@@ -408,14 +408,14 @@ export default function TeachersMobile() {
       <section id="flow" className="mb-12 scroll-mt-6">
         <SectionHeading>{SECTIONS[5].label}</SectionHeading>
         <p className="mb-4 font-semibold text-gray-900">{FLOW.lead}</p>
-        <ol className="mb-4 ml-5 list-decimal space-y-3 [&_a]:text-rose-700 [&_a]:underline [&_strong]:font-semibold [&_strong]:text-gray-900">
+        <ol className="mb-4 ml-5 list-decimal space-y-3 [&_a]:text-gray-600 [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-gray-900 [&_strong]:font-semibold [&_strong]:text-gray-900">
           {FLOW.steps.map((s, i) => (
             <li key={i}>{s.body}</li>
           ))}
         </ol>
 
         {/* 中段 CTA（全幅ボタン） */}
-        <div className="mt-8 rounded border border-rose-200 bg-rose-50 p-5 text-center">
+        <div className="mt-8 rounded border border-slate-200 bg-slate-50 p-5 text-center">
           <p className="mb-3 text-sm font-semibold text-gray-900">
             {MID_CTA.title}
           </p>
@@ -424,7 +424,7 @@ export default function TeachersMobile() {
           </p>
           <a
             href={MID_CTA.buttonHref}
-            className="block w-full rounded bg-rose-700 px-5 py-3.5 text-center text-sm font-semibold text-white hover:bg-rose-800"
+            className="block w-full rounded bg-gray-900 px-5 py-3.5 text-center text-sm font-semibold text-white hover:bg-gray-700"
           >
             {MID_CTA.buttonLabel}
           </a>
@@ -449,8 +449,8 @@ export default function TeachersMobile() {
 
         {/* 大学別カスタマイズプラン（特定大学専用）。rose tint のカードで区別
             （box-shadow/疑似要素は使わず border＋bg tint）。 */}
-        <div className="mt-6 rounded-xl border border-rose-200 bg-rose-50/60 p-4 [&_strong]:font-semibold [&_strong]:text-gray-900">
-          <h3 className="mb-2 text-sm font-semibold text-rose-900">
+        <div className="mt-6 rounded-xl border border-emerald-300 bg-emerald-50/40 p-4 [&_strong]:font-semibold [&_strong]:text-gray-900">
+          <h3 className="mb-2 text-sm font-semibold text-emerald-900">
             {PAID.customHeading}
           </h3>
           {PAID.customParas.map((p, i) => (
@@ -488,7 +488,7 @@ export default function TeachersMobile() {
       <section id="contact" className="mb-12 scroll-mt-6">
         <SectionHeading>{SECTIONS[8].label}</SectionHeading>
         <p className="mb-4">{CONTACT.intro}</p>
-        <div className="mb-6 rounded border border-rose-100 bg-rose-50/50 p-5">
+        <div className="mb-6 rounded border border-slate-200 bg-slate-50 p-5">
           <p className="mb-2 text-xs text-gray-600">
             <span className="font-semibold text-gray-900">
               {CONTACT.cardDeveloperLabel}
@@ -499,14 +499,14 @@ export default function TeachersMobile() {
             <span className="font-semibold text-gray-900">
               {CONTACT.cardEmailLabel}
             </span>
-            <a href={`mailto:${CONTACT.email}`} className="text-rose-700 underline">
+            <a href={`mailto:${CONTACT.email}`} className="text-emerald-800 underline hover:text-emerald-900">
               {CONTACT.email}
             </a>
           </p>
         </div>
         <a
           href={CONTACT.buttonHref}
-          className="block w-full rounded bg-rose-700 px-5 py-3.5 text-center text-sm font-semibold text-white hover:bg-rose-800"
+          className="block w-full rounded bg-gray-900 px-5 py-3.5 text-center text-sm font-semibold text-white hover:bg-gray-700"
         >
           {CONTACT.buttonLabel}
         </a>

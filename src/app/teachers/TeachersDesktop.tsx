@@ -62,7 +62,7 @@ function ParagraphBlock({
   if (para.variant === "emphasis") {
     return (
       <p
-        className={`whitespace-pre-line rounded-md border border-rose-200 bg-rose-50/60 p-5 leading-relaxed text-gray-800 [&_strong]:font-semibold [&_strong]:text-gray-900 ${className}`}
+        className={`whitespace-pre-line rounded-md border border-slate-200 border-l-2 border-l-emerald-300 bg-slate-50 p-5 leading-relaxed text-gray-800 [&_strong]:font-semibold [&_strong]:text-gray-900 ${className}`}
       >
         {para.body}
       </p>
@@ -80,7 +80,7 @@ function ParagraphBlock({
 /* セクション見出し（h2）：border-l hairline + 余白で階層を明確化 */
 function SectionHeading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className="mb-6 border-l-4 border-rose-600 pl-4 text-2xl font-bold text-slate-900">
+    <h2 className="mb-6 border-l-4 border-gray-900 pl-4 text-2xl font-bold text-slate-900">
       {children}
     </h2>
   );
@@ -99,7 +99,7 @@ export default function TeachersDesktop() {
        * ヒーロー（横長レイアウト）
        * ============================================================ */}
       <header className="mb-14 border-b border-gray-200 pb-12">
-        <p className="mb-3 text-xs font-semibold tracking-widest text-rose-700">
+        <p className="mb-3 text-xs font-semibold tracking-widest text-emerald-800">
           {HERO.eyebrow}
         </p>
         <h1 className="mb-5 text-4xl font-bold text-gray-900">{HERO.title}</h1>
@@ -120,7 +120,7 @@ export default function TeachersDesktop() {
                   {/* 色ドットは実 <span>（疑似要素を使わない） */}
                   <span
                     aria-hidden
-                    className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-rose-600"
+                    className="mt-2 inline-block h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-600"
                   />
                   <span className="[&_strong]:font-semibold [&_strong]:text-gray-900">
                     {point.body}
@@ -158,7 +158,7 @@ export default function TeachersDesktop() {
             <span className="font-semibold text-gray-900">
               {DEVELOPER.labelContact}
             </span>
-            <MailLink className="text-rose-700 underline" />
+            <MailLink className="text-emerald-800 underline hover:text-emerald-900" />
           </p>
         </div>
       </header>
@@ -179,7 +179,7 @@ export default function TeachersDesktop() {
                 <li key={s.id}>
                   <a
                     href={`#${s.id}`}
-                    className="block text-rose-700 hover:underline"
+                    className="block text-gray-600 hover:text-gray-900 hover:underline"
                   >
                     {s.label}
                   </a>
@@ -423,7 +423,7 @@ export default function TeachersDesktop() {
 
             <Heading3>{DATA.masterHeading}</Heading3>
             <p className="mb-4 leading-relaxed">{DATA.masterBody}</p>
-            <p className="leading-relaxed [&_a]:text-rose-700 [&_a]:underline">
+            <p className="leading-relaxed [&_a]:text-gray-600 [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-gray-900">
               {DATA.privacyLink}
             </p>
           </section>
@@ -444,7 +444,7 @@ export default function TeachersDesktop() {
                     <th className="py-3 pr-4 font-semibold text-gray-900">
                       {COMPARE.header.existing}
                     </th>
-                    <th className="py-3 font-semibold text-rose-700">
+                    <th className="py-3 font-semibold text-emerald-800">
                       {COMPARE.header.ringmap}
                     </th>
                   </tr>
@@ -456,7 +456,7 @@ export default function TeachersDesktop() {
                         {r.row}
                       </td>
                       <td className="py-3 pr-4">{r.existing}</td>
-                      <td className="bg-rose-50/40 py-3 font-medium text-gray-900">
+                      <td className="bg-slate-50 py-3 font-medium text-gray-900">
                         {r.ringmap}
                       </td>
                     </tr>
@@ -483,11 +483,11 @@ export default function TeachersDesktop() {
                 >
                   <div
                     aria-hidden
-                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-rose-200 bg-rose-50 text-sm font-bold text-rose-700"
+                    className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-slate-300 bg-slate-50 text-sm font-bold text-gray-900"
                   >
                     {i + 1}
                   </div>
-                  <div className="leading-relaxed [&_a]:text-rose-700 [&_a]:underline [&_strong]:font-semibold [&_strong]:text-gray-900">
+                  <div className="leading-relaxed [&_a]:text-gray-600 [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-gray-900 [&_strong]:font-semibold [&_strong]:text-gray-900">
                     {step.body}
                   </div>
                 </li>
@@ -495,7 +495,7 @@ export default function TeachersDesktop() {
             </ol>
 
             {/* 中段 CTA */}
-            <div className="mt-10 rounded-lg border border-rose-200 bg-rose-50 p-8 text-center">
+            <div className="mt-10 rounded-lg border border-slate-200 bg-slate-50 p-8 text-center">
               <p className="mb-3 text-lg font-semibold text-gray-900">
                 {MID_CTA.title}
               </p>
@@ -504,7 +504,7 @@ export default function TeachersDesktop() {
               </p>
               <a
                 href={MID_CTA.buttonHref}
-                className="inline-block rounded-md bg-rose-700 px-6 py-3 text-sm font-semibold text-white hover:bg-rose-800"
+                className="inline-block rounded-md bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-700"
               >
                 {MID_CTA.buttonLabel}
               </a>
@@ -549,8 +549,8 @@ export default function TeachersDesktop() {
 
             {/* 大学別カスタマイズプラン（特定大学専用＝本命オプション）。全幅・rose tint で
                 Standard/Pro と差別化（box-shadow/疑似要素は使わず border＋bg tint）。 */}
-            <div className="mt-6 rounded-lg border border-rose-200 bg-rose-50/60 p-6">
-              <h3 className="mb-4 text-base font-semibold text-rose-900">
+            <div className="mt-6 rounded-lg border border-emerald-300 bg-emerald-50/40 p-6">
+              <h3 className="mb-4 text-base font-semibold text-emerald-900">
                 {PAID.customHeading}
               </h3>
               <div className="space-y-4 [&_strong]:font-semibold [&_strong]:text-gray-900">
@@ -576,7 +576,7 @@ export default function TeachersDesktop() {
                     <span
                       aria-hidden
                       className={`inline-block h-2.5 w-2.5 rounded-full ${
-                        FAQ_TONE_DOT[group.tone] ?? "bg-gray-400"
+                        FAQ_TONE_DOT[group.tone] ?? "bg-gray-500"
                       }`}
                     />
                     <h3 className="text-base font-semibold text-gray-900">
@@ -588,14 +588,14 @@ export default function TeachersDesktop() {
                     {group.items.map((item, i) => (
                       <details
                         key={i}
-                        className="group rounded-lg border border-gray-200 bg-white open:border-rose-200 open:bg-rose-50/30"
+                        className="group rounded-lg border border-gray-200 bg-white open:border-slate-300 open:bg-slate-50/40"
                       >
                         <summary className="cursor-pointer list-none p-4 [&::-webkit-details-marker]:hidden">
                           <div className="flex items-start gap-3">
                             {/* 開閉インジケータは実テキスト（疑似要素ではない） */}
                             <span
                               aria-hidden
-                              className="mt-0.5 inline-block text-xs font-bold text-rose-700 transition-transform group-open:rotate-90"
+                              className="mt-0.5 inline-block text-xs font-bold text-gray-900 transition-transform group-open:rotate-90"
                             >
                               ▶
                             </span>
@@ -609,7 +609,7 @@ export default function TeachersDesktop() {
                             </div>
                           </div>
                         </summary>
-                        <div className="border-t border-gray-200 px-4 py-3 pl-11 text-sm leading-relaxed text-gray-700 [&_a]:text-rose-700 [&_a]:underline">
+                        <div className="border-t border-gray-200 px-4 py-3 pl-11 text-sm leading-relaxed text-gray-700 [&_a]:text-gray-600 [&_a]:underline [&_a]:underline-offset-2 hover:[&_a]:text-gray-900">
                           {item.a}
                         </div>
                       </details>
@@ -626,7 +626,7 @@ export default function TeachersDesktop() {
           <section id="contact" className="mb-12 scroll-mt-8">
             <SectionHeading>{SECTIONS[8].label}</SectionHeading>
             <p className="mb-5 leading-relaxed">{CONTACT.intro}</p>
-            <div className="mb-6 rounded-lg border border-rose-100 bg-rose-50/50 p-6">
+            <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 p-6">
               <p className="mb-2 text-sm text-gray-600">
                 <span className="font-semibold text-gray-900">
                   {CONTACT.cardDeveloperLabel}
@@ -639,7 +639,7 @@ export default function TeachersDesktop() {
                 </span>
                 <a
                   href={`mailto:${CONTACT.email}`}
-                  className="text-rose-700 underline"
+                  className="text-emerald-800 underline hover:text-emerald-900"
                 >
                   {CONTACT.email}
                 </a>
@@ -647,7 +647,7 @@ export default function TeachersDesktop() {
             </div>
             <a
               href={CONTACT.buttonHref}
-              className="inline-block rounded-md bg-rose-700 px-6 py-3 text-sm font-semibold text-white hover:bg-rose-800"
+              className="inline-block rounded-md bg-gray-900 px-6 py-3 text-sm font-semibold text-white hover:bg-gray-700"
             >
               {CONTACT.buttonLabel}
             </a>
