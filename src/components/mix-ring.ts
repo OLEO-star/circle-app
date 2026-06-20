@@ -219,45 +219,67 @@ export function drawMixRing(
     return hslToString(h, clamp01(s * params.satMul), clamp01(l * params.lightMul));
   };
 
-  // 学科単位の色付け（catIndexPerPoint 指定時）。制御点(学科)の並びそのままに色を引き、
-  // 隣り合う学科のカテゴリが異なる境界だけ blendZone でブレンド（同カテゴリ連続は単色）。
-  // SEG（=360/NFAC＝長さの制御点と同じ角度割り）を使うので、長さと色がズレない。
+  // 学科単位の色付け（catIndexPerPoint 指定時＝文系/理系）。
+  // ❗にじみが mix と一致するよう、制御点(15°刻み等)ではなく「カテゴリの連続アーク」で
+  //   blendZone を効かせる。catIndexPerPoint は同カテゴリが連続する確定並び
+  //   （理系=3連/文系=非減少）なので、連続ランに畳めば各カテゴリは1本の弧になる。
+  //   その弧に対し mix(colorAtHsl) と同一の blendZone ロジック＝弧の両端 blendZone 割合で
+  //   隣カテゴリへブレンド。これで「カテゴリ弧の割合でにじむ」挙動が mix と揃う。
+  const runs: { cat: number; start: number; span: number }[] = [];
+  if (catIndexPerPoint) {
+    const NPP = catIndexPerPoint.length;
+    const catOf = (i: number) =>
+      ((catIndexPerPoint[i] % N_CAT) + N_CAT) % N_CAT;
+    let i = 0;
+    while (i < NPP) {
+      const cat = catOf(i);
+      let j = i;
+      while (j + 1 < NPP && catOf(j + 1) === cat) j++;
+      runs.push({ cat, start: i * SEG, span: (j - i + 1) * SEG });
+      i = j + 1;
+    }
+  }
+  const R = runs.length;
+
   const colorAtPerPoint = (alpha: number): string => {
     const a = ((alpha % 360) + 360) % 360;
-    const pos = a / SEG;
-    const j0 = Math.floor(pos) % NFAC;
-    const frac = pos - Math.floor(pos);
-    const idx = (i: number) =>
-      ((catIndexPerPoint![((i % NFAC) + NFAC) % NFAC] % N_CAT) + N_CAT) % N_CAT;
-    const cThis = idx(j0);
-    let cA = cThis,
-      cB = cThis,
+    let idx = 0;
+    for (let k = 0; k < R; k++) {
+      if (a >= runs[k].start && a < runs[k].start + runs[k].span) {
+        idx = k;
+        break;
+      }
+    }
+    const run = runs[idx];
+    const frac = (a - run.start) / run.span; // 0..1（カテゴリ弧内の位置）
+    let cA = run.cat,
+      cB = run.cat,
       t = -1; // t<0 → 単色
     if (frac < blendZone) {
-      const prev = idx(j0 - 1);
-      if (prev !== cThis) {
+      const prev = runs[(idx - 1 + R) % R].cat;
+      if (prev !== run.cat) {
         cA = prev;
-        cB = cThis;
+        cB = run.cat;
         t = 0.5 + (frac / blendZone) * 0.5; // 境界中央(0.5)→単色this(1)
       }
     } else if (frac > 1 - blendZone) {
-      const next = idx(j0 + 1);
-      if (next !== cThis) {
-        cA = cThis;
+      const next = runs[(idx + 1) % R].cat;
+      if (next !== run.cat) {
+        cA = run.cat;
         cB = next;
         t = ((frac - (1 - blendZone)) / blendZone) * 0.5; // 単色this(0)→境界中央(0.5)
       }
     }
     if (useRgb) {
       if (t < 0) {
-        const [r, g, b] = catRgbsArr[cThis];
+        const [r, g, b] = catRgbsArr[run.cat];
         return `rgb(${r}, ${g}, ${b})`;
       }
       return lerpRgb(catRgbsArr[cA], catRgbsArr[cB], t);
     }
     let h: number, s: number, l: number;
     if (t < 0) {
-      [h, s, l] = catHslsArr[cThis];
+      [h, s, l] = catHslsArr[run.cat];
     } else {
       [h, s, l] = lerpHslTuple(catHslsArr[cA], catHslsArr[cB], t, bp);
     }
