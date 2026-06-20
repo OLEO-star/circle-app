@@ -31,7 +31,7 @@ export default function PrivacyPage() {
       </p>
       <p className="mb-2 font-medium text-gray-900">a. 全モード共通</p>
       <ul className="mb-3 list-inside list-disc">
-        <li>診断結果（適合度上位の学科・適合度スコア・19軸スコア）</li>
+        <li>診断結果（適合度上位の学科・適合度スコア・22軸スコア）</li>
         <li>選んだ診断バージョン（全学科 / 文系 / 理系）</li>
         <li>回答変更ログ（どの質問で選択をやり直したかの回数）— 質問文の分かりやすさを改善するための指標です</li>
         <li>匿名識別子（session_id）— 完全にランダムな文字列で、個人を特定する情報を含みません</li>

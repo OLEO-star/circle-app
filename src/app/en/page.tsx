@@ -203,7 +203,7 @@ export default function EnglishPage() {
             Student responses are saved to a Google Spreadsheet owned by your school, accessible only to your designated staff.
           </li>
           <li className="mb-1">
-            The developer&apos;s master database only stores 19-axis scores (no student names, classes, or numbers).
+            The developer&apos;s master database only stores 22-axis scores (no student names, classes, or numbers).
           </li>
           <li className="mb-1">
             No third-party sharing. No advertising. No university-sponsored steering.
@@ -225,7 +225,7 @@ export default function EnglishPage() {
         </p>
         <ul className="mb-4 ml-6 list-disc">
           <li className="mb-1">
-            Per-student PDF counseling sheets (1 page per student, with 19-axis chart and conversation prompts)
+            Per-student PDF counseling sheets (1 page per student, with 22-axis chart and conversation prompts)
           </li>
           <li className="mb-1">
             Counselor dashboard (Looker Studio integration showing class- and year-level trends)

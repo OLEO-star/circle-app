@@ -4,12 +4,12 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "教員の皆様へ",
   description:
-    "ring-map 学部診断の導入をご検討の進路指導の先生方へ。約45〜66問・19軸・36学科の根拠、データの扱い、導入の流れをまとめています。",
+    "ring-map 学部診断の導入をご検討の進路指導の先生方へ。約45〜66問・22軸・36学科の根拠、データの扱い、導入の流れをまとめています。",
   alternates: { canonical: "https://ring-map.com/teachers" },
   openGraph: {
     title: "教員の皆様へ | ring-map 学部診断",
     description:
-      "ring-map 学部診断の導入をご検討の進路指導の先生方へ。約45〜66問・19軸・36学科の根拠、データの扱い、導入の流れをまとめています。",
+      "ring-map 学部診断の導入をご検討の進路指導の先生方へ。約45〜66問・22軸・36学科の根拠、データの扱い、導入の流れをまとめています。",
     url: "https://ring-map.com/teachers",
     type: "article",
     locale: "ja_JP",
@@ -54,7 +54,7 @@ export default function TeachersPage() {
               <span className="text-rose-600">●</span>
               <span>
                 約45〜66問（学部選択により異なる）の質問で、生徒の興味を{" "}
-                <strong>19軸 × 36学科</strong>{" "}
+                <strong>22軸 × 36学科</strong>{" "}
                 で可視化する無料の進路診断ツールです
               </span>
             </li>
@@ -202,7 +202,7 @@ export default function TeachersPage() {
         <ul className="mb-4 ml-6 list-disc space-y-2">
           <li>
             <strong className="text-gray-900">① 多角的な比較：</strong>
-            36 学科 × 19 軸で「得意」とは別の物差しを提供。「やりたいこと」「興味の方向」で比較できるようにしました。
+            36 学科 × 22 軸で「得意」とは別の物差しを提供。「やりたいこと」「興味の方向」で比較できるようにしました。
           </li>
           <li>
             <strong className="text-gray-900">② 学部の中身を可視化：</strong>
@@ -266,7 +266,7 @@ export default function TeachersPage() {
       {/* 3. 設計の考え方 */}
       <section id="design" className="mb-12 scroll-mt-6">
         <h2 className="mb-4 border-l-4 border-rose-600 pl-3 text-lg font-bold text-slate-900">
-          3. 設計の考え方：質問・19軸・36学科
+          3. 設計の考え方：質問・22軸・36学科
         </h2>
 
         <h3 className="mb-2 mt-6 text-base font-semibold text-gray-900">
@@ -300,10 +300,10 @@ export default function TeachersPage() {
         </p>
 
         <h3 className="mb-2 mt-6 text-base font-semibold text-gray-900">
-          19 軸の作り方
+          22 軸の作り方
         </h3>
         <p className="mb-4">
-          RIASEC（6 軸）と Big Five（5 軸）だけでは日本の細かい学科の差を表現できないため、両モデルを基盤としつつ、中高生に「好き・やりたい」で聞ける具体的な行為・状態に翻訳した独自の 19 軸を設計しました。
+          RIASEC（6 軸）と Big Five（5 軸）だけでは日本の細かい学科の差を表現できないため、両モデルを基盤としつつ、中高生に「好き・やりたい」で聞ける具体的な行為・状態に翻訳した独自の 22 軸を設計しました。
         </p>
         <p className="mb-3">
           <strong className="text-gray-900">最初に設計した 16 軸：</strong>
@@ -312,6 +312,10 @@ export default function TeachersPage() {
         <p className="mb-4">
           <strong className="text-gray-900">偏り調査の結果、追加した 3 軸：</strong>
           開発途中で「法学・文学・スポーツ科学を狙い撃つ質問が不足している」ことが判明し、物語・文学（NARRATIVE）／正義・制度（JUSTICE）／身体性・運動（BODY）の 3 軸を追加。結果、合計 19 軸となりました。
+        </p>
+        <p className="mb-4">
+          <strong className="text-gray-900">化学・情報の分離のために追加した 3 軸：</strong>
+          化学系・情報系の細かい違いを見分けるため、純粋⇄応用志向（PURE）／生体・生命現象（BIO）／量産・プロセス設計（PROC）の 3 軸を追加し、現在は合計 22 軸です。
         </p>
 
         <h3 className="mb-2 mt-6 text-base font-semibold text-gray-900">
@@ -465,7 +469,7 @@ export default function TeachersPage() {
         </h3>
         <ol className="mb-4 ml-6 list-decimal">
           <li className="mb-1">
-            生徒の回答を集計し、19 軸スコア（0.0〜1.0、負値・1.0 超もあり）を算出
+            生徒の回答を集計し、22 軸スコア（0.0〜1.0、負値・1.0 超もあり）を算出
           </li>
           <li className="mb-1">
             36 学科それぞれの「学科ベクトル」との距離を計算（軸ごとのばらつきで重み付けし、その学科に不可欠な軸が極端に低い場合は減点）
@@ -477,7 +481,7 @@ export default function TeachersPage() {
         </p>
 
         <p className="mt-6 rounded bg-rose-50/60 p-4 text-gray-800">
-          ring-map は、進路を「決める」ためのツールではありません。診断結果はあくまで「現時点での興味の傾向」のスナップショットです。生徒の興味は 3 年で変わりますし、19 軸で全てを測れるわけでもありません。それでも「自分はこういう傾向があるのか」「先生はこの結果をどう見るか」という対話のきっかけになることを狙っています。
+          ring-map は、進路を「決める」ためのツールではありません。診断結果はあくまで「現時点での興味の傾向」のスナップショットです。生徒の興味は 3 年で変わりますし、22 軸で全てを測れるわけでもありません。それでも「自分はこういう傾向があるのか」「先生はこの結果をどう見るか」という対話のきっかけになることを狙っています。
         </p>
       </section>
 
@@ -493,7 +497,7 @@ export default function TeachersPage() {
         </h3>
         <ul className="mb-4 ml-6 list-disc">
           <li className="mb-1">学年・クラス・出席番号</li>
-          <li className="mb-1">19 軸のスコア</li>
+          <li className="mb-1">22 軸のスコア</li>
           <li className="mb-1">36 学科ランキング</li>
           <li className="mb-1">所要時間</li>
           <li className="mb-1">回答変更ログ（迷った質問の特定）</li>
@@ -518,7 +522,7 @@ export default function TeachersPage() {
           マスタスプレッドシート
         </h3>
         <p className="mb-4">
-          開発者側にもマスタ DB がありますが、そこに保存されるのは「19 軸スコア」のみで、個人を特定できる情報（学年・クラス・番号）は保存されません。
+          開発者側にもマスタ DB がありますが、そこに保存されるのは「22 軸スコア」のみで、個人を特定できる情報（学年・クラス・番号）は保存されません。
         </p>
         <p className="mb-4">
           詳細は{" "}
@@ -572,7 +576,7 @@ export default function TeachersPage() {
               <tr className="border-b border-gray-200">
                 <td className="py-2 pr-2 font-semibold">軸の数</td>
                 <td className="py-2 pr-2">6〜10 軸</td>
-                <td className="py-2">19 軸</td>
+                <td className="py-2">22 軸</td>
               </tr>
               <tr className="border-b border-gray-200">
                 <td className="py-2 pr-2 font-semibold">大学広告</td>
@@ -672,11 +676,11 @@ export default function TeachersPage() {
         <ul className="mb-4 ml-6 list-disc">
           <li className="mb-2">
             <strong className="text-gray-900">進路面談サポートシート：</strong>
-            生徒 1 人ごとに、19 軸チャート + Top3 学科 +「面談で聞くべきこと」を 1 ページ PDF で自動生成。三者面談・進路面談の準備時間を 50 時間/年削減。
+            生徒 1 人ごとに、22 軸チャート + Top3 学科 +「面談で聞くべきこと」を 1 ページ PDF で自動生成。三者面談・進路面談の準備時間を 50 時間/年削減。
           </li>
           <li className="mb-2">
             <strong className="text-gray-900">教員ダッシュボード：</strong>
-            クラス別・学年別の傾向グラフ、19 軸分布ヒートマップ、Top3 学科集計などを Looker Studio で自動表示。
+            クラス別・学年別の傾向グラフ、22 軸分布ヒートマップ、Top3 学科集計などを Looker Studio で自動表示。
           </li>
         </ul>
 
@@ -802,7 +806,7 @@ export default function TeachersPage() {
           <Faq
             q="「マッチング○○%」という数字は何を意味していますか？"
             short="学科ベクトルとの距離の近さを 0〜100% に変換した値で、「合格する確率」ではありません。"
-            a="「生徒の 19 軸スコア」と「その学科の 19 軸スコア」がどれだけ近いかを百分率化したものです（軸ごとのばらつきで重み付けし、その学科に不可欠な軸が満たされない場合は控えめになります）。1 位と 2 位の差が小さい場合は「両方に適性がある」と読んでいただくのが正しい解釈です。"
+            a="「生徒の 22 軸スコア」と「その学科の 22 軸スコア」がどれだけ近いかを百分率化したものです（軸ごとのばらつきで重み付けし、その学科に不可欠な軸が満たされない場合は控えめになります）。1 位と 2 位の差が小さい場合は「両方に適性がある」と読んでいただくのが正しい解釈です。"
           />
           <Faq
             q="「あなたは〜なタイプです」という特徴文はどう決まりますか？"
