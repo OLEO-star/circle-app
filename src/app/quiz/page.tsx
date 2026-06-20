@@ -614,7 +614,7 @@ export default function QuizPage() {
                 className={`min-w-[280px] rounded-full px-8 py-3 text-sm font-medium transition-colors ${
                   allAnswered
                     ? "bg-gray-900 text-white hover:bg-gray-700"
-                    : "bg-gray-300 text-white hover:bg-gray-400"
+                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                 }`}
               >
                 {nextButtonLabel}
@@ -669,7 +669,7 @@ export default function QuizPage() {
           className={`w-full rounded-full py-3 text-sm font-medium transition-colors ${
             allAnswered
               ? "bg-gray-900 text-white active:bg-gray-700"
-              : "bg-gray-300 text-white active:bg-gray-400"
+              : "bg-gray-200 text-gray-700 active:bg-gray-300"
           }`}
         >
           {nextButtonLabel}

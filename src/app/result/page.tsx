@@ -33,6 +33,28 @@ const isDemoView = () =>
   typeof window !== "undefined" &&
   new URLSearchParams(window.location.search).has("demo");
 
+// 順位バッジ等で、学科カテゴリ色(slot色)の上に載せる文字色を背景輝度から自動選択する。
+// 旧実装は全バッジ text-white 固定で、黄系カテゴリ(#F5EE42 等)では白文字が判読困難
+// （コントラスト 1.2〜1.7:1）だった。相対輝度が高い背景には濃色(#1F2937)、低い背景には白。
+function readableTextOn(hex: string): string {
+  const h = hex.replace("#", "");
+  if (h.length < 6) return "#ffffff";
+  const lum = (hex6: string) => {
+    const r = parseInt(hex6.slice(0, 2), 16) / 255;
+    const g = parseInt(hex6.slice(2, 4), 16) / 255;
+    const b = parseInt(hex6.slice(4, 6), 16) / 255;
+    const lin = (c: number) =>
+      c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+    return 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+  };
+  const cr = (a: number, b: number) =>
+    (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+  // 白(#fff)と濃色(#1F2937)のうち、背景とのコントラストが高い方を選ぶ。
+  // 黄系(#F5EE42 等)は濃色、青/紫/濃緑は白、緑/赤など中間色も「読める方」を選択。
+  const Lbg = lum(h);
+  return cr(Lbg, 1) >= cr(Lbg, lum("1F2937")) ? "#ffffff" : "#1F2937";
+}
+
 const ANALYTICS_ENDPOINT =
   "https://script.google.com/macros/s/AKfycbxoGqyDg6ERed2B24LArJZACk5cI5IAoEgF5hmIHtIIvrF-koDoTSy8GNy_XxZznmhX/exec";
 
@@ -378,8 +400,8 @@ export default function ResultPage() {
             {top3.map((r, i) => (
               <div key={r.id} className="flex items-center gap-3">
                 <span
-                  className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                  style={{ backgroundColor: colors[r.slot] }}
+                  className="flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold"
+                  style={{ backgroundColor: colors[r.slot], color: readableTextOn(colors[r.slot]) }}
                 >
                   {i + 1}
                 </span>
@@ -443,8 +465,8 @@ export default function ResultPage() {
                 <div className="flex-1 px-5 py-5">
                   <div className="mb-4 flex items-center gap-3">
                     <span
-                      className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
-                      style={{ backgroundColor: colors[r.slot] }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
+                      style={{ backgroundColor: colors[r.slot], color: readableTextOn(colors[r.slot]) }}
                     >
                       {i + 1}
                     </span>
@@ -899,8 +921,8 @@ function DeptDetailModal({
           <div className="mb-6 flex items-start justify-between">
             <div className="flex items-center gap-3.5">
               <span
-                className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold text-white"
-                style={{ backgroundColor: colors[dept.slot] }}
+                className="flex h-9 w-9 items-center justify-center rounded-full text-xs font-bold"
+                style={{ backgroundColor: colors[dept.slot], color: readableTextOn(colors[dept.slot]) }}
               >
                 {rank}
               </span>
@@ -985,8 +1007,8 @@ function DeptDetailModal({
             <div className="mb-5 flex items-start justify-between">
               <div className="flex items-center gap-3">
                 <span
-                  className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold text-white"
-                  style={{ backgroundColor: colors[dept.slot] }}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold"
+                  style={{ backgroundColor: colors[dept.slot], color: readableTextOn(colors[dept.slot]) }}
                 >
                   {rank}
                 </span>
@@ -1167,8 +1189,8 @@ function ResultDesktopView({
               {top3.map((r, i) => (
                 <div key={r.id} className="flex items-center gap-3">
                   <span
-                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold text-white"
-                    style={{ backgroundColor: colors[r.slot] }}
+                    className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                    style={{ backgroundColor: colors[r.slot], color: readableTextOn(colors[r.slot]) }}
                   >
                     {i + 1}
                   </span>
@@ -1209,8 +1231,8 @@ function ResultDesktopView({
                 return (
                   <div key={r.id} className="flex gap-5">
                     <span
-                      className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white"
-                      style={{ backgroundColor: colors[r.slot] }}
+                      className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                      style={{ backgroundColor: colors[r.slot], color: readableTextOn(colors[r.slot]) }}
                     >
                       {i + 1}
                     </span>

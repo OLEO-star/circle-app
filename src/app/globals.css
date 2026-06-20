@@ -57,6 +57,29 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+/* 可視フォーカス（キーボード操作時のみ）。WCAG 2.4.7 対応。
+   各入力は focus:outline-none でネイティブ枠を消しているため、:focus-visible に
+   outline を !important で復活させる（box-shadow は使わず outline＝規約準拠）。
+   :focus でなく :focus-visible なのでマウスクリック時には出ない（操作の邪魔をしない）。
+   ボタン/リンク/トグル＝emerald(要点強調)、入力欄＝無彩 gray で既存トーンと整合。 */
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  /* Tailwind の focus:outline-none(:focus・高詳細度) に勝つため !important で復活 */
+  outline: 2px solid #9ca3af !important; /* gray-400 */
+  outline-offset: 2px !important;
+}
+button:focus-visible,
+a:focus-visible,
+summary:focus-visible,
+[role="button"]:focus-visible {
+  outline-color: #059669 !important; /* emerald-600 */
+}
+
 @media (prefers-reduced-motion: reduce) {
   /* スクロール誘導の矢印バウンスは reduced-motion で停止（"続きがある"の
      情報自体は静止テキスト「スクロールして詳しく見る」で担保されるので消えない）。 */

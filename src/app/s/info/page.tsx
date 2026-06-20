@@ -177,12 +177,20 @@ export default function StudentInfoPage() {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="mb-1.5 block text-xs text-gray-500">
+                  <label
+                    htmlFor="grade-pc"
+                    className="mb-1.5 block text-xs text-gray-500"
+                  >
                     学年
                   </label>
                   <select
+                    id="grade-pc"
                     value={grade}
                     onChange={(e) => setGrade(e.target.value)}
+                    aria-invalid={attempted && grade === ""}
+                    aria-describedby={
+                      attempted && grade === "" ? "grade-pc-err" : undefined
+                    }
                     className={`${fieldBase} appearance-none cursor-pointer ${borderFor(
                       grade === "",
                     )}`}
@@ -195,13 +203,22 @@ export default function StudentInfoPage() {
                     <option value="高2">高2</option>
                     <option value="高3">高3</option>
                   </select>
+                  {attempted && grade === "" && (
+                    <p id="grade-pc-err" className="mt-1 text-[10px] text-red-600">
+                      未入力
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs text-gray-500">
+                  <label
+                    htmlFor="klass-pc"
+                    className="mb-1.5 block text-xs text-gray-500"
+                  >
                     クラス
                   </label>
                   <input
+                    id="klass-pc"
                     type="number"
                     inputMode="numeric"
                     value={klass}
@@ -209,15 +226,28 @@ export default function StudentInfoPage() {
                     placeholder="3"
                     min={1}
                     max={40}
+                    aria-invalid={attempted && klass.trim() === ""}
+                    aria-describedby={
+                      attempted && klass.trim() === "" ? "klass-pc-err" : undefined
+                    }
                     className={`${fieldBase} ${borderFor(klass.trim() === "")}`}
                   />
+                  {attempted && klass.trim() === "" && (
+                    <p id="klass-pc-err" className="mt-1 text-[10px] text-red-600">
+                      未入力
+                    </p>
+                  )}
                 </div>
 
                 <div>
-                  <label className="mb-1.5 block text-xs text-gray-500">
+                  <label
+                    htmlFor="number-pc"
+                    className="mb-1.5 block text-xs text-gray-500"
+                  >
                     出席番号
                   </label>
                   <input
+                    id="number-pc"
                     type="number"
                     inputMode="numeric"
                     value={number}
@@ -225,8 +255,22 @@ export default function StudentInfoPage() {
                     placeholder="15"
                     min={1}
                     max={50}
+                    aria-invalid={attempted && number.trim() === ""}
+                    aria-describedby={
+                      attempted && number.trim() === ""
+                        ? "number-pc-err"
+                        : undefined
+                    }
                     className={`${fieldBase} ${borderFor(number.trim() === "")}`}
                   />
+                  {attempted && number.trim() === "" && (
+                    <p
+                      id="number-pc-err"
+                      className="mt-1 text-[10px] text-red-600"
+                    >
+                      未入力
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -237,8 +281,8 @@ export default function StudentInfoPage() {
                 学部診断を始める
               </button>
               {attempted && !canProceed && (
-                <p className="mt-2 text-xs text-red-500">
-                  未入力の項目があります
+                <p role="alert" className="mt-2 text-xs text-red-600">
+                  未入力の項目があります（上の「未入力」の欄をご確認ください）
                 </p>
               )}
 
@@ -285,10 +329,17 @@ export default function StudentInfoPage() {
             幅が狭いので学年表示は「中1」「高3」の短縮形にし、クラス・番号は数字のみ。 */}
         <div className="mb-6 grid grid-cols-3 gap-2">
           <div>
-            <label className="mb-1 block text-xs text-gray-500">学年</label>
+            <label htmlFor="grade-m" className="mb-1 block text-xs text-gray-500">
+              学年
+            </label>
             <select
+              id="grade-m"
               value={grade}
               onChange={(e) => setGrade(e.target.value)}
+              aria-invalid={attempted && grade === ""}
+              aria-describedby={
+                attempted && grade === "" ? "grade-m-err" : undefined
+              }
               className={`h-[46px] w-full appearance-none rounded-xl border bg-white px-3 text-sm text-gray-900 focus:outline-none ${
                 attempted && grade === ""
                   ? "border-red-400 focus:border-red-500"
@@ -303,11 +354,19 @@ export default function StudentInfoPage() {
               <option value="高2">高2</option>
               <option value="高3">高3</option>
             </select>
+            {attempted && grade === "" && (
+              <p id="grade-m-err" className="mt-1 text-[10px] text-red-600">
+                未入力
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-500">クラス</label>
+            <label htmlFor="klass-m" className="mb-1 block text-xs text-gray-500">
+              クラス
+            </label>
             <input
+              id="klass-m"
               type="number"
               inputMode="numeric"
               value={klass}
@@ -315,17 +374,29 @@ export default function StudentInfoPage() {
               placeholder="3"
               min={1}
               max={40}
+              aria-invalid={attempted && klass.trim() === ""}
+              aria-describedby={
+                attempted && klass.trim() === "" ? "klass-m-err" : undefined
+              }
               className={`h-[46px] w-full rounded-xl border bg-white px-3 text-sm text-gray-900 focus:outline-none ${
                 attempted && klass.trim() === ""
                   ? "border-red-400 focus:border-red-500"
                   : "border-gray-200 focus:border-gray-400"
               }`}
             />
+            {attempted && klass.trim() === "" && (
+              <p id="klass-m-err" className="mt-1 text-[10px] text-red-600">
+                未入力
+              </p>
+            )}
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-gray-500">出席番号</label>
+            <label htmlFor="number-m" className="mb-1 block text-xs text-gray-500">
+              出席番号
+            </label>
             <input
+              id="number-m"
               type="number"
               inputMode="numeric"
               value={number}
@@ -333,12 +404,21 @@ export default function StudentInfoPage() {
               placeholder="15"
               min={1}
               max={50}
+              aria-invalid={attempted && number.trim() === ""}
+              aria-describedby={
+                attempted && number.trim() === "" ? "number-m-err" : undefined
+              }
               className={`h-[46px] w-full rounded-xl border bg-white px-3 text-sm text-gray-900 focus:outline-none ${
                 attempted && number.trim() === ""
                   ? "border-red-400 focus:border-red-500"
                   : "border-gray-200 focus:border-gray-400"
               }`}
             />
+            {attempted && number.trim() === "" && (
+              <p id="number-m-err" className="mt-1 text-[10px] text-red-600">
+                未入力
+              </p>
+            )}
           </div>
         </div>
 
@@ -399,8 +479,8 @@ export default function StudentInfoPage() {
           学部診断を始める
         </button>
         {attempted && !canProceed && (
-          <p className="mt-2 text-center text-xs text-red-500">
-            未入力の項目があります
+          <p role="alert" className="mt-2 text-center text-xs text-red-600">
+            未入力の項目があります（上の「未入力」の欄をご確認ください）
           </p>
         )}
 
