@@ -101,16 +101,11 @@ export default function AnimatedRing({
       version === "mixed"
         ? CATEGORY_COLORS.map((c, i) => (i === 7 ? mp.pink : i === 4 ? mp.yellow : c))
         : [...VERSION_CATEGORY_COLORS[version]];
+    // 全版とも HSL 境界補間（mix と同じ仕組み）。これで境界の彩度/明度/色相の
+    // 調整が文系・理系にも効く。理系の寒色ランプは隣接色相差が小さく緑↔濃紺間に
+    // 紫は湧かない並びなので RGB 専用パスは使わない（useRgb=false）。
     const render = (arr: number[]) =>
-      drawMixRing(
-        ctx,
-        size,
-        arr,
-        mp,
-        palette,
-        version === "sciences",
-        catIdx ?? undefined
-      );
+      drawMixRing(ctx, size, arr, mp, palette, false, catIdx ?? undefined);
 
     const lo = cfg.ampMin;
     const span = Math.max(0, cfg.ampMax - cfg.ampMin);
