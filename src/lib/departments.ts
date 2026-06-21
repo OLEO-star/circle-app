@@ -88,7 +88,7 @@ export const SCIENCES_CATEGORY_NAMES = [
   "物質・化学",
   "環境・構造",
   "地球・生物",
-  "生命・薬獣",
+  "獣医・生命・薬学",
   "医療・臨床",
 ] as const;
 
