@@ -79,7 +79,16 @@ export default function AnimatedRing({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const cfg: MixAnimConfig = { ...DEFAULT_MIX_ANIM, ...anim };
-  const mp: MixRingParams = { ...DEFAULT_MIX_PARAMS, ...mixParams };
+  // 理系だけ境界の彩度/明度を僅かに調整（2026-06-22 オーナー確定JSON）。全版共通の
+  // DEFAULT_MIX_PARAMS は変えず（mix/文系の確定見た目を保つ）、sciences のときだけ
+  // デフォルトを上書きする。mixParams（/ring-lab 等）が来ればそちらが優先。
+  const versionDefaults: Partial<MixRingParams> =
+    version === "sciences" ? { boundarySat: 0.95, boundaryLight: -0.02 } : {};
+  const mp: MixRingParams = {
+    ...DEFAULT_MIX_PARAMS,
+    ...versionDefaults,
+    ...mixParams,
+  };
   const paletteKey = paletteOverride ? paletteOverride.join(",") : "";
   // 依存配列用にプリミティブ化（オブジェクト参照差での無駄な再起動を避ける）。
   const cfgKey = JSON.stringify(cfg);
