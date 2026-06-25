@@ -56,7 +56,8 @@ function hslToString(h: number, s: number, l: number): string {
   return `hsl(${h}, ${s * 100}%, ${l * 100}%)`;
 }
 
-// 隣接カテゴリ間を彩度を落とした淡い色を経由して補間する U字カーブ。
+// 隣接カテゴリ色を線形補間（色相は長回り切替あり）。彩度・明度は淡色化せず鮮やかなまま
+// （boundarySat=1 相当・選択プレビュー drawMixRing と統一。2026-06-24 オーナー指示）。
 // 約180°差で短回りが寒色側を通る場合は長回り（暖色側）へ切替。
 function lerpHsl(
   [h1, s1, l1]: [number, number, number],
@@ -76,15 +77,10 @@ function lerpHsl(
 
   const h = ((h1 + dh * t) % 360 + 360) % 360;
 
-  const hueDistance = Math.min(1, Math.abs(dh) / 180);
-  const peakDesat = 0.6 * hueDistance;
-  const peakLight = 0.22 * hueDistance;
-  const u = 4 * t * (1 - t);
-
-  const sLin = s1 + (s2 - s1) * t;
-  const lLin = l1 + (l2 - l1) * t;
-  const s = Math.max(0, sLin * (1 - peakDesat * u));
-  const l = Math.min(1, lLin + peakLight * u);
+  // 境界を淡くせず鮮やかなまま（boundarySat=1 相当・選択プレビューと統一。2026-06-24 オーナー指示）。
+  // 旧仕様: hueDistance に応じ peakDesat=0.6/peakLight=0.22 で境界中央(u=4t(1-t))を脱彩度・明色化していた。
+  const s = Math.max(0, Math.min(1, s1 + (s2 - s1) * t));
+  const l = Math.min(1, l1 + (l2 - l1) * t);
 
   return hslToString(h, s, l);
 }
