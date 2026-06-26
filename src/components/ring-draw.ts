@@ -98,19 +98,31 @@ const RING_CFG: Record<Version, { strands: number; lwRatio: number }> = {
 // strengths = 各学科の適合度を VERSION_RING_ORDER 順に並べた配列（mixed 36 / 理系 24 / 文系 13）。
 // 色は学科ごとに所属カテゴリ色を引き、隣接学科間を直線補間（尖り）。
 // 理系のみ RGB 線形補間（緑↔濃紺に紫が湧くのを防ぐ）、mixed/文系は HSL。
+export type DrawRingOpts = {
+  // labeled 時の山の最大長 / size（既定 0.34）。大きいほどリングが大きく見える（プレビューは 0.44）。
+  outerRatio?: number;
+  // カテゴリラベルの見せ方。plain=従来(灰・背景なし) / box=白い角丸背景で重なっても読める /
+  //   halo=白い縁取り / outside=リングの外側に逃がす。
+  labelStyle?: "plain" | "box" | "halo" | "outside";
+  // ラベル文字色。既定 box/halo=#333・plain/outside=#888。薄くしたいとき #999/#aaa 等。
+  labelColor?: string;
+};
+
 export function drawRing(
   ctx: CanvasRenderingContext2D,
   size: number,
   strengths: number[],
   showLabels: boolean,
-  version: Version
+  version: Version,
+  opts: DrawRingOpts = {}
 ): void {
   ctx.clearRect(0, 0, size, size);
 
   const cx = size / 2;
   const cy = size / 2;
   const innerRadius = size * 0.16;
-  const maxOuterRadius = showLabels ? size * 0.34 : size * 0.44;
+  const labeledOuter = opts.outerRatio ?? 0.34;
+  const maxOuterRadius = (showLabels ? labeledOuter : 0.44) * size;
   const minLineLength = size * 0.02;
 
   // ユーザー内 min-max 正規化（差を強調）: 最弱=0.05、最強=1.0。
@@ -181,27 +193,64 @@ export function drawRing(
   }
 
   if (showLabels) {
+    const style = opts.labelStyle ?? "plain";
+    // ラベル文字色。既定 box/halo=#333・plain/outside=#888。?ink で薄く（#999/#aaa 等）。
+    const ink = opts.labelColor ?? (style === "box" || style === "halo" ? "#333" : "#888");
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
-    ctx.font = `bold ${size * 0.035}px sans-serif`;
-    ctx.fillStyle = "#888";
+    // 太さは見出し下「リングの形があなたの個性です」(font-weight 400=通常) と同じ＝太字にしない。
+    ctx.font = `${size * 0.035}px sans-serif`;
 
     const categoryNames = VERSION_CATEGORY_NAMES[version];
     // カテゴリの占有弧（所属学科数 × SEG）。学科は連続配置なので累積で中央角を出す（不揃いも対応）。
     const counts = new Array(categoryNames.length).fill(0);
     for (const ci of ringCatIndex) counts[ci]++;
+    // ラベルはリングの外周に出す。ただし canvas からはみ出さないよう半径をクランプ
+    //   （横長ラベル"教育・人文/機械・材料"が左右端で切れない上限＝約0.40*size）。
+    //   fill が小さいほどリングとラベルの間に余白ができ「外側で被らない」見た目になる。
+    //   outside はさらに外（0.42上限）、box/halo は 0.40上限。
+    const labelR =
+      style === "outside"
+        ? Math.min(maxOuterRadius + size * 0.085, size * 0.42)
+        : Math.min(maxOuterRadius + size * 0.05, size * 0.4);
+    const bh = size * 0.05; // 背景ボックスの高さ目安
     let acc = 0;
     for (let c = 0; c < categoryNames.length; c++) {
       const span = counts[c] * SEG;
       const centerAlpha = acc + span / 2;
       acc += span;
       const angleRad = ((centerAlpha - 90) * Math.PI) / 180;
-      const labelR = maxOuterRadius + size * 0.08;
-      ctx.fillText(
-        categoryNames[c],
-        cx + labelR * Math.cos(angleRad),
-        cy + labelR * Math.sin(angleRad)
-      );
+      const x = cx + labelR * Math.cos(angleRad);
+      const y = cy + labelR * Math.sin(angleRad);
+      const text = categoryNames[c];
+
+      if (style === "box") {
+        // 白い角丸背景 → リングに重なっても読める（オーナー指定）。
+        const bw = ctx.measureText(text).width + size * 0.028;
+        const r = Math.min(bh / 2, size * 0.012);
+        ctx.beginPath();
+        if (typeof (ctx as unknown as { roundRect?: unknown }).roundRect === "function") {
+          (ctx as unknown as { roundRect: (x: number, y: number, w: number, h: number, r: number) => void })
+            .roundRect(x - bw / 2, y - bh / 2, bw, bh, r);
+        } else {
+          ctx.rect(x - bw / 2, y - bh / 2, bw, bh);
+        }
+        ctx.fillStyle = "rgba(255, 255, 255, 0.92)";
+        ctx.fill();
+        ctx.fillStyle = ink;
+        ctx.fillText(text, x, y);
+      } else if (style === "halo") {
+        // 白い縁取り → 背景ボックスより軽い。
+        ctx.lineJoin = "round";
+        ctx.lineWidth = size * 0.014;
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.95)";
+        ctx.strokeText(text, x, y);
+        ctx.fillStyle = ink;
+        ctx.fillText(text, x, y);
+      } else {
+        ctx.fillStyle = ink;
+        ctx.fillText(text, x, y);
+      }
     }
   }
 }

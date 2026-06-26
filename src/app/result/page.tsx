@@ -389,7 +389,14 @@ export default function ResultPage() {
       <section className="flex min-h-dvh w-full flex-col items-center justify-center px-4 pb-6 pt-4">
         <h2 className="mb-1 text-lg font-bold">あなたの興味マップ</h2>
         <p className="mb-1 text-[10px] text-gray-400">リングの形があなたの個性です</p>
-        <Ring strengths={data.categoryStrengths} size={344} version={data.version} />
+        <Ring
+          strengths={data.categoryStrengths}
+          size={344}
+          version={data.version}
+          outerRatio={0.37}
+          labelStyle="halo"
+          labelColor="#999"
+        />
 
         {/* Top 3 一覧（旧 Page 2 から移植）。第一画面で答えが見える Primacy Effect 最大化。 */}
         <div className="mt-4 w-full max-w-sm">
@@ -1180,7 +1187,14 @@ function ResultDesktopView({
         <aside className="sticky top-16 flex w-[440px] shrink-0 flex-col items-center px-10 py-12 text-center">
           <h1 className="mb-0.5 text-lg font-bold">あなたの興味マップ</h1>
           <p className="mb-3 text-xs text-gray-400">リングの形があなたの個性です</p>
-          <Ring strengths={data.categoryStrengths} size={300} version={data.version} />
+          <Ring
+            strengths={data.categoryStrengths}
+            size={420}
+            version={data.version}
+            outerRatio={0.37}
+            labelStyle="halo"
+            labelColor="#999"
+          />
           <div className="mt-5 w-full max-w-[320px]">
             <p className="mb-2.5 text-sm font-semibold text-gray-500">
               あなたに合う学科 Top 3
