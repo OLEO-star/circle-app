@@ -386,7 +386,7 @@ export default function ResultPage() {
           - 単方向誘導: 「→ スワイプ」と右方向のみを示し、左戻りの混乱を防ぐ
           - リング 320px で画面幅いっぱい近くまで広げ、ブランド・ビジュアルの
             インパクトを最大化（リング型 = サービス名の由来） */}
-      <section className="flex min-h-dvh w-full flex-col items-center justify-center px-4 pb-6 pt-4">
+      <section className="flex min-h-dvh w-full flex-col items-center justify-start px-4 pb-6 pt-4">
         <h2 className="mb-1 text-lg font-bold">あなたの興味マップ</h2>
         <p className="mb-1 text-[10px] text-gray-400">リングの形があなたの個性です</p>
         <Ring
@@ -1184,7 +1184,7 @@ function ResultDesktopView({
 
       <div className="mx-auto flex max-w-[1180px] items-start">
         {/* 左 aside: sticky な興味マップ + リング(300) + Top3 */}
-        <aside className="sticky top-16 flex w-[440px] shrink-0 flex-col items-center px-10 py-12 text-center">
+        <aside className="sticky top-16 flex w-[440px] shrink-0 flex-col items-center px-10 pt-4 pb-12 text-center">
           <h1 className="mb-0.5 text-lg font-bold">あなたの興味マップ</h1>
           <p className="mb-3 text-xs text-gray-400">リングの形があなたの個性です</p>
           <Ring
@@ -1234,7 +1234,7 @@ function ResultDesktopView({
         {/* 右 main: 4 セクション（上罫線 + p-12 で区切る） */}
         <main className="min-w-0 flex-1 border-l border-gray-100">
           {/* ① 上位3学科の詳細 */}
-          <section className="p-12">
+          <section className="px-12 pt-4 pb-12">
             <p className="mb-7 text-xs font-medium uppercase tracking-[0.06em] text-gray-400">
               上位3学科の詳細
             </p>
