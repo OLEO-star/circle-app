@@ -3,8 +3,11 @@ import Link from "next/link";
 import { CONTACT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
-  title: "プライバシーポリシー | 学部診断",
-  description: "学部診断のプライバシーポリシー",
+  // title.absolute はテンプレート（%s | ring-map）を無視する＝ブランド二重付与を防ぐ。
+  title: { absolute: "プライバシーポリシー | ring-map 学部診断" },
+  description:
+    "ring-map 学部診断における個人情報・学校データ・年齢・診断スコアの取り扱いを定めたプライバシーポリシー。",
+  alternates: { canonical: "/privacy" },
 };
 
 export default function PrivacyPage() {

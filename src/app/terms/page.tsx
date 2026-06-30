@@ -3,8 +3,10 @@ import Link from "next/link";
 import { CONTACT_EMAIL } from "@/lib/contact";
 
 export const metadata: Metadata = {
-  title: "利用規約 | 学部診断",
-  description: "学部診断の利用規約",
+  // title.absolute はテンプレート（%s | ring-map）を無視する＝ブランド二重付与を防ぐ。
+  title: { absolute: "利用規約 | ring-map 学部診断" },
+  description: "ring-map 学部診断の利用条件を定めた利用規約。",
+  alternates: { canonical: "/terms" },
 };
 
 export default function TermsPage() {

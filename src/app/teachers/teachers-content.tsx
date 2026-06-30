@@ -39,6 +39,13 @@ export const metadata: Metadata = {
     type: "article",
     locale: "ja_JP",
   },
+  // Twitter/X 共有時も買い手（先生）向けの文言にする（既定ではルートの汎用文言を継承するため）。
+  twitter: {
+    card: "summary_large_image",
+    title: "教員の皆様へ | ring-map 学部診断",
+    description:
+      "ring-map 学部診断の導入をご検討の進路指導の先生方へ。約45〜66問・22軸・36学科の根拠、データの扱い、導入の流れをまとめています。",
+  },
 };
 
 /* ============================================================

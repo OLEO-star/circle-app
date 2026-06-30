@@ -2,7 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 export const metadata: Metadata = {
-  title: "ring-map – Career Path Diagnosis for Japanese Universities",
+  // title.absolute はテンプレート（%s | ring-map）を無視する＝ ring-map の二重付与を防ぐ。
+  title: { absolute: "ring-map – Career Path Diagnosis for Japanese Universities" },
   description:
     "A free career path diagnosis tool for high school students considering Japanese universities. Designed for international school counselors supporting students with diverse pathways. 36 fields × 22 axes, based on Holland Code and Big Five.",
   alternates: { canonical: "https://ring-map.com/en" },
